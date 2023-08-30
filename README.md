@@ -1,3 +1,5 @@
-# Team-17
 
-ECE461 Project Team 17
+# Team-17-
+ECE461 Project 
+
+Alan Fu
