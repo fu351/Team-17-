@@ -1,13 +1,19 @@
 #!/usr/bin/env node_modules/.bin/ts-node
 import * as yargs from 'yargs';
 import { exec } from 'child_process';
+//import axios from 'axios';
+import { handleNpmUrl } from './url_handler';
+import { readLines } from './url_handler';
+import * as fs from 'fs';
+
+
 
 //How to run the code (right now)
 //compile using $tsc run.ts
 //provide permissions using $chmod +x run.js
 //run any command using ./run.js <command>
 
-const packagesToInstall = ['yargs', 'child_process'];
+const packagesToInstall = ['yargs', 'child_process', 'axios'];
 
 // Define the 'install' command
 yargs.command({
@@ -25,6 +31,10 @@ yargs.command({
   describe: 'Asbolute Location of URLs',
   handler: () => {
     console.log('Getting URLs for NetScore calculations....');
+    const filepath = 'URL_FILE.txt';
+    let decodedURLs: string[] = [];
+    decodedURLs = readLines(filepath);
+    handleNpmUrl(decodedURLs[0]);
   },
 });
 
