@@ -61,12 +61,12 @@ function installDependencies(packages: string[]) {
       }
     });
 
-    subProcess1.stdout.on('data', (data) => {
-      //console.log(data);
-    });
+    // subProcess1.stdout.on('data', (data) => {
+    //   //console.log(data);
+    // });
 
-    subProcess1.stderr.on('data', (data) => {
-      //console.log(data);
-    });
+    // subProcess1.stderr.on('data', (data) => {
+    //   //console.log(data);
+    // });
   } 
 }
