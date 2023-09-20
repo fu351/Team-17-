@@ -1,2 +1,2 @@
 #!/bin/bash
-node "$(dirname "$0")/run.js" $@
+npx ts-node run.ts $@
