@@ -141,13 +141,13 @@ function calculate_responsiveness(days_since_last_commit: number) {
 // Net_Score
 function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number) {
     
-    const bus_factor = 0.25 * calculate_bus_factor(contributor_commits, total_contributors);
-    const correctness = 1.25 * calculate_correctness(lines_of_code, num_issues);
-    const ramp_up_time = 1 * calculate_ramp_up_time(lines_of_readme);
-    const license = 0.5 * calculate_license(license_type);
-    const responsiveness = 2 * calculate_responsiveness(days_since_last_commit);
+    const bus_factor = calculate_bus_factor(contributor_commits, total_contributors);
+    const correctness = calculate_correctness(lines_of_code, num_issues);
+    const ramp_up_time = calculate_ramp_up_time(lines_of_readme);
+    const license = calculate_license(license_type);
+    const responsiveness = calculate_responsiveness(days_since_last_commit);
 
-    const net_score = bus_factor + correctness + ramp_up_time + license + responsiveness;
+    const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
 
     //return each const metric score and net score
     return [bus_factor, correctness, ramp_up_time, license, responsiveness, net_score];
