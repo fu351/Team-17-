@@ -1,103 +1,154 @@
 //Metric 1
-function calculate_bus_factor(key_contributor: number, total_contributor: number) {
-    return 1 * (key_contributor / total_contributor);
+function calculate_bus_factor(contributor_commits: number[], total_contributors: number) {
+    var key_contributor = 0;
+    //find midrange of commits
+    var max = 0;
+    var min = 0;
+    for (var i = 0; i < contributor_commits.length; i++) {
+        if (contributor_commits[i] > max) {
+            max = contributor_commits[i];
+        }
+        if (contributor_commits[i] < min) {
+            min = contributor_commits[i];
+        }
+    }
+    const midrange = (max + min) / 2;
+    //find key contributor
+    for (var i = 0; i < contributor_commits.length; i++) {
+        if (contributor_commits[i] >= midrange) {
+            key_contributor++;
+        }
+    }
+    return 1 - (key_contributor / total_contributors);
+
 }
 //Metric 2
-function calculate_correctness(num_issues: number) {
-    //make sure num_issues is smaller than 10
-    if (num_issues > 10) {
-        return 0;
+function calculate_correctness(lines_of_code: number, num_issues: number) {
+    var correctness_percentage = lines_of_code / (num_issues * 100);
+    if ( correctness_percentage >= 1) {
+        return 1;
     }
     else {
-        return 1 - (num_issues / 10);
+        return correctness_percentage;
     }
 }
 //Metric 3
 function calculate_ramp_up_time(lines_of_readme: number) {
-    if lines_of_readme > 200 {
-    
+    if (lines_of_readme > 200) {
+        return 1;
     }
-}
+    else {
+        return lines_of_readme / 200;
+    }
+}   
 //Metric 4 calculates the license score and how freely we can use the code
-function license(license_type:string) {
-    license_type = license_type.toLowerCase();
+function calculate_license(license_type:string) {
+    license_type = license_type.toLowerCase(); 
     switch (license_type) {
+        case "afl-3.0":
+            return 0.8; //open-source, requires attribution and inclusion of license
+        case "apache-2.0":
+            return 0.7; //open-source, requires attribution and preservation and disclaimer
+        case "artistic-2.0":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "bsl-1.0":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "bsd-2-clause":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "bsd-3-clause":
+            return 0.7; //open-source, requires attribution and preservation and disclaimer
+        case "bsd-3-clause-clear":
+            return 0.7; //open-source, requires attribution and preservation and disclaimer
+        case "bsd-4-clause":
+            return 0.6; //open-source, requires attribution, preservation, disclaimer and notification
+        case "0bsd":
+            return 1; // No restrictions
+        case "cc0-1.0":
+            return 1; // No restrictions
+        case "cc-by-4.0":
+            return 0.9; //open-source, requires attribution 
+        case "cc-by-sa-4.0":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "wtfpl":
+            return 1; // Minimal restrictions
+        case "ecl-2.0":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "epl-1.0":
+            return 0.8; //open-source, requires disclaimer and preservation 
+        case "epl-2.0":
+            return 0.8; //same as epl-1.0
+        case "eupl-1.1":
+            return 0.8; //open-source, requires attribution and preservation 
+        case "agpl-3.0":
+            return 0.9; //Requires that modified versions are made available to users of the software over a network.
+        case "gpl-2.0":
+            return 0.9; //Requires preservation of licesnse for derivative works
+        case "gpl-3.0":
+            return 0.9; //same as gpl-2.0
+        case "lgpl-2.1":
+            return 1; // Low restrictions
+        case "lgpl-3.0":
+            return 1; // same as lgpl-2.1
+        case "isc":
+            return 1; // Minimal restrictions
+        case "lppl-1.3c":
+            return 0.9; //open-source, requires attribution 
+        case "ms-pl":
+            return 0.9; //open-source, requires attribution 
         case "mit":
-            return 1;
-        case "gpl":
-            return 0.5;
-        case "apache":
-            return 0.75;
-        case "bsd":
-            return 0.25;
-        case "gnu":
-            return 0.5;
-        case "mozilla":
-            return 0.5;
+            return 1; // Minimal restrictions
+        case "mpl-2.0":
+            return 0.7 // Conditions on source code modifications and copyleft provisions
+        case "osl-3.0":
+            return 0.6; //open-source, requires attribution, preservation, disclaimer and copyleft
+        case "postgresql":
+            return 0.8; //open-source, requires attribution and disclaimers
+        case "ofl-1.1":
+            return 0.8; //open-source, requires attribution and preservation
+        case "ncsa":
+            return 0.7; //open-source, requires attribution, preservation and disclaimers
         case "unlicense":
             return 1;
-        case "eclipse":
-            return 0.5;
-        case "wtfpl":
-            return 1;
-        case "isc":
-            return 0.75;
-        case "artistic":
-            return 0.5;
-        case "cc0":
-            return 1;
         case "zlib":
-            return 0.75;
-        case "bsl":
-            return 0.75;
-        case "mpl":
-            return 0.75;
-        case "lppl":
-            return 0.75;
-        case "cc-by":
-            return 0.5;
-        case "cc-by-sa":
-            return 0.5;
-        case "cc-by-nc":
-            return 0.5;
-        case "cc-by-nc-sa":
-            return 0.5;
-        case "cc-by-nd":
-            return 0.5;
-        case "cc-by-nc-nd":
-            return 0.5;
-        case "epl":
-            return 0.5;
-        case "agpl":
-            return 0.5;
-        case "lgpl":
-            return 0.5;
-        case "gplv2":
-            return 0.5;
-        case "gplv3":
-            return 0.5;
-        case "lgplv2.1":
-            return 0.5;
-        case "lgplv3":
-            return 0.5;
-        case "agplv3":
-            return 0.5;
+            return 0.8; //open-source, requires attribution and disclaimers
         default:
             return 0;
     }
+    
 }
-//Metric 5
-function calculate_responsiveness(num_issues: number, num_issues_closed: number) {
-    return num_issues_closed / num_issues;
+//Metric 5 calculates responsiveness based on time since last commit
+function calculate_responsiveness(days_since_last_commit: number) {
+    if (days_since_last_commit <= 7) { //within a week
+        return 1;
+    }
+    else if (days_since_last_commit <= 14) { //within 2 weeks
+        return 0.8;
+    }
+    else if (days_since_last_commit <= 30) { //within a month
+        return 0.6;
+    }
+    else if (days_since_last_commit <= 60) { //within 2 months
+        return 0.4;
+    }
+    else if (days_since_last_commit <= 180) { //within 6 months
+        return 0.2;
+    }
+    else { // more than 6 months
+        return 0;
+    }
 }
+
 // Net_Score
-function calculate_net_score() {
-    var net_score = 0;
-    const bus_factor = 0.25 * calculate_bus_factor(key_contributor, total_contributor);
-    const correctness = 1.25 * calculate_correctness(num_issues);
-    const ramp_up_time = 1 * calculate_ramp_up_time(lines_of_code, lines_of_readme);
-    const license = 0.5 * license(license_type);
-    const responsiveness = 2 * calculate_responsiveness(num_issues, num_issues_closed);
-    net_score += bus_factor + correctness + ramp_up_time + license + responsiveness;
-    return net_score;
+function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number) {
+    
+    const bus_factor = 0.25 * calculate_bus_factor(contributor_commits, total_contributors);
+    const correctness = 1.25 * calculate_correctness(lines_of_code, num_issues);
+    const ramp_up_time = 1 * calculate_ramp_up_time(lines_of_readme);
+    const license = 0.5 * calculate_license(license_type);
+    const responsiveness = 2 * calculate_responsiveness(days_since_last_commit);
+
+    const net_score = bus_factor + correctness + ramp_up_time + license + responsiveness;
+
+    //return each const metric score and net score
+    return [bus_factor, correctness, ramp_up_time, license, responsiveness, net_score];
 }
