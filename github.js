@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,8 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
-var getRepoInfo = function (owner, repo, token) { return __awaiter(_this, void 0, void 0, function () {
+exports.__esModule = true;
+var getRepoInfo = function (owner, repo, token) { return __awaiter(void 0, void 0, void 0, function () {
     var baseURL, url, response, repositoryInfo, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -73,7 +74,7 @@ var getRepoInfo = function (owner, repo, token) { return __awaiter(_this, void 0
         }
     });
 }); };
-var getCommitInfo = function (owner, repo, token) { return __awaiter(_this, void 0, void 0, function () {
+var getCommitInfo = function (owner, repo, token) { return __awaiter(void 0, void 0, void 0, function () {
     var baseURL, url, response, repositoryInfo, error_2;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -111,6 +112,44 @@ var getCommitInfo = function (owner, repo, token) { return __awaiter(_this, void
         }
     });
 }); };
+var getIssueInfo = function (owner, repo, token) { return __awaiter(void 0, void 0, void 0, function () {
+    var baseURL, url, response, repositoryInfo, error_3;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                baseURL = 'https://api.github.com/repos';
+                url = "".concat(baseURL, "/").concat(owner, "/").concat(repo, "/issues");
+                _a.label = 1;
+            case 1:
+                _a.trys.push([1, 6, , 7]);
+                return [4 /*yield*/, fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: "token ".concat(token),
+                            'Content-Type': 'application/json',
+                            'X-GitHub-Api-Version': '2022-11-28',
+                            'issues': 'all'
+                        }
+                    })];
+            case 2:
+                response = _a.sent();
+                if (!response.ok) return [3 /*break*/, 4];
+                return [4 /*yield*/, response.json()];
+            case 3:
+                repositoryInfo = _a.sent();
+                return [2 /*return*/, repositoryInfo];
+            case 4:
+                console.error("Error: Unable to fetch data from GitHub API. Status code: ".concat(response.status));
+                return [2 /*return*/, null];
+            case 5: return [3 /*break*/, 7];
+            case 6:
+                error_3 = _a.sent();
+                console.error("Error: ".concat(error_3.message));
+                return [2 /*return*/, null];
+            case 7: return [2 /*return*/];
+        }
+    });
+}); };
 function getTimeSinceCommit(commitDate) {
     var currentDate = new Date();
     var timeDifferenceInSeconds = Math.floor((currentDate.getTime() - commitDate.getTime()) / 1000);
@@ -132,7 +171,7 @@ function getTimeSinceCommit(commitDate) {
 }
 var owner = 'fu351';
 var repo = 'Team-17-';
-var token = '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';
+var token = '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';
 var allCommitsByCollaborators = [];
 getRepoInfo(owner, repo, token)
     .then(function (collaboratorInfo) {
@@ -165,6 +204,21 @@ getRepoInfo(owner, repo, token)
                 console.log('Time Since Commit:', timeSinceCommit);
             }
         });
+    }
+})["catch"](function (error) {
+    console.error("Error: ".concat(error));
+});
+getIssueInfo(owner, repo, token)
+    .then(function (issuesInfo) {
+    if (issuesInfo) {
+        // Issues
+        var openIssues = issuesInfo.filter(function (issue) { return issue.state === 'open'; });
+        var numberOfOpenIssues = openIssues.length;
+        var closeIssues = issuesInfo.filter(function (issue) { return issue.state === 'close'; });
+        var numberOfCloseIssues = closeIssues.length;
+        console.log('Number of issues: ', openIssues.length);
+        console.log('Open Issues: ', numberOfOpenIssues);
+        console.log('Close Issues: ', numberOfCloseIssues);
     }
 })["catch"](function (error) {
     console.error("Error: ".concat(error));

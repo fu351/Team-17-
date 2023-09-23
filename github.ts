@@ -1,3 +1,5 @@
+import { all } from "axios";
+
 const getRepoInfo = async (owner: String, repo: String, token: String): Promise<any | null> => {
   const baseURL = 'https://api.github.com/repos';
   const url = `${baseURL}/${owner}/${repo}/collaborators`;
@@ -55,6 +57,34 @@ const getCommitInfo = async (owner: String, repo: String, token: String): Promis
   }
 }
 
+const getIssueInfo = async (owner: String, repo: String, token: String): Promise<any | null> => {
+  const baseURL = 'https://api.github.com/repos';
+  const url = `${baseURL}/${owner}/${repo}/issues`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'issues': 'all'
+      },
+    });
+
+    if (response.ok) {
+      const repositoryInfo = await response.json();
+      return repositoryInfo;
+    } else {
+      console.error(`Error: Unable to fetch data from GitHub API. Status code: ${response.status}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    return null;
+  }
+}
+
 function getTimeSinceCommit(commitDate: Date): string {
   const currentDate = new Date();
   const timeDifferenceInSeconds = Math.floor((currentDate.getTime() - commitDate.getTime()) / 1000);
@@ -75,7 +105,8 @@ function getTimeSinceCommit(commitDate: Date): string {
 
 const owner = 'fu351';
 const repo = 'Team-17-';
-const token = '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';
+// NEED TO ADD TOKEN
+const token = '';
 const allCommitsByCollaborators: number[] = [];
 
 getRepoInfo(owner, repo, token)
@@ -112,6 +143,25 @@ getRepoInfo(owner, repo, token)
   .catch((error) => {
     console.error(`Error: ${error}`);
   });
+
+getIssueInfo(owner, repo, token)
+  .then((issuesInfo) => {
+    if (issuesInfo) {
+      // Issues
+      const openIssues = issuesInfo.filter((issue) => issue.state === 'open');
+      const numberOfOpenIssues = openIssues.length;
+      const closeIssues = issuesInfo.filter((issue) => issue.state === 'close');
+      const numberOfCloseIssues = closeIssues.length;
+      console.log('Number of issues: ', openIssues.length);
+      console.log('Open Issues: ', numberOfOpenIssues);
+      console.log('Close Issues: ', numberOfCloseIssues);
+    }
+  })
+  .catch((error) => {
+    console.error(`Error: ${error}`);
+  });
+
+
 
 
   

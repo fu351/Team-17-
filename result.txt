@@ -1,5 +1,8 @@
 Collaborator Names: [ 'LihongWu21', 'shreya-rathi', 'cgcolquitt', 'fu351' ]
 Number of Collaborators: 4
+Number of issues:  5
+Open Issues:  5
+Close Issues:  0
 All commits: 30
-Commits by Collaborators: [ 8, 8, 10, 4 ]
-Time Since Commit: 1 day ago
+Commits by Collaborators: [ 8, 5, 10, 6 ]
+Time Since Commit: 3 hours ago
