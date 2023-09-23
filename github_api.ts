@@ -17,3 +17,16 @@ async function getRepoLicense(owner, repo, token) {
   });
   return response.data.license.name;
 }
+
+async function getContributorCommits(owner, repo) {
+  const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/stats/contributors`);
+  const contributorCommits = response.data.map(contributor => contributor.total);
+  return contributorCommits;
+}
+
+// Example usage:
+getContributorCommits('Microsoft', 'TypeScript').then(contributorCommits => {
+  console.log(`Number of commits by each contributor: ${contributorCommits}`);
+}).catch(error => {
+  console.error(error);
+});
