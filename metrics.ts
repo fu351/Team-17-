@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 
 //Metric 1
-export async function calculate_bus_factor(contributor_commits: number[], total_contributors: number) {
+export async function calculate_bus_factor(contributor_commits: number[]) {
     var key_contributor = 0;
+    var total_contributors = contributor_commits.length;
     //find midrange of commits
     var max = 0;
     var min = 0;
@@ -152,9 +153,9 @@ export async function calculate_responsiveness(days_since_last_commit: number) {
 }
 
 //Net_Score
-export async function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, npmPackageUrl: string) {
+export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, npmPackageUrl: string) {
     
-    const bus_factor = await calculate_bus_factor(contributor_commits, total_contributors);
+    const bus_factor = await calculate_bus_factor(contributor_commits);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
     const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);
     const license = await calculate_license(license_type);

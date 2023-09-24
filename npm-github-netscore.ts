@@ -36,84 +36,6 @@ async function countLinesInFile(filePath: string): Promise<number> {
   });
 }
 
-async function getContributorsCount(getUsername: string, repositoryName: string, axiosConfig: any): Promise<number | null> {
-  try {
-    const repositoryInfoResponse = await axios.get(`https://api.github.com/repos/${getUsername}/${repositoryName}`, axiosConfig);
-    const contributorsUrl = `${repositoryInfoResponse.data.contributors_url}?per_page=${perPage}`;
-
-    let allContributors = [];
-    let page = 1;
-
-    while (true) {
-      const contributorsResponse = await axios.get(`${contributorsUrl}&page=${page}`, axiosConfig);
-      const contributors = contributorsResponse.data;
-
-      if (contributors.length === 0) {
-        break; // No more contributors
-      }
-
-      allContributors = allContributors.concat(contributors);
-      page++;
-
-      // Check for the Link header to determine if there are more pages
-      const linkHeader = contributorsResponse.headers.link;
-      if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        break; // No more pages
-      }
-    }
-
-    // Return the total contributor count
-    return allContributors.length;
-  } catch (error) {
-    console.error('Error fetching contributor count:', error);
-    return null;
-  }
-}
-
-async function getIssues(getUsername: string, repositoryName: string) {
-  try {
-    const issuesUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/issues?per_page=${perPage}`;
-
-    let allIssues = [];
-    let page = 1;
-
-    while (true) {
-      const issuesResponse = await axios.get(`${issuesUrl}&page=${page}`);
-      const issues = issuesResponse.data;
-
-      if (issues.length === 0) {
-        break; // No more issues
-      }
-
-      allIssues = allIssues.concat(issues);
-      page++;
-
-      // Check for the Link header to determine if there are more pages
-      const linkHeader = issuesResponse.headers.link;
-      if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        break; // No more pages
-      }
-    }
-
-    return allIssues;
-  } catch (error) {
-    console.error('Error fetching issues:', error);
-    throw error;
-  }
-}
-
-async function getIssueCount(getUsername: string, repositoryName: string, axiosConfig:any) {
-  try {
-    const issues = await getIssues(getUsername, repositoryName);
-    const issueCount = issues.length;
-
-    return issueCount;
-  } catch (error) {
-    console.error('Error fetching issue count:', error);
-    throw error;
-  }
-}
-
 async function getCommits(getUsername: string, repositoryName: string) {
   try {
     const commitsUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits?per_page=${perPage}`;
@@ -293,28 +215,6 @@ async function cloneREPO(username: string, repository: string) {
   }
 }
 
-async function getRepoLicense(username: string, repoName: string): Promise<string | null> {
-  try {
-    const response = await axios.get(`https://api.github.com/repos/${username}/${repoName}`);
-
-    if (response.data.license) {
-      const license = response.data.license;
-      if (license.name) {
-        return license.name;
-      } else {
-        console.log('No license type found for this repository.');
-        return null;
-      }
-    } else {
-      console.log('No license information found for this repository. Continuing as Unlicensed.');
-      return null;
-    }
-  } catch (error) {
-    console.error(`Error fetching repository information: ${error.message}`);
-    return null;
-  }
-}
-
 function addLists(list1: number[], list2: number[]): number[] {
   // Check if both lists have the same length
   if (list1.length !== list2.length) {
@@ -381,20 +281,30 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       const axiosConfig = {
         headers,
       };
-
+      const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}`;
+      const response = await axios.get(url, axiosConfig);
       //gather info
       await cloneREPO(githubInfo.username, githubInfo.repository);
       const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig) as number;
-      const issue_count: number = await getIssueCount(githubInfo.username, githubInfo.repository, axiosConfig) as number;
-      const total_contributors: number = await getContributorsCount(githubInfo.username, githubInfo.repository, axiosConfig) as number;
+      const issue_count: number =  response.data.open_issues_count;
       const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, axiosConfig) as number[];
-      const repolicense: string = await getRepoLicense(githubInfo.username, githubInfo.repository) as string;
+      let repolicense: string = 'unlicense';
+      if (response.data.license) {
+        const license = response.data.license;
+        if (license.key) {
+          repolicense = license.key;
+        } else {
+          console.log('No license type found for this repository.');
+        }
+      } else {
+        console.log('No license information found for this repository. Continuing as Unlicensed.');
+      } 
       const rootDirectory = `./cli_storage/${githubInfo.repository}`;
       const totalLines = await traverseDirectory(rootDirectory);
       const total_lines = totalLines[1] - totalLines[0];
 
       //calculate netscore and all metrics
-      const netscore = await calculate_net_score(contributor_commits, total_contributors, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
+      const netscore = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
       fs.writeFileSync('output.ndjson', netscore + '\n', { flag: 'a' }); // 'a' flag appends data to the file
       return netscore;
     }
