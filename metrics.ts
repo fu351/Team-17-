@@ -19,7 +19,13 @@ export async function calculate_bus_factor(contributor_commits: number[], total_
             key_contributor++;
         }
     }
-    return 1 - (key_contributor / total_contributors);
+    
+    if (key_contributor / total_contributors > 1) {
+        return 1;
+    }
+    else {
+        return key_contributor / total_contributors;
+    }
 
 }
 //Metric 2
@@ -155,5 +161,5 @@ export async function calculate_net_score(contributor_commits: number[], total_c
     const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
 
     //return each const metric score and net score
-    return [bus_factor, correctness, ramp_up_time, license, responsiveness, net_score];
+    return [Math.floor(bus_factor * 10) / 10, Math.floor(correctness * 10) / 10, Math.floor(ramp_up_time * 10) / 10, Math.floor(license * 10) / 10, Math.floor(responsiveness * 10) / 10, Math.floor(net_score * 10) / 10];
 }
