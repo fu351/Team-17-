@@ -1,5 +1,5 @@
 //Metric 1
-function calculate_bus_factor(contributor_commits: number[], total_contributors: number) {
+export async function calculate_bus_factor(contributor_commits: number[], total_contributors: number) {
     var key_contributor = 0;
     //find midrange of commits
     var max = 0;
@@ -23,7 +23,7 @@ function calculate_bus_factor(contributor_commits: number[], total_contributors:
 
 }
 //Metric 2
-function calculate_correctness(lines_of_code: number, num_issues: number) {
+export async function calculate_correctness(lines_of_code: number, num_issues: number) {
     var correctness_percentage = lines_of_code / (num_issues * 100);
     if ( correctness_percentage >= 1) {
         return 1;
@@ -33,7 +33,7 @@ function calculate_correctness(lines_of_code: number, num_issues: number) {
     }
 }
 //Metric 3
-function calculate_ramp_up_time(lines_of_readme: number) {
+export async function calculate_ramp_up_time(lines_of_readme: number) {
     if (lines_of_readme > 200) {
         return 1;
     }
@@ -42,8 +42,13 @@ function calculate_ramp_up_time(lines_of_readme: number) {
     }
 }   
 //Metric 4 calculates the license score and how freely we can use the code
-function calculate_license(license_type:string) {
-    license_type = license_type.toLowerCase(); 
+export async function calculate_license(license_type:string) {
+    if(license_type == null) {
+        license_type = 'unlicense';
+    }
+    else {
+        license_type = license_type.toLowerCase();
+    }
     switch (license_type) {
         case "afl-3.0":
             return 0.8; //open-source, requires attribution and inclusion of license
@@ -95,7 +100,7 @@ function calculate_license(license_type:string) {
             return 0.9; //open-source, requires attribution 
         case "ms-pl":
             return 0.9; //open-source, requires attribution 
-        case "mit":
+        case "mit license":
             return 1; // Minimal restrictions
         case "mpl-2.0":
             return 0.7 // Conditions on source code modifications and copyleft provisions
@@ -117,7 +122,7 @@ function calculate_license(license_type:string) {
     
 }
 //Metric 5 calculates responsiveness based on time since last commit
-function calculate_responsiveness(days_since_last_commit: number) {
+export async function calculate_responsiveness(days_since_last_commit: number) {
     if (days_since_last_commit <= 7) { //within a week
         return 1;
     }
@@ -138,14 +143,14 @@ function calculate_responsiveness(days_since_last_commit: number) {
     }
 }
 
-// Net_Score
-function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number) {
+//Net_Score
+export async function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number) {
     
-    const bus_factor = calculate_bus_factor(contributor_commits, total_contributors);
-    const correctness = calculate_correctness(lines_of_code, num_issues);
-    const ramp_up_time = calculate_ramp_up_time(lines_of_readme);
-    const license = calculate_license(license_type);
-    const responsiveness = calculate_responsiveness(days_since_last_commit);
+    const bus_factor = await calculate_bus_factor(contributor_commits, total_contributors);
+    const correctness = await calculate_correctness(lines_of_code, num_issues);
+    const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);
+    const license = await calculate_license(license_type);
+    const responsiveness = await calculate_responsiveness(days_since_last_commit);
 
     const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
 

@@ -5,18 +5,27 @@ if [ "$1" == "install" ]; then
     echo "Running installation..."
     echo "Installing ts-node"
     npm install ts-node --save
-    echo "Ts-node installed.";
+    echo "Ts-node installed."
     echo "Installing yargs"
     npm install yargs --save
-    echo "Yargs installed.";
+    echo "Yargs installed."
     echo "Installing axios"
     npm install axios --save
-    echo "Axios installed.";
+    echo "Axios installed."
     echo "Installing child_process"
     npm install child_process --save
-    echo "Child_process installed.";
-    echo "Ready to run other commands.";
+    echo "Child_process installed."
+    echo "Installing path"
+    npm install path --save
+    echo "Path installed."
+    echo "Ready to run other commands."
 elif [ "$1" == "URL_FILE" ]; then
+    rm -rf "cli_storage"/*
+    echo "Clearing local package storage..."
+    echo "Compiling essential scripts..."
+    tsc metrics.ts
+    tsc npm-github-netscore.ts
+    echo "Scripts compiled."
     npx ts-node run.ts $@
     if [ $? -ne 0 ]; then
       echo "An error occurred. Must install dependencies!"
@@ -28,7 +37,7 @@ elif [ "$1" == "test" ]; then
     fi
 else
     echo "Unknown command: $1"
-    echo "Please us one of these commands: install', 'URL_FILE', or 'test'";
+    echo "Please us one of these commands: install', 'URL_FILE', or 'test'"
     exit 1
 fi
 
