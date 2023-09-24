@@ -215,6 +215,10 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
 
 async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
   try {
+  const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+    //Checks if it is a github url if not treats it as a npm url
+  if (!githubUrlPattern.test(npmPackageUrl)) {
+
     // Check if the URL is a valid npm package URL
     const npmUrlPattern = /^https?:\/\/(www\.)?npmjs\.com\/package\/([^/]+)/i;
     const npmUrlMatch = npmPackageUrl.match(npmUrlPattern);
@@ -234,11 +238,9 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
     if (!repositoryUrl) {
       throw new Error('No GitHub repository URL found for the package.');
     }
-
+  
     // Check if the repository URL follows the typical GitHub structure
-    const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
     const githubUrlMatch = repositoryUrl.match(githubUrlPattern);
-
     if (githubUrlMatch && githubUrlMatch.length >= 3) {
       const username = githubUrlMatch[1];
       const repository = githubUrlMatch[2];
@@ -254,6 +256,24 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
         throw new Error('Unable to extract GitHub username and repository name from the repository URL.');
       }
     }
+  } else {
+    const githubUrlMatch = npmPackageUrl.match(githubUrlPattern);
+    if (githubUrlMatch && githubUrlMatch.length >= 3) {
+      const username = githubUrlMatch[1];
+      const repository = githubUrlMatch[2];
+      return { username, repository };
+    } else {
+      // If the URL doesn't follow the typical structure, attempt to extract from the URL
+      const urlParts = npmPackageUrl.split('/');
+      if (urlParts.length >= 4) {
+        const username = urlParts[urlParts.length - 2];
+        const repository = urlParts[urlParts.length - 1].replace('.git', '');
+        return { username, repository };
+      } else {
+        throw new Error('Unable to extract GitHub username and repository name from the repository URL.');
+      }
+    }
+  }
   } catch (error) {
     console.error('Error extracting GitHub info:', error.message);
     return null;
