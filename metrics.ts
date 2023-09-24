@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 //Metric 1
 export async function calculate_bus_factor(contributor_commits: number[], total_contributors: number) {
     var key_contributor = 0;
@@ -150,7 +152,7 @@ export async function calculate_responsiveness(days_since_last_commit: number) {
 }
 
 //Net_Score
-export async function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number) {
+export async function calculate_net_score(contributor_commits: number[], total_contributors: number, lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, npmPackageUrl: string) {
     
     const bus_factor = await calculate_bus_factor(contributor_commits, total_contributors);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
@@ -161,5 +163,15 @@ export async function calculate_net_score(contributor_commits: number[], total_c
     const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
 
     //return each const metric score and net score
-    return [Math.floor(bus_factor * 10) / 10, Math.floor(correctness * 10) / 10, Math.floor(ramp_up_time * 10) / 10, Math.floor(license * 10) / 10, Math.floor(responsiveness * 10) / 10, Math.floor(net_score * 10) / 10];
+    const ndjsonEntry = {
+        URL: npmPackageUrl,
+        NetScore: Math.floor(net_score * 10) / 10,
+        RampUp: Math.floor(ramp_up_time * 10) / 10,
+        Correctness:  Math.floor(correctness * 10) / 10,
+        BusFactor: Math.floor(bus_factor * 10),
+        ResponsiveMaintainer: Math.floor(responsiveness * 10) / 10,
+        License: Math.floor(license * 10) / 10,
+    };
+    const ndjsonOutput = JSON.stringify(ndjsonEntry);
+    return ndjsonOutput;
 }

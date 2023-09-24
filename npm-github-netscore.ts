@@ -394,10 +394,9 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       const total_lines = totalLines[1] - totalLines[0];
 
       //calculate netscore and all metrics
-      console.log(`Package Name: ${githubInfo.repository}`);
-      let netscore: number[] = await calculate_net_score(contributor_commits, total_contributors, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit);
-      console.log(`Metrics and Netscore: ${netscore}`);
-
+      const netscore = await calculate_net_score(contributor_commits, total_contributors, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
+      fs.writeFileSync('output.ndjson', netscore + '\n', { flag: 'a' }); // 'a' flag appends data to the file
+      return netscore;
     }
   } catch (error) {
     console.error('Error:', error.message);
@@ -405,7 +404,5 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
 }
 
 export { fetchGitHubInfo, readLines, countLinesInFile };
-
-
 
 

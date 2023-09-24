@@ -1,8 +1,5 @@
-Collaborator Names: [ 'LihongWu21', 'shreya-rathi', 'cgcolquitt', 'fu351' ]
-Number of Collaborators: 4
-Number of issues:  5
-Open Issues:  5
-Close Issues:  0
-All commits: 30
-Commits by Collaborators: [ 8, 5, 10, 6 ]
-Time Since Commit: 3 hours ago
+Clearing local package storage...
+Compiling essential scripts...
+npm-github-netscore.ts(378,11): error TS2322: Type 'string' is not assignable to type 'number[]'.
+Scripts compiled.
+Getting URLs for NetScore calculations....

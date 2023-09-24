@@ -49,10 +49,8 @@ var getRepoInfo = function (owner, repo, token) { return __awaiter(void 0, void 
                 return [4 /*yield*/, fetch(url, {
                         method: 'GET',
                         headers: {
-                            Authorization: "token ".concat(token),
                             'Content-Type': 'application/json',
-                            'X-GitHub-Api-Version': '2022-11-28',
-                            'since': '2023-01-3100:00:000'
+                            'X-GitHub-Api-Version': '2022-11-28'
                         }
                     })];
             case 2:
@@ -87,10 +85,8 @@ var getCommitInfo = function (owner, repo, token) { return __awaiter(void 0, voi
                 return [4 /*yield*/, fetch(url, {
                         method: 'GET',
                         headers: {
-                            Authorization: "token ".concat(token),
                             'Content-Type': 'application/json',
-                            'X-GitHub-Api-Version': '2022-11-28',
-                            'since': '2023-01-3100:00:000'
+                            'X-GitHub-Api-Version': '2022-11-28'
                         }
                     })];
             case 2:
@@ -171,6 +167,7 @@ function getTimeSinceCommit(commitDate) {
 }
 var owner = 'fu351';
 var repo = 'Team-17-';
+// NEED TO ADD TOKEN
 var token = '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';
 var allCommitsByCollaborators = [];
 getRepoInfo(owner, repo, token)

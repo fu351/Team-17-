@@ -10,8 +10,7 @@ const getRepoInfo = async (owner: String, repo: String, token: String): Promise<
       headers: {
         Authorization: `token ${token}`,
         'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'since': '2023-01-3100:00:000'
+        'X-GitHub-Api-Version': '2022-11-28'
       },
     });
 
@@ -39,8 +38,7 @@ const getCommitInfo = async (owner: String, repo: String, token: String): Promis
       headers: {
         Authorization: `token ${token}`,
         'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'since': '2023-01-3100:00:000'
+        'X-GitHub-Api-Version': '2022-11-28'
       },
     });
 
@@ -103,10 +101,10 @@ function getTimeSinceCommit(commitDate: Date): string {
   }
 }
 
-const owner = 'fu351';
-const repo = 'Team-17-';
+const owner = 'InfluxData';
+const repo = 'influxdb';
 // NEED TO ADD TOKEN
-const token = '';
+const token = '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';
 const allCommitsByCollaborators: number[] = [];
 
 getRepoInfo(owner, repo, token)
