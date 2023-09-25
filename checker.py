@@ -76,13 +76,13 @@ def run_urlfile() -> int:
             is_valid_output = False
     except Exception as e:
         is_valid_output = False
-    print(output);
+
     if is_valid_output is True:
         total_correct += 1
         print(f"{GREEN}> URL_FILE output is valid NDJSON.{RESET}")
     else:
         print(f"{RED}> URL_FILE output is not valid NDJSON.{RESET}")
-        #return total_correct
+        return total_correct
     
     module_score = MODULE_SCORE(output)
     if module_score.is_valid():
