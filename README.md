@@ -18,3 +18,7 @@ Run `./run URL_FILE` command
 - Step 4:
 Run `./run test` command
 <br> It runs the test cases that cover 80% of our code
+
+# Things to note
+- API Limit <br>
+Though this is not directly related to the I/O specification of the auto-grader, while we were doing our own testing we have been running into issues of exceeding the hourly request limit. This could cause the auto-grader to choke.
