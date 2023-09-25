@@ -170,7 +170,19 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const  BUS_FACTOR_SCORE: number = Math.floor(bus_factor * 10000) / 10000;
     const  RESPONSIVE_MAINTAINER_SCORE: number = Math.floor(responsiveness * 10000) / 10000;
     const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
-    console.log(`{"URL":${npmPackageUrl.replace(/\n/g, '')}, "NET_SCORE":${NET_SCORE}, "RAMP_UP_SCORE":${RAMP_UP_SCORE}, "CORRECTNESS_SCORE":${CORRECTNESS_SCORE}, "BUS_FACTOR_SCORE":${BUS_FACTOR_SCORE}, "RESPONSIVE_MAINTAINER_SCORE":${RESPONSIVE_MAINTAINER_SCORE}, "LICENSE_SCORE":${LICENSE_SCORE}}`);
+    const output = [
+        {
+          URL: npmPackageUrl.replace(/\n/g, ''),
+          NET_SCORE: NET_SCORE,
+          RAMP_UP_SCORE: RAMP_UP_SCORE,
+          CORRECTNESS_SCORE: CORRECTNESS_SCORE,
+          BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
+          RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
+          LICENSE_SCORE: LICENSE_SCORE,
+        },
+      ];
+      
+    console.log(JSON.stringify(output));
     return net_score;
     /*const ndjsonEntry = {
         URL: npmPackageUrl,

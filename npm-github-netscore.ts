@@ -29,9 +29,7 @@ async function readLines(filePath: string): Promise<string[]> {
 
   const lines = fileContents.split('\n');
   for (const line of lines) {
-    const asciiCodes = line.trim().split(' ').map(Number);
-    const decodedText = asciiCodes.map(code => String.fromCharCode(code)).join('');
-    decodedURLs.push(decodedText);
+    decodedURLs.push(line.trim());
   }
 
   return decodedURLs;
@@ -93,7 +91,8 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
     });
 
     const data = await response.json();
-
+    //console.log(`${data},${response}`);
+    //console.log(`${getUsername}, ${repositoryName}`);
     if (!data || !data.data || !data.data.repository) {
       throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
     }
@@ -119,7 +118,7 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
 
     return commitCountsArray;
   } catch (error) {
-    console.error('Error fetching commits per contributor:', error);
+    //console.error('Error fetching commits per contributor:', error);
     throw error;
   }
 }

@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import { fetchGitHubInfo, readLines, countLinesInFile } from './npm-github-netscore';
 import * as fs from 'fs';
 
-const token = "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"; //personal token needed to avoid API limits
+const token = "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"; //personal token needed to avoid API limits
 
 const ndjsonEntries: string[] = [];
 
@@ -20,11 +20,11 @@ function logFileContents() {
 }
 
 yargs.command({
-  command: 'URL_FILE',
-  describe: 'Asbolute Location of URLs',
-  handler: async () => {
+  command: 'URL_FILE <filepath>',
+  describe: 'Location of URLs',
+  handler: async (argv) => {
   console.log('Getting URLs for NetScore calculations....');
-  const filepath = 'URL_FILE.txt';
+  const filepath = argv.filepath;
     try {
       const decodedURLs = await readLines(filepath);
       const numLines = await countLinesInFile(filepath);
