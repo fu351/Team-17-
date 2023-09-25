@@ -23,7 +23,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         }
     }
     
-    if (key_contributor / total_contributors > 1) {
+    if ((key_contributor / total_contributors) >= 1) {
         return 1;
     }
     else {
@@ -164,7 +164,15 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
 
     //return each const metric score and net score
-    const ndjsonEntry = {
+    const  NET_SCORE: number = (Math.floor(net_score / 5 * 10000) / 10000); 
+    const  RAMP_UP_SCORE: number = Math.floor(ramp_up_time * 10000) / 10000;
+    const  CORRECTNESS_SCORE: number =  Math.floor(correctness * 10000) / 10000; 
+    const  BUS_FACTOR_SCORE: number = Math.floor(bus_factor * 10000) / 10000;
+    const  RESPONSIVE_MAINTAINER_SCORE: number = Math.floor(responsiveness * 10000) / 10000;
+    const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
+    console.log(`{"URL":${npmPackageUrl.replace(/\n/g, '')}, "NET_SCORE":${NET_SCORE}, "RAMP_UP_SCORE":${RAMP_UP_SCORE}, "CORRECTNESS_SCORE":${CORRECTNESS_SCORE}, "BUS_FACTOR_SCORE":${BUS_FACTOR_SCORE}, "RESPONSIVE_MAINTAINER_SCORE":${RESPONSIVE_MAINTAINER_SCORE}, "LICENSE_SCORE":${LICENSE_SCORE}}\n`);
+    return net_score;
+    /*const ndjsonEntry = {
         URL: npmPackageUrl,
         NetScore: Math.floor(net_score * 10) / 10,
         RampUp: Math.floor(ramp_up_time * 10) / 10,
@@ -174,5 +182,5 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
         License: Math.floor(license * 10) / 10,
     };
     const ndjsonOutput = JSON.stringify(ndjsonEntry);
-    return ndjsonOutput;
+    return ndjsonOutput; */
 }

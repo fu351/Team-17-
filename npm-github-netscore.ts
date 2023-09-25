@@ -337,7 +337,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
 
       //calculate netscore and all metrics
       const netscore = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
-      fs.writeFileSync('output.ndjson', netscore + '\n', { flag: 'a' }); // 'a' flag appends data to the file
+      //fs.writeFileSync('output.ndjson', netscore + '\n', { flag: 'a' }); // 'a' flag appends data to the file
       return netscore;
     }
   } catch (error) {

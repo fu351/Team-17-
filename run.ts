@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import { fetchGitHubInfo, readLines, countLinesInFile } from './npm-github-netscore';
 import * as fs from 'fs';
 
-const token = "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"; //personal token needed to avoid API limits
+const token = "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"; //personal token needed to avoid API limits
 
 const ndjsonEntries: string[] = [];
 
@@ -16,6 +16,7 @@ function logFileContents() {
   } catch (error: any) {
     console.error('Error reading file:', error.message);
   }
+  process.exit(0);
 }
 
 yargs.command({
@@ -50,6 +51,7 @@ yargs.command({
     if (ndjsonEntries.length > 0) {
       logFileContents();
     }
+    process.exit(0);
   },
 })
 yargs.command({
@@ -57,6 +59,8 @@ yargs.command({
   describe: 'Run pre-made test cases',
   handler: () => {
   console.log('Running test cases...\nGithub Packages loading...\nNPM Packages loading...\nFinished!');
+  process.exit(0);
   },
+  
 })
 .help().argv;
