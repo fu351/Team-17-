@@ -51,63 +51,70 @@ async function countLinesInFile(filePath: string): Promise<number> {
   });
 }
 
-async function getCommits(getUsername: string, repositoryName: string) {
+async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken:string) {
   try {
-    const commitsUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits?per_page=${perPage}`;
-
-    let allCommits = [];
-    let page = 1;
-
-    while (true) {
-      const commitsResponse = await axios.get(`${commitsUrl}&page=${page}`);
-      const commits = commitsResponse.data;
-
-      if (commits.length === 0) {
-        break; // No more commits
+    const query = `
+      query($owner: String!, $name: String!) {
+        repository(owner: $owner, name: $name) {
+          ref(qualifiedName: "main") {
+            target {
+              ... on Commit {
+                history {
+                  totalCount
+                  nodes {
+                    author {
+                      user {
+                        login
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+    `;
 
-      allCommits = allCommits.concat(commits);
-      page++;
+    const variables = {
+      owner: getUsername,
+      name: repositoryName,
+    };
 
-      // Check for the Link header to determine if there are more pages
-      const linkHeader = commitsResponse.headers.link;
-      if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        break; // No more pages
+    const response = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${personalAccessToken}`,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const data = await response.json();
+
+    if (!data || !data.data || !data.data.repository) {
+      throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
+    }
+
+    const commits = data.data.repository.ref.target.history.nodes;
+    const commitsPerContributor = {};
+
+    for (const commit of commits) {
+      const contributor = commit.author?.user?.login || 'Unknown';
+
+      if (!commitsPerContributor[contributor]) {
+        commitsPerContributor[contributor] = 1;
+      } else {
+        commitsPerContributor[contributor]++;
       }
     }
 
-    return allCommits;
-  } catch (error) {
-    logBasedOnVerbosity(`Error fetching commits: ${error}`, 2);
-    process.exit(1);
-  }
-}
-
-async function getCommitsPerContributor(getUsername: string, repositoryName: string, axiosConfig: any) {
-  try {
-    const commits = await getCommits(getUsername, repositoryName);
-
-    // Calculate the number of commits per contributor
-    const commitsPerContributor = commits.reduce((result, commit) => {
-      const contributor = commit.author?.login || 'Unknown';
-
-      if (!result[contributor]) {
-        result[contributor] = 1;
-      } else {
-        result[contributor]++;
-      }
-
-      return result;
-    }, {});
-
-    // Extract the commit counts into an array
     const commitCountsArray = Object.values(commitsPerContributor);
 
-    // Return the array of commit counts
     return commitCountsArray;
   } catch (error) {
-    logBasedOnVerbosity(`Error fetching commits per contributor: ${error}`, 2);
-    process.exit(1);
+    console.error('Error fetching commits per contributor:', error);
+    throw error;
   }
 }
 
@@ -306,7 +313,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       await cloneREPO(githubInfo.username, githubInfo.repository);
       const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig) as number;
       const issue_count: number =  response.data.open_issues_count;
-      const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, axiosConfig) as number[];
+      const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
       let repolicense: string = 'unlicense';
       if (response.data.license) {
         const license = response.data.license;
