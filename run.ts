@@ -38,9 +38,6 @@ yargs.command({
             if (Error instanceof Error) {
               //console.error('Error:', Error.message);
               process.exit(1);
-            } else {
-              //console.error('Error:', Error);
-              process.exit(1);
             }
           }
         }
