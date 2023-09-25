@@ -3,27 +3,16 @@ import * as yargs from 'yargs';
 import { fetchGitHubInfo, readLines, countLinesInFile } from './npm-github-netscore';
 import * as fs from 'fs';
 
-const token = "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"; //personal token needed to avoid API limits
+const token = "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"; //personal token needed to avoid API limits
 
 const ndjsonEntries: string[] = [];
 
-function logFileContents() {
-  try {
-    // Read the contents of the file
-    const fileContents = fs.readFileSync('output.ndjson', 'utf-8');
-    // Log the contents to the console
-    console.log(fileContents);
-  } catch (error: any) {
-    console.error('Error reading file:', error.message);
-  }
-  process.exit(0);
-}
 
 yargs.command({
   command: 'URL_FILE <filepath>',
   describe: 'Location of URLs',
   handler: async (argv) => {
-  console.log('Getting URLs for NetScore calculations....');
+  //console.log('Getting URLs for NetScore calculations....');
   const filepath = argv.filepath;
     try {
       const decodedURLs = await readLines(filepath);
@@ -44,9 +33,6 @@ yargs.command({
       }
     } catch (error) {
       process.exit(1);
-    }
-    if (ndjsonEntries.length > 0) {
-      logFileContents();
     }
     process.exit(0);
   },

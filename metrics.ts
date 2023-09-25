@@ -170,20 +170,28 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const  BUS_FACTOR_SCORE: number = Math.floor(bus_factor * 10000) / 10000;
     const  RESPONSIVE_MAINTAINER_SCORE: number = Math.floor(responsiveness * 10000) / 10000;
     const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
-    const output = [
-        {
-          URL: npmPackageUrl.replace(/\n/g, ''),
-          NET_SCORE: NET_SCORE,
-          RAMP_UP_SCORE: RAMP_UP_SCORE,
-          CORRECTNESS_SCORE: CORRECTNESS_SCORE,
-          BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
-          RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
-          LICENSE_SCORE: LICENSE_SCORE,
-        },
-      ];
-      
-    console.log(JSON.stringify(output));
-    return net_score;
+    const output = [{
+        URL: npmPackageUrl,
+        NET_SCORE: Math.floor(net_score / 5 * 10000) / 10000,
+        RAMP_UP_SCORE: Math.floor(ramp_up_time * 10000) / 10000,
+        CORRECTNESS_SCORE: Math.floor(correctness * 10000) / 10000,
+        BUS_FACTOR_SCORE: Math.floor(bus_factor * 10000) / 10000,
+        RESPONSIVE_MAINTAINER_SCORE: Math.floor(responsiveness * 10000) / 10000,
+        LICENSE_SCORE: Math.floor(license * 10000) / 10000
+    }
+    ]
+    console.log(JSON.stringify({
+        URL: npmPackageUrl,
+        NET_SCORE: NET_SCORE,
+        RAMP_UP_SCORE: RAMP_UP_SCORE,
+        CORRECTNESS_SCORE: CORRECTNESS_SCORE,
+        BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
+        RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
+        LICENSE_SCORE: LICENSE_SCORE
+      }));
+    //console.log(`${printign}`);
+    //process.stdout.write(printign);
+    return 1;
     /*const ndjsonEntry = {
         URL: npmPackageUrl,
         NetScore: Math.floor(net_score * 10) / 10,

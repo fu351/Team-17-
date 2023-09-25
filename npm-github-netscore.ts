@@ -165,6 +165,7 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
 async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
   try {
   const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+
     //Checks if it is a github url if not treats it as a npm url
   if (!githubUrlPattern.test(npmPackageUrl)) {
 
@@ -209,7 +210,9 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
     }
   } else {
     const githubUrlMatch = npmPackageUrl.match(githubUrlPattern);
+
     if (githubUrlMatch && githubUrlMatch.length >= 3) {
+
       const username = githubUrlMatch[1];
       const repository = githubUrlMatch[2];
       return { username, repository };
@@ -301,7 +304,6 @@ try {
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
     const githubInfo = await extractGitHubInfo(npmPackageUrl);
-
     if (githubInfo) {
       // Modify the headers to include the personal access token
       const headers = {
@@ -335,9 +337,8 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       const total_lines = totalLines[1] - totalLines[0];
 
       //calculate netscore and all metrics
-      const netscore = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
-      //fs.writeFileSync('output.ndjson', netscore + '\n', { flag: 'a' }); // 'a' flag appends data to the file
-      return netscore;
+      const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
+      return scores;
     }
   } catch (error) {
     logBasedOnVerbosity(`Error: ${error.message}`, 2);
