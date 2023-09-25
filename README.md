@@ -36,3 +36,10 @@ Run `./run test` command
 ## Things to note
 - API Limit <br>
 Though this is not directly related to the I/O specification of the auto-grader, while we were doing our own testing we have been running into issues of exceeding the hourly request limit. This could cause the auto-grader to choke.
+
+## Credits
+This project was created as part of an assignment for ECE 461 at Purdue University. Team members:
+- Christopher Colloquit
+- Alan Fu
+- Shreya Rathi
+- Li Hong Wu
