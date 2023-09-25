@@ -164,9 +164,9 @@ def run_test_suite() -> int:
 def main():
     
     #Setup ENV for testing
-    os.environ['GITHUB_TOKEN'] = "INSERT VALID TOKEN HERE"
+    os.environ['GITHUB_TOKEN'] = "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"
     os.environ['LOG_LEVEL'] = "0"
-    os.environ['LOG_FILE'] = "/tmp/log"
+    os.environ['LOG_FILE'] = "log"
     
     # Run install test
     print(f"{BOLD}{BLUE}Testing './run install'...{RESET}")

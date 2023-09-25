@@ -35,9 +35,8 @@ elif [ -f "$1" ]; then
     tsc npm-github-netscore.ts
     #echo "Scripts compiled."
     npx ts-node run.ts "URL_FILE" "$1"
-    
     if [ $? -ne 0 ]; then
-      #echo "An error occurred. Enable or check logfile for debugging"
+    echo "An error occurred. Enable or check logfile for debugging"
     exit 1
     else
     exit 0
@@ -45,14 +44,14 @@ elif [ -f "$1" ]; then
 elif [ "$1" == "test" ]; then
     npx ts-node run.ts $@
     if [ $? -ne 0 ]; then
-      #echo "An error occurred. Must install dependencies!"
+      echo "An error occurred. Must install dependencies!"
       exit 1
     else
     exit 0
     fi
 else
-    #echo "Unknown command: $1"
-    #echo "Please us one of these commands: install', 'URL_FILE', or 'test'"
+    echo "Unknown command: $1"
+    echo "Please us one of these commands: install', 'URL_FILE', or 'test'"
     exit 1
 fi
 

@@ -17,7 +17,7 @@ const createCustomLogger = (labelStr: string, level: string) =>
     transports: [
       new transports.Console(),
       new transports.File({
-        filename: process.env.LOG_FILE || 'logfile.log',
+        filename: process.env.LOG_FILE,
       }),
     ],
   });
