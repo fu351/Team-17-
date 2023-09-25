@@ -50,13 +50,14 @@ async function countLinesInFile(filePath: string): Promise<number> {
     });
   });
 }
-
-async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken:string) {
+async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
   try {
     const query = `
-      query($owner: String!, $name: String!) {
-        repository(owner: $owner, name: $name) {
-          ref(qualifiedName: "main") {
+    query($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        refs(first: 100, refPrefix: "refs/") {
+          nodes {
+            name
             target {
               ... on Commit {
                 history {
@@ -74,6 +75,7 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
           }
         }
       }
+    }
     `;
 
     const variables = {
@@ -96,16 +98,20 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
       throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
     }
 
-    const commits = data.data.repository.ref.target.history.nodes;
+    const refs = data.data.repository.refs.nodes;
     const commitsPerContributor = {};
 
-    for (const commit of commits) {
-      const contributor = commit.author?.user?.login || 'Unknown';
+    for (const ref of refs) {
+      const commits = ref.target?.history?.nodes || [];
 
-      if (!commitsPerContributor[contributor]) {
-        commitsPerContributor[contributor] = 1;
-      } else {
-        commitsPerContributor[contributor]++;
+      for (const commit of commits) {
+        const contributor = commit.author?.user?.login || 'Unknown';
+
+        if (!commitsPerContributor[contributor]) {
+          commitsPerContributor[contributor] = 1;
+        } else {
+          commitsPerContributor[contributor]++;
+        }
       }
     }
 
