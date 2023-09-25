@@ -3,7 +3,7 @@ import * as yargs from 'yargs';
 import { fetchGitHubInfo, readLines, countLinesInFile } from './npm-github-netscore';
 import * as fs from 'fs';
 
-const token = process.env.GITHUB_TOKEN || "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"; //personal token needed to avoid API limits
+const token = process.env.GITHUB_TOKEN || "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"; //personal token needed to avoid API limits
 
 const ndjsonEntries: string[] = [];
 
@@ -49,7 +49,11 @@ yargs.command({
   command: 'test',
   describe: 'Run pre-made test cases',
   handler: () => {
-  console.log('Running test cases...\nGithub Packages loading...\nNPM Packages loading...\nFinished!');
+  //console.log('Running test cases...\nGithub Packages loading...\nNPM Packages loading...\nFinished!');
+  const num_passed = 0;
+  const total_tests = 0;
+  const coverage_pct = 0;
+  console.log(`${num_passed}/${total_tests} test cases passed. ${coverage_pct}% line coverage achieved.`);
   process.exit(0);
   },
   
