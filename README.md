@@ -1,8 +1,5 @@
 
-# Team-17-
-ECE461 Project 
+# Team-17
+ECE461 Project: A CLI for trustworthy module re-use
 
-Alan Fu
-Christopher Colquitt
-Lihong Wu 
 
