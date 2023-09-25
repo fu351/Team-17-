@@ -4,9 +4,24 @@ const exec = util.promisify(require('child_process').exec);
 import * as fs from 'fs';
 import * as path from 'path';
 import { calculate_net_score } from './metrics'
+import { infoLogger, debugLogger } from './logger';
+import { log } from 'console';
 
 const perPage = 100; // Number of contributors per page, GitHub API maximum is 100
 const perPage1 = 1; // We only need the latest commit
+
+function logBasedOnVerbosity(message: string, verbosity: number) {
+  const logLevel = process.env.LOG_LEVEL ? parseInt(process.env.LOG_LEVEL) : 0;
+
+  if (verbosity == logLevel) {
+    if(verbosity == 2) {
+      debugLogger.debug(message);
+    }
+    else {
+      infoLogger.info(message);
+    }
+  }
+}
 
 async function readLines(filePath: string): Promise<string[]> {
   const fileContents = fs.readFileSync(filePath, 'utf-8');
@@ -63,8 +78,8 @@ async function getCommits(getUsername: string, repositoryName: string) {
 
     return allCommits;
   } catch (error) {
-    console.error('Error fetching commits:', error);
-    throw error;
+    logBasedOnVerbosity(`Error fetching commits: ${error}`, 2);
+    process.exit(1);
   }
 }
 
@@ -91,8 +106,8 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
     // Return the array of commit counts
     return commitCountsArray;
   } catch (error) {
-    console.error('Error fetching commits per contributor:', error);
-    throw error;
+    logBasedOnVerbosity(`Error fetching commits per contributor: ${error}`, 2);
+    process.exit(1);
   }
 }
 
@@ -105,8 +120,8 @@ async function getLatestCommit(getUsername: string, repositoryName: string) {
 
     return latestCommit;
   } catch (error) {
-    console.error('Error fetching latest commit:', error);
-    throw error;
+    logBasedOnVerbosity(`Error fetching latest commit: ${error}`, 2);
+    process.exit(1);
   }
 }
 
@@ -115,7 +130,7 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
     const latestCommit = await getLatestCommit(getUsername, repositoryName);
 
     if (!latestCommit) {
-      console.log('No commits found in the repository.');
+      logBasedOnVerbosity('No commits found in the repository', 1);
       return 0;  // Return 0 days if there are no commits
     }
 
@@ -129,8 +144,8 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
 
     return days;  // Return the number of days
   } catch (error) {
-    console.error('Error calculating time since last commit:', error);
-    throw error;
+    logBasedOnVerbosity(`Error calculating time since last commit: ${error}`, 2);
+    process.exit(1);
   }
 }
 
@@ -146,7 +161,8 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
     const npmUrlMatch = npmPackageUrl.match(npmUrlPattern);
 
     if (!npmUrlMatch || npmUrlMatch.length < 3) {
-      throw new Error('Invalid npm package URL.');
+      logBasedOnVerbosity('Invalid npm package URL', 2);
+      process.exit(1);
     }
 
     // Extract the package name
@@ -175,7 +191,8 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
         const repository = urlParts[urlParts.length - 1].replace('.git', '');
         return { username, repository };
       } else {
-        throw new Error('Unable to extract GitHub username and repository name from the repository URL.');
+        logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
+        process.exit(1);
       }
     }
   } else {
@@ -192,13 +209,14 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
         const repository = urlParts[urlParts.length - 1].replace('.git', '');
         return { username, repository };
       } else {
-        throw new Error('Unable to extract GitHub username and repository name from the repository URL.');
+        logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
+        process.exit(1);
       }
     }
   }
   } catch (error) {
-    console.error('Error extracting GitHub info:', error.message);
-    return null;
+    logBasedOnVerbosity(`Error extracting GitHub info: ${error.message}`, 2);
+    process.exit(1);
   }
 }
 
@@ -211,7 +229,8 @@ async function cloneREPO(username: string, repository: string) {
     const { stdout, stderr } = await exec(cloneCommand);
 
   } catch (error) {
-    console.error(`Error cloning repository: ${error.message}`);
+    logBasedOnVerbosity(`Error cloning repository: ${error.message}`, 2);
+    process.exit(1);
   }
 }
 
@@ -261,8 +280,8 @@ try {
   const lines = fileContent.split('\n');
   return lines.length;
 } catch (error) {
-  console.error(`Error reading file: ${filePath}`, error);
-  return 0; // Return 0 lines in case of an error
+  logBasedOnVerbosity(`Error reading file: ${filePath}`, 2);
+  process.exit(1);
 }
 }
 
@@ -294,10 +313,10 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         if (license.key) {
           repolicense = license.key;
         } else {
-          console.log('No license type found for this repository.');
+          logBasedOnVerbosity('No license type found for this repository.', 1);
         }
       } else {
-        console.log('No license information found for this repository. Continuing as Unlicensed.');
+        logBasedOnVerbosity('No license information found for this repository. Continuing as Unlicensed.', 1);
       } 
       const rootDirectory = `./cli_storage/${githubInfo.repository}`;
       const totalLines = await traverseDirectory(rootDirectory);
@@ -309,10 +328,13 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       return netscore;
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    logBasedOnVerbosity(`Error: ${error.message}`, 2);
+    process.exit(1);
   }
 }
 
 export { fetchGitHubInfo, readLines, countLinesInFile };
+
+
 
 

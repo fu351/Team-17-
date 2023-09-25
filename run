@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export LOG_FILE="./logile.log"
+export LOG_LEVEL="2"
+
 # Check the first argument to the script
 if [ "$1" == "install" ]; then
     echo "Running installation..."
@@ -18,17 +21,22 @@ if [ "$1" == "install" ]; then
     echo "Installing path"
     npm install path --save
     echo "Path installed."
+    echo "Installing winston"
+    npm install winston --save
+    echo "Winston installed."
     echo "Ready to run other commands."
 elif [ "$1" == "URL_FILE" ]; then
     rm -rf "cli_storage"/*
     echo "Clearing local package storage..."
     echo "Compiling essential scripts..."
     tsc metrics.ts
+    tsc logger.ts
     tsc npm-github-netscore.ts
     echo "Scripts compiled."
     npx ts-node run.ts $@
     if [ $? -ne 0 ]; then
-      echo "An error occurred. Must install dependencies!"
+      echo "An error occurred. Enable or check logfile for debugging"
+    exit 0
     fi
 elif [ "$1" == "test" ]; then
     npx ts-node run.ts $@

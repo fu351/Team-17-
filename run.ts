@@ -5,10 +5,6 @@ import * as fs from 'fs';
 
 const token = "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"; //personal token needed to avoid API limits
 
-//STILL NEEDED, IF LOOP THAT TAKES IN THE DECODED URL FROM URL_FILE.txt AND PARSES WHETHER IT"S AN NPM URL OR GITHUB URL. ->
-//->THEN CALL THE PROPER FUCNTIONS/FILE
-//ALL THAT IS READY RIGHT NOW IS THE NPM->GITHHUB->NETSCORE (DONE BY CHRIS)
-
 const ndjsonEntries: string[] = [];
 
 function logFileContents() {
@@ -39,15 +35,17 @@ yargs.command({
             ndjsonEntries.push(ndjsonEntry);
           } else {
             if (Error instanceof Error) {
-              console.error('Error:', Error.message);
+              //console.error('Error:', Error.message);
+              process.exit(1);
             } else {
-              console.error('Error:', Error);
+              //console.error('Error:', Error);
+              process.exit(1);
             }
           }
         }
       }
     } catch (error) {
-      console.error('Error:', error);
+      process.exit(1);
     }
     if (ndjsonEntries.length > 0) {
       logFileContents();
@@ -62,4 +60,3 @@ yargs.command({
   },
 })
 .help().argv;
-
