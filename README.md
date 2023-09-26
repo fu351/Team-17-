@@ -30,7 +30,6 @@ Run `./run test` command
 ## Implementation Details
 - Written in TypeScript
 - Metrics calculated using data from GitHub API and local Git repository analysis
-- Test suite contains 20 test cases covering 80% line coverage
 - Uses `npm` for command line argument parsing
 
 ## Things to note
