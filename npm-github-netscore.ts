@@ -303,6 +303,10 @@ try {
 
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
+    if (npmPackageUrl == "") {
+      logBasedOnVerbosity("Empty line encountered", 1);
+      return 0;
+    }
     const githubInfo = await extractGitHubInfo(npmPackageUrl);
     if (githubInfo) {
       // Modify the headers to include the personal access token
