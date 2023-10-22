@@ -23,7 +23,7 @@ function logBasedOnVerbosity(message: string, verbosity: number) {
   }
 }
 
-async function readLines(filePath: string): Promise<string[]> {
+export async function readLines(filePath: string): Promise<string[]> {
   const fileContents = fs.readFileSync(filePath, 'utf-8');
   const decodedURLs: string[] = [];
 
@@ -35,7 +35,7 @@ async function readLines(filePath: string): Promise<string[]> {
   return decodedURLs;
 }
 
-async function countLinesInFile(filePath: string): Promise<number> {
+export async function countLinesInFile(filePath: string): Promise<number> {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
@@ -161,6 +161,47 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
   }
 }
 
+async function getPinnedDependencies(username, repository) {
+  try {
+    const apiUrl = `https://api.github.com/repos/${username}/${repository}/contents/package.json`;
+    const response = await axios.get(apiUrl, {
+      headers: {
+        Accept: 'application/vnd.github.v3.raw'
+      }
+    });
+
+    const packageJson = response.data;
+    const dependencies = packageJson.dependencies || {};
+
+    let pinned_dependencies = 0;
+    const total_dependencies = Object.keys(dependencies).length;
+
+    for (const [dependency, version] of Object.entries(dependencies)) {
+
+      let major: string;
+      let minor: string;
+
+      const dot = (version as string).indexOf('.');
+      if (dot <= 0 || dot > 2) {
+        major = "x";
+        minor = "x";
+      } else {
+        major = (version as string)[dot - 1];
+        minor = (version as string)[dot + 1];
+      }
+
+      // Check if the version is a valid pinned version
+      if (!isNaN(parseInt(major, 10)) && !isNaN(parseInt(minor, 10)) && !(version as string).startsWith('^')) {
+        pinned_dependencies++;
+      }
+    }
+
+    return { pinned_dependencies, total_dependencies };
+  } catch (error) {
+    console.error(`Error counting pinned dependencies: ${error.message}`);
+    throw error;
+  }
+}
 
 async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
   try {
@@ -301,7 +342,7 @@ try {
 }
 
 
-async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
+export async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
     const githubInfo = await extractGitHubInfo(npmPackageUrl);
     if (githubInfo) {
@@ -335,9 +376,12 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       const rootDirectory = `./cli_storage/${githubInfo.repository}`;
       const totalLines = await traverseDirectory(rootDirectory);
       const total_lines = totalLines[1] - totalLines[0];
+      const { pinned_dependencies, total_dependencies } = await getPinnedDependencies(githubInfo.username, githubInfo.repository);
+      const reviewed_lines = 1;      //
 
       //calculate netscore and all metrics
-      const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
+      const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, 
+        days_since_last_commit, npmPackageUrl, pinned_dependencies, total_dependencies, reviewed_lines);
       return scores;
     }
   } catch (error) {
@@ -345,9 +389,3 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
     process.exit(1);
   }
 }
-
-export { fetchGitHubInfo, readLines, countLinesInFile };
-
-
-
-
