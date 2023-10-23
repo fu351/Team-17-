@@ -94,7 +94,9 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
     //console.log(`${data},${response}`);
     //console.log(`${getUsername}, ${repositoryName}`);
     if (!data || !data.data || !data.data.repository) {
-      throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
+      //throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
+      logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
+      return 0;
     }
 
     const refs = data.data.repository.refs.nodes;
@@ -119,7 +121,9 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
     return commitCountsArray;
   } catch (error) {
     //console.error('Error fetching commits per contributor:', error);
-    throw error;
+    //throw error;
+    logBasedOnVerbosity("No commits per contributor obtained", 1);
+    return 0;
   }
 }
 
