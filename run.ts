@@ -34,7 +34,6 @@ yargs.command({
           } else {
             if (Error instanceof Error) {
               console.error('Error:', Error.message);
-              process.exit(1);
             }
           }
         }
@@ -50,6 +49,7 @@ yargs.command({
   describe: 'Run pre-made test cases',
   handler: () => {
   //console.log('Running test cases...\nGithub Packages loading...\nNPM Packages loading...\nFinished!');
+  //Base test case for formatting test case output
   const num_passed = 0;
   const total_tests = 0;
   const coverage_pct = 0;

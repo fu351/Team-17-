@@ -137,7 +137,7 @@ async function getLatestCommit(getUsername: string, repositoryName: string) {
     return latestCommit;
   } catch (error) {
     logBasedOnVerbosity(`Error fetching latest commit: ${error}`, 2);
-    process.exit(1);
+    return 0;
   }
 }
 
@@ -161,7 +161,7 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
     return days;  // Return the number of days
   } catch (error) {
     logBasedOnVerbosity(`Error calculating time since last commit: ${error}`, 2);
-    process.exit(1);
+    return 0; // Return 0 days if there are no commits
   }
 }
 
@@ -179,7 +179,7 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
 
     if (!npmUrlMatch || npmUrlMatch.length < 3) {
       logBasedOnVerbosity('Invalid npm package URL', 2);
-      process.exit(1);
+      return null;
     }
 
     // Extract the package name
@@ -209,7 +209,7 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
         return { username, repository };
       } else {
         logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
-        process.exit(1);
+        return null;
       }
     }
   } else {
@@ -229,7 +229,7 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
         return { username, repository };
       } else {
         logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
-        process.exit(1);
+        return null
       }
     }
   }
@@ -347,6 +347,9 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       //calculate netscore and all metrics
       const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl);
       return scores;
+    }
+    else{
+      const score = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, npmPackageUrl);
     }
   } catch (error) {
     logBasedOnVerbosity(`Error: ${error.message}`, 2);

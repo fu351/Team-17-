@@ -51,7 +51,7 @@ export async function calculate_ramp_up_time(lines_of_readme: number) {
     }
 }   
 //Metric 4 calculates the license score and how freely we can use the code
-export async function calculate_license(license_type:string) {
+export async function calculate_license(license_type:string | null) {
     if(license_type == null) {
         license_type = 'unlicense';
     }
