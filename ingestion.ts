@@ -2,26 +2,38 @@ import * as fs from 'fs';
 import * as childProcess from 'child_process';
 import axios from 'axios';
 
-export async function pkg_upload(score: number, pkg_path: string){
-    //check if file directory exist
-    if (fs.existsSync(pkg_path)){
-        //check if package score is elgible for ingest to upload
-        if(score>=0.5){
-            //publish the ingestible package
-            const command = `npm publish ${pkg_path}`; 
-            //execut the bash command
-            childProcess.exec(command, (error, stdout, stderr) => {
-                if (error) { 
-                    console.error(`Error: ${error.message}`);
-                } else {
-                    console.log(`Package uploaded successfully!`);
-                    console.log(`stdout: ${stdout}`);
-                }
-            });
-        }else{
-            console.error('Package metrics do not meet the required criteria.');
-        }
+
+export async function pkg_download(score: number, pkg_name: string, registry_url: string){
+    //check if package score is elgible for ingest to upload
+    if(score>=0.5){
+        //install the public package
+        const command = `npm install -g ${pkg_name}`; 
+        //execut the install command
+        childProcess.exec(command, (error, stdout, stderr) => {
+            if (error) { 
+                console.error(`Error: ${error.message}`);
+
+            } else {
+                console.log(`Package downloaded successfully!`);
+                console.log(`stdout: ${stdout}`);
+                //configure private registry for upload
+                fs.writeFileSync('.npmrc', `registry=${registry_url}`);
+                //publish the qualified package to registry
+                childProcess.exec('npm publish', (error, stderr) => {
+                    if (error) {
+                      console.error(`Error: ${error.message}`);
+                      return;
+                    }else{
+                        console.log(`Package published successfully!`);
+                    }
+                  });
+            }
+        });
     }else{
-        console.error(`Package directory ${pkg_path} does not exist.`);
+        console.error('Package metrics do not meet the required criteria.');
     }
+}
+
+export async function registry_cleanup(){
+    fs.unlinkSync('.npmrc');
 }
