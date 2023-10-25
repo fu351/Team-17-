@@ -34,6 +34,11 @@ export async function pkg_download(score: number, pkg_name: string, registry_url
     }
 }
 
-export async function registry_cleanup(){
+export async function reset_state(){
+    //clear the private registry
     fs.unlinkSync('.npmrc');
+    //reset to default public registry
+    const defaultRegistryUrl = 'https://registry.npmjs.org/';
+    fs.writeFileSync('.npmrc', `registry=${defaultRegistryUrl}`);
+
 }
