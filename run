@@ -25,6 +25,7 @@ if [ "$1" == "install" ]; then
     npm install winston --save
     #echo "Winston installed."
     #echo "Ready to run other commands."
+    npm install @octokit/graphql --save
     exit 0
 elif [ -f "$1" ]; then
     rm -rf "cli_storage"/*

@@ -151,17 +151,25 @@ export async function calculate_responsiveness(days_since_last_commit: number) {
         return 0;
     }
 }
-
+export async function calculate_dependencies(assigned_dependencies: number, unassigned_dependencies: number) {
+    //If there are no unassigned dependencies, then the score is 1, this covers the case of if there are no dependencies too
+    if (unassigned_dependencies == 0) {
+        return 1;
+    }
+    const total_dependencies = assigned_dependencies + unassigned_dependencies;
+    return (assigned_dependencies / total_dependencies);
+}
 //Net_Score
-export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, npmPackageUrl: string) {
+export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, assigned_dependencies:number, unassigned_dependencies:number, reviewed_code:number, npmPackageUrl: string) {
     
     const bus_factor = await calculate_bus_factor(contributor_commits);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
     const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);
     const license = await calculate_license(license_type);
     const responsiveness = await calculate_responsiveness(days_since_last_commit);
-
-    const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
+    const dependencies = await calculate_dependencies(assigned_dependencies, unassigned_dependencies);
+    const reviewed_fraction = reviewed_code / lines_of_code;
+    const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_fraction;
 
     //return each const metric score and net score
     const  NET_SCORE: number = (Math.floor(net_score / 5 * 10000) / 10000); 
@@ -170,16 +178,19 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const  BUS_FACTOR_SCORE: number = Math.floor(bus_factor * 10000) / 10000;
     const  RESPONSIVE_MAINTAINER_SCORE: number = Math.floor(responsiveness * 10000) / 10000;
     const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
-    const output = [{
+    const DEPENDENCY_SCORE: number = Math.floor(dependencies * 10000) / 10000;
+    const REVIEWED_CODE_SCORE: number = Math.floor(reviewed_fraction * 10000) / 10000;
+    const output = JSON.stringify({
         URL: npmPackageUrl,
-        NET_SCORE: Math.floor(net_score / 5 * 10000) / 10000,
-        RAMP_UP_SCORE: Math.floor(ramp_up_time * 10000) / 10000,
-        CORRECTNESS_SCORE: Math.floor(correctness * 10000) / 10000,
-        BUS_FACTOR_SCORE: Math.floor(bus_factor * 10000) / 10000,
-        RESPONSIVE_MAINTAINER_SCORE: Math.floor(responsiveness * 10000) / 10000,
-        LICENSE_SCORE: Math.floor(license * 10000) / 10000
-    }
-    ]
+        NET_SCORE: NET_SCORE,
+        RAMP_UP_SCORE: RAMP_UP_SCORE,
+        CORRECTNESS_SCORE: CORRECTNESS_SCORE,
+        BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
+        RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
+        LICENSE_SCORE: LICENSE_SCORE,
+        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
+        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
+      });
     console.log(JSON.stringify({
         URL: npmPackageUrl,
         NET_SCORE: NET_SCORE,
@@ -187,11 +198,13 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
         CORRECTNESS_SCORE: CORRECTNESS_SCORE,
         BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
         RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
-        LICENSE_SCORE: LICENSE_SCORE
+        LICENSE_SCORE: LICENSE_SCORE,
+        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
+        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
       }));
     //console.log(`${printign}`);
     //process.stdout.write(printign);
-    return 1;
+    return output;
     /*const ndjsonEntry = {
         URL: npmPackageUrl,
         NetScore: Math.floor(net_score * 10) / 10,
