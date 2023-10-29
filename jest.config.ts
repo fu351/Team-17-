@@ -192,6 +192,13 @@ const config: Config = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
+    reporters: [
+        'default',
+        [ 'jest-junit', {
+            outputDirectory: './test',
+            outputName: 'report',
+        } ]
+    ]  
 }
 
 export default config
