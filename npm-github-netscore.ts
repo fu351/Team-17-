@@ -10,20 +10,22 @@ import { log } from 'console';
 const perPage = 100; // Number of contributors per page, GitHub API maximum is 100
 const perPage1 = 1; // We only need the latest commit
 
-function logBasedOnVerbosity(message: string, verbosity: number) {
+export function logBasedOnVerbosity(message: string, verbosity: number) {
   const logLevel = process.env.LOG_LEVEL ? parseInt(process.env.LOG_LEVEL) : 0;
-
+  console.log(logLevel)
   if (verbosity == logLevel) {
     if(verbosity == 2) {
+      console.log("debug")
       debugLogger.debug(message);
     }
     else {
+      console.log("info")
       infoLogger.info(message);
     }
   }
 }
 
-async function readLines(filePath: string): Promise<string[]> {
+export async function readLines(filePath: string): Promise<string[]> {
   const fileContents = fs.readFileSync(filePath, 'utf-8');
   const decodedURLs: string[] = [];
 
@@ -35,7 +37,7 @@ async function readLines(filePath: string): Promise<string[]> {
   return decodedURLs;
 }
 
-async function countLinesInFile(filePath: string): Promise<number> {
+export async function countLinesInFile(filePath: string): Promise<number> {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
@@ -48,7 +50,8 @@ async function countLinesInFile(filePath: string): Promise<number> {
     });
   });
 }
-async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
+
+export async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
   try {
     const query = `
     query($owner: String!, $name: String!) {
@@ -123,7 +126,7 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
   }
 }
 
-async function getLatestCommit(getUsername: string, repositoryName: string) {
+export async function getLatestCommit(getUsername: string, repositoryName: string) {
   try {
     const commitsUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits?per_page=${perPage1}`;
 
@@ -137,7 +140,7 @@ async function getLatestCommit(getUsername: string, repositoryName: string) {
   }
 }
 
-async function getTimeSinceLastCommit(getUsername: string, repositoryName: string, axiosConfig:any): Promise<number | null> {
+export async function getTimeSinceLastCommit(getUsername: string, repositoryName: string, axiosConfig:any): Promise<number | null> {
   try {
     const latestCommit = await getLatestCommit(getUsername, repositoryName);
 
@@ -161,8 +164,7 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
   }
 }
 
-
-async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
+export async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
   try {
   const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
 
@@ -235,7 +237,7 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
   }
 }
 
-async function cloneREPO(username: string, repository: string) {
+export async function cloneREPO(username: string, repository: string) {
   try {
     const repoUrl = `https://github.com/${username}/${repository}.git`;
     const destinationPath = `cli_storage/${repository}`;
@@ -249,7 +251,7 @@ async function cloneREPO(username: string, repository: string) {
   }
 }
 
-function addLists(list1: number[], list2: number[]): number[] {
+export function addLists(list1: number[], list2: number[]): number[] {
   // Check if both lists have the same length
   if (list1.length !== list2.length) {
     throw new Error("Lists must have the same length for element-wise addition.");
@@ -261,7 +263,7 @@ function addLists(list1: number[], list2: number[]): number[] {
   return resultList;
 }
 
-async function traverseDirectory(dir: string) {
+export async function traverseDirectory(dir: string) {
 const files = fs.readdirSync(dir); // Get all files and directories in the current directory
 let count: number[] = [0, 0];
 
@@ -289,7 +291,7 @@ for (const file of files) {
 return count;
 }
 
-function countLines(filePath: string): number {
+export function countLines(filePath: string): number {
 try {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const lines = fileContent.split('\n');
@@ -300,8 +302,7 @@ try {
 }
 }
 
-
-async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
+export async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
     const githubInfo = await extractGitHubInfo(npmPackageUrl);
     if (githubInfo) {
@@ -345,9 +346,3 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
     process.exit(1);
   }
 }
-
-export { fetchGitHubInfo, readLines, countLinesInFile };
-
-
-
-
