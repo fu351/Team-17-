@@ -2,5 +2,5 @@ function add(x, y) {
   return x + y;
 }
 
-a = 1
+a = 1;
 c = add(1,2);
