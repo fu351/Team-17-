@@ -6,9 +6,9 @@ const app = express();
 const port = 3000;
 
 AWS.config.update({
-  accessKeyId: 'AKIASRQLZFHMZPFTWPWI',
-  secretAccessKey: 'nJN/oqi3YO2cP03BvWxrwVR0uoVP6/oQ/W30DtHc',
-  region: 'us-east-2', // Replace with your desired AWS region
+  accessKeyId: '',
+  secretAccessKey: '',
+  region: '', // Replace with your desired AWS region
 });
 
 const docClient = new AWS.DynamoDB.DocumentClient();
