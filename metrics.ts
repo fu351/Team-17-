@@ -2,12 +2,15 @@ import * as fs from 'fs';
 
 //Metric 1
 export async function calculate_bus_factor(contributor_commits: number[]) {
+    if (!contributor_commits) {
+        return 0;
+    }
     var key_contributor = 0;
     var total_contributors = contributor_commits.length;
     //find midrange of commits
     var max = 0;
     var min = 0;
-    for (var i = 0; i < contributor_commits.length; i++) {
+    for (var i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] > max) {
             max = contributor_commits[i];
         }
@@ -17,7 +20,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
     }
     const midrange = (max + min) / 2;
     //find key contributor
-    for (var i = 0; i < contributor_commits.length; i++) {
+    for (var i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] >= midrange) {
             key_contributor++;
         }
@@ -168,8 +171,7 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const license = await calculate_license(license_type);
     const responsiveness = await calculate_responsiveness(days_since_last_commit);
     const dependencies = await calculate_dependencies(assigned_dependencies, unassigned_dependencies);
-    const reviewed_fraction = reviewed_code / lines_of_code;
-    const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_fraction;
+    const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_code;
 
     //return each const metric score and net score
     const  NET_SCORE: number = (Math.floor(net_score / 5 * 10000) / 10000); 
@@ -179,7 +181,7 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const  RESPONSIVE_MAINTAINER_SCORE: number = Math.floor(responsiveness * 10000) / 10000;
     const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
     const DEPENDENCY_SCORE: number = Math.floor(dependencies * 10000) / 10000;
-    const REVIEWED_CODE_SCORE: number = Math.floor(reviewed_fraction * 10000) / 10000;
+    const REVIEWED_CODE_SCORE: number = Math.floor(reviewed_code * 10000) / 10000;
     const output = JSON.stringify({
         URL: npmPackageUrl,
         NET_SCORE: NET_SCORE,

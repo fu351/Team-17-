@@ -1,13 +1,12 @@
-export async function getPopularity(response: any) {
+export async function getPopularity(response: any, dependents_count: number) {
     //Use API request to get the download and stars count
     //Use API request to get the number of forks
     //Get the stars count
-    const data = response.data;
-    const stars_count = data.stargazers_count;
-    const forks_count = data.forks_count;
+    const stars_count = response.data.stargazers_count;
+    const forks_count = response.data.forks_count;
     let download_count = 0;
-    if (data.releases) {
-        for (const release of data.releases) {
+    if (response.data.releases) {
+        for (const release of response.data.releases) {
           if (release.assets) {
             for (const asset of release.assets) {
               download_count += asset.download_count;
@@ -15,7 +14,6 @@ export async function getPopularity(response: any) {
           }
         }
       }
-    const dependents_count = data.dependents_count;
     let download_score = 0;
     let stars_score = 0;
     let forks_score = 0;

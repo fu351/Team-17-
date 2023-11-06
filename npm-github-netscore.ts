@@ -46,7 +46,7 @@ async function countLinesInFile(filePath: string): Promise<number> {
     });
   });
 }
-async function getCommitInformation(getUsername: string, repositoryName: string, personalAccessToken: string) {
+async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
   try {
     const query = `
     query($owner: String!, $name: String!) {
@@ -65,17 +65,6 @@ async function getCommitInformation(getUsername: string, repositoryName: string,
                       }
                     }
                   }
-                }
-              }
-            }
-          }
-        }
-        defaultBranchRef {
-          target {
-            ... on Commit {
-              history(first: 1000) {
-                nodes {
-                  comittedDate
                 }
               }
             }
@@ -126,9 +115,8 @@ async function getCommitInformation(getUsername: string, repositoryName: string,
     }
 
     const commitCountsArray = Object.values(commitsPerContributor);
-    const latestCommitDate = new Date(data.data.repository.defaultBranchRef.target.history.nodes[0].committedDate);
 
-    return [commitCountsArray, latestCommitDate];
+    return commitCountsArray;
   } catch (error) {
     //console.error('Error fetching commits per contributor:', error);
     //throw error;
@@ -137,9 +125,9 @@ async function getCommitInformation(getUsername: string, repositoryName: string,
   }
 }
 
-/*async function getLatestCommit(getUsername: string, repositoryName: string) {
+async function getLatestCommit(getUsername: string, repositoryName: string) {
   try {
-    const commitsUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits?per_page=${perPage1}`;
+    const commitsUrl = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits?per_page=1`;
 
     const latestCommitResponse = await axios.get(commitsUrl);
     const latestCommit = latestCommitResponse.data[0];
@@ -150,9 +138,10 @@ async function getCommitInformation(getUsername: string, repositoryName: string,
     return 0;
   }
 }
-*/
-async function getTimeSinceLastCommit(getUsername: string, repositoryName: string, axiosConfig:any, latestCommit: any): Promise<number | null> {
+
+async function getTimeSinceLastCommit(getUsername: string, repositoryName: string, axiosConfig:any): Promise<number | null> {
   try {
+    const latestCommit = await getLatestCommit(getUsername, repositoryName);
 
     if (!latestCommit) {
       logBasedOnVerbosity('No commits found in the repository', 1);
@@ -309,13 +298,19 @@ try {
   process.exit(1);
 }
 }
-async function getDependencyData(getUsername: string, repositoryName: string,  axiosConfig: any) {
+async function getDependencyData(getUsername: string, repositoryName: string, personalAccessToken: string) {
   //Gets the number of dependencies that are assigned and unassigned with a version number
   //The dependency data is in a sbom file in JSON format
-  const url = `https://api.github.com/repo/${getUsername}/${repositoryName}/dependency-graph/sbom`
+  const axiosConfig = {
+    headers: {
+      'Accept': 'application/vnd.github.hawkgirl-preview+json',
+      'Authorization': `token ${personalAccessToken}`
+    }
+  };
+  const url = `https://api.github.com/repos/${getUsername}/${repositoryName}/dependency-graph/sbom`;
   const response = await axios.get(url, axiosConfig);
   const data = response.data;
-  const dependency_versions = data.sbom.packagesmap((pkg) => pkg.versionInfo);
+  const dependency_versions = data.sbom.packages.map((pkg) => pkg.versionInfo);
   let assigned_dependencies = 0;
   let unassigned_dependencies = 0;
   for (const version of dependency_versions) {
@@ -331,54 +326,24 @@ async function getDependencyData(getUsername: string, repositoryName: string,  a
 
 }
 
-async function getPullRequestsAndCommits(getUsername: string, repositoryName: string,  token: any): Promise<any> {
-  const query = `
-    query($owner: String!, $repo: String!) {
-      repository(owner: $owner, name: $repo) {
-        pullRequests(first: 1000, states: [MERGED]) {
-          nodes {
-            commits(last: 1000) {
-              nodes {
-                commit {
-                  additions
-                  deletions
-                  changedFiles
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-  const variables = {
-    owner: getUsername,
-    repo: repositoryName,
-  };
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-  const response = await fetch('https://api.github.com/graphql', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ query, variables }),
-  });
-  const data = await response.json();
-  return data.data.repository.pullRequests.nodes;
+async function getReviewedLines(getUsername: string, repositoryName: string, token: any): Promise<any> {
+  //find the total number of commits in the repo and the total number of closed pull requests in the repo
+  const url = `https://api.github.com/repos/${getUsername}/${repositoryName}/pulls?state=closed`;
+  const response = await axios.get(url, token);
+  const data = response.data;
+  //find the total number of commits in the repo as an number
+  const url2 = `https://api.github.com/repos/${getUsername}/${repositoryName}/commits`;
+  const response2 = await axios.get(url2, token);
+  const data2 = response2.data;
+  const commits = data2.length;
+  const pull_requests = data.length;
+  //console.log(`Commits: ${commits}, Pull Requests: ${pull_requests}`);
+  if (pull_requests / commits >= 1)
+    return 1;
+  else
+    return pull_requests / commits;
 }
-async function getReviewedLines(owner: string, repo: string, token: string): Promise<number> {
-  const pullRequests = await getPullRequestsAndCommits(owner, repo, token);
-  let reviewedLines = 0;
-  for (const pr of pullRequests) {
-    for (const commit of pr.commits.nodes) {
-      if (commit.commit.additions > 0 && commit.commit.deletions > 0 && commit.commit.changedFiles > 0) {
-        reviewedLines += commit.commit.additions + commit.commit.deletions;
-      }
-    }
-  }
-  return reviewedLines;
-}
+
 async function getRepoLicense(response: any): Promise<string> {
   let repolicense = 'unlicense';
   if (response) {
@@ -399,43 +364,49 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       logBasedOnVerbosity("Empty line encountered", 1);
       return 0;
     }
-    const githubInfo = await extractGitHubInfo(npmPackageUrl);
-    if (githubInfo) {
-      // Modify the headers to include the personal access token
-      const headers = {
-        Authorization: `Bearer ${personalAccessToken}`,
-      };
+    else {
+      const githubInfo = await extractGitHubInfo(npmPackageUrl);
+      if (githubInfo) {
+        console.log(githubInfo);
+        // Modify the headers to include the personal access token
+        const headers = {
+          Authorization: `Bearer ${personalAccessToken}`,
+        };
 
-      // Use axios with the modified headers
-      const axiosConfig = {
-        headers,
-      };
-      const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}`;
-      const response = await axios.get(url, axiosConfig);
-      //gather info
-      await cloneREPO(githubInfo.username, githubInfo.repository);
-      
-      const issue_count: number =  response.data.open_issues_count;
-      const [contributor_commits, latestCommit] = await getCommitInformation(githubInfo.username, githubInfo.repository, personalAccessToken) as [number[], Date];
-      const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig, latestCommit) as number;
-      const repoLicense = await getRepoLicense(response.data.license);
-      const reviewed_lines_of_code = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
-      const rootDirectory = `./cli_storage/${githubInfo.repository}`;
-      const totalLines = await traverseDirectory(rootDirectory);
-      const total_lines = totalLines[1] - totalLines[0];
-      const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, axiosConfig) as [number,number];
-      //calculate netscore and all metrics
-      const popularity = await getPopularity(response);
-      const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, reviewed_lines_of_code, npmPackageUrl);
-      return scores;
-    }
-    else{
-      const scores = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl);
-      return scores;
+        // Use axios with the modified headers
+        const axiosConfig = {
+          headers,
+        };
+        const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}`;
+        const response = await axios.get(url, axiosConfig);
+        //gather info
+        await cloneREPO(githubInfo.username, githubInfo.repository);
+        
+        const issue_count: number =  response.data.open_issues_count;
+        const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
+        console.log(contributor_commits);
+        const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig) as number;
+        const repoLicense = await getRepoLicense(response.data.license);
+        const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
+        const rootDirectory = `./cli_storage/${githubInfo.repository}`;
+        const totalLines = await traverseDirectory(rootDirectory);
+        const total_lines = totalLines[1] - totalLines[0];
+        const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
+        //calculate netscore and all metrics
+        const total_dependencies = assigned_dependencies + unassigned_dependencies;
+        const popularity = await getPopularity(response, total_dependencies);
+        console.log(`Popularity: ${popularity}`);
+        const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);
+        return scores;
+      }
+      else{
+        const scores = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl);
+        return scores;
+      }
     }
   } catch (error) {
-    logBasedOnVerbosity(`Error: ${error.message}`, 2);
-    process.exit(1);
+    logBasedOnVerbosity(`Error: ${error.stack}`, 2);
+    //process.exit(1);
   }
 }
 
