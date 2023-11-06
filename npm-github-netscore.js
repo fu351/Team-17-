@@ -44,8 +44,7 @@ var fs = require("fs");
 var path = require("path");
 var metrics_1 = require("./metrics");
 var logger_1 = require("./logger");
-var perPage = 100; // Number of contributors per page, GitHub API maximum is 100
-var perPage1 = 1; // We only need the latest commit
+var popularity_tracker_1 = require("./popularity_tracker");
 function logBasedOnVerbosity(message, verbosity) {
     var logLevel = process.env.LOG_LEVEL ? parseInt(process.env.LOG_LEVEL) : 0;
     if (verbosity == logLevel) {
@@ -100,7 +99,7 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
             switch (_f.label) {
                 case 0:
                     _f.trys.push([0, 3, , 4]);
-                    query = "\n    query($owner: String!, $name: String!) {\n      repository(owner: $owner, name: $name) {\n        refs(first: 100, refPrefix: \"refs/\") {\n          nodes {\n            name\n            target {\n              ... on Commit {\n                history {\n                  totalCount\n                  nodes {\n                    author {\n                      user {\n                        login\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n    ";
+                    query = "\n    query($owner: String!, $name: String!) {\n      repository(owner: $owner, name: $name) {\n        refs(first: 1000, refPrefix: \"refs/\") {\n          nodes {\n            name\n            target {\n              ... on Commit {\n                history {\n                  totalCount\n                  nodes {\n                    author {\n                      user {\n                        login\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n    ";
                     variables = {
                         owner: getUsername,
                         name: repositoryName
@@ -121,7 +120,9 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
                     //console.log(`${data},${response}`);
                     //console.log(`${getUsername}, ${repositoryName}`);
                     if (!data || !data.data || !data.data.repository) {
-                        throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
+                        //throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
+                        logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
+                        return [2 /*return*/, 0];
                     }
                     refs = data.data.repository.refs.nodes;
                     commitsPerContributor = {};
@@ -144,7 +145,9 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
                 case 3:
                     error_1 = _f.sent();
                     //console.error('Error fetching commits per contributor:', error);
-                    throw error_1;
+                    //throw error;
+                    logBasedOnVerbosity("No commits per contributor obtained", 1);
+                    return [2 /*return*/, 0];
                 case 4: return [2 /*return*/];
             }
         });
@@ -157,7 +160,7 @@ function getLatestCommit(getUsername, repositoryName) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    commitsUrl = "https://api.github.com/repos/".concat(getUsername, "/").concat(repositoryName, "/commits?per_page=").concat(perPage1);
+                    commitsUrl = "https://api.github.com/repos/".concat(getUsername, "/").concat(repositoryName, "/commits?per_page=1");
                     return [4 /*yield*/, axios.get(commitsUrl)];
                 case 1:
                     latestCommitResponse = _a.sent();
@@ -166,8 +169,7 @@ function getLatestCommit(getUsername, repositoryName) {
                 case 2:
                     error_2 = _a.sent();
                     logBasedOnVerbosity("Error fetching latest commit: ".concat(error_2), 2);
-                    process.exit(1);
-                    return [3 /*break*/, 3];
+                    return [2 /*return*/, 0];
                 case 3: return [2 /*return*/];
             }
         });
@@ -196,8 +198,7 @@ function getTimeSinceLastCommit(getUsername, repositoryName, axiosConfig) {
                 case 2:
                     error_3 = _b.sent();
                     logBasedOnVerbosity("Error calculating time since last commit: ".concat(error_3), 2);
-                    process.exit(1);
-                    return [3 /*break*/, 3];
+                    return [2 /*return*/, 0]; // Return 0 days if there are no commits
                 case 3: return [2 /*return*/];
             }
         });
@@ -217,7 +218,7 @@ function extractGitHubInfo(npmPackageUrl) {
                     npmUrlMatch = npmPackageUrl.match(npmUrlPattern);
                     if (!npmUrlMatch || npmUrlMatch.length < 3) {
                         logBasedOnVerbosity('Invalid npm package URL', 2);
-                        process.exit(1);
+                        return [2 /*return*/, null];
                     }
                     packageName = npmUrlMatch[2];
                     apiUrl = "https://registry.npmjs.org/".concat(packageName);
@@ -243,7 +244,7 @@ function extractGitHubInfo(npmPackageUrl) {
                         }
                         else {
                             logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
-                            process.exit(1);
+                            return [2 /*return*/, null];
                         }
                     }
                     return [3 /*break*/, 3];
@@ -263,7 +264,7 @@ function extractGitHubInfo(npmPackageUrl) {
                         }
                         else {
                             logBasedOnVerbosity('Unable to extract GitHub username and repository name from the repository URL.', 2);
-                            process.exit(1);
+                            return [2 /*return*/, null];
                         }
                     }
                     _c.label = 3;
@@ -366,17 +367,104 @@ function countLines(filePath) {
         process.exit(1);
     }
 }
-function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
+function getDependencyData(getUsername, repositoryName, personalAccessToken) {
     return __awaiter(this, void 0, void 0, function () {
-        var githubInfo, headers, axiosConfig, url, response, days_since_last_commit, issue_count, contributor_commits, repolicense, license, rootDirectory, totalLines, total_lines, scores, error_6;
+        var axiosConfig, url, response, data, dependency_versions, assigned_dependencies, unassigned_dependencies, _i, dependency_versions_1, version;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 9, , 10]);
-                    return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
+                    axiosConfig = {
+                        headers: {
+                            'Accept': 'application/vnd.github.hawkgirl-preview+json',
+                            'Authorization': "token ".concat(personalAccessToken)
+                        }
+                    };
+                    url = "https://api.github.com/repos/".concat(getUsername, "/").concat(repositoryName, "/dependency-graph/sbom");
+                    return [4 /*yield*/, axios.get(url, axiosConfig)];
                 case 1:
-                    githubInfo = _a.sent();
-                    if (!githubInfo) return [3 /*break*/, 8];
+                    response = _a.sent();
+                    data = response.data;
+                    dependency_versions = data.sbom.packages.map(function (pkg) { return pkg.versionInfo; });
+                    assigned_dependencies = 0;
+                    unassigned_dependencies = 0;
+                    for (_i = 0, dependency_versions_1 = dependency_versions; _i < dependency_versions_1.length; _i++) {
+                        version = dependency_versions_1[_i];
+                        if (version) {
+                            assigned_dependencies++;
+                        }
+                        else {
+                            unassigned_dependencies++;
+                        }
+                    }
+                    return [2 /*return*/, [assigned_dependencies, unassigned_dependencies]];
+            }
+        });
+    });
+}
+function getReviewedLines(getUsername, repositoryName, token) {
+    return __awaiter(this, void 0, void 0, function () {
+        var url, response, data, url2, response2, data2, commits, pull_requests;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    url = "https://api.github.com/repos/".concat(getUsername, "/").concat(repositoryName, "/pulls?state=closed");
+                    return [4 /*yield*/, axios.get(url, token)];
+                case 1:
+                    response = _a.sent();
+                    data = response.data;
+                    url2 = "https://api.github.com/repos/".concat(getUsername, "/").concat(repositoryName, "/commits");
+                    return [4 /*yield*/, axios.get(url2, token)];
+                case 2:
+                    response2 = _a.sent();
+                    data2 = response2.data;
+                    commits = data2.length;
+                    pull_requests = data.length;
+                    //console.log(`Commits: ${commits}, Pull Requests: ${pull_requests}`);
+                    if (pull_requests / commits >= 1)
+                        return [2 /*return*/, 1];
+                    else
+                        return [2 /*return*/, pull_requests / commits];
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function getRepoLicense(response) {
+    return __awaiter(this, void 0, void 0, function () {
+        var repolicense, license;
+        return __generator(this, function (_a) {
+            repolicense = 'unlicense';
+            if (response) {
+                license = response;
+                if (license.key) {
+                    repolicense = license.key;
+                }
+                else {
+                    logBasedOnVerbosity('No license type found for this repository.', 1);
+                }
+            }
+            else {
+                logBasedOnVerbosity('No license information found for this repository. Continuing as Unlicensed.', 1);
+            }
+            return [2 /*return*/, repolicense];
+        });
+    });
+}
+function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
+    return __awaiter(this, void 0, void 0, function () {
+        var githubInfo, headers, axiosConfig, url, response, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, rootDirectory, totalLines, total_lines, _a, assigned_dependencies, unassigned_dependencies, total_dependencies, popularity, scores, scores, error_6;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _b.trys.push([0, 16, , 17]);
+                    if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
+                    logBasedOnVerbosity("Empty line encountered", 1);
+                    return [2 /*return*/, 0];
+                case 1: return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
+                case 2:
+                    githubInfo = _b.sent();
+                    if (!githubInfo) return [3 /*break*/, 13];
+                    console.log(githubInfo);
                     headers = {
                         Authorization: "Bearer ".concat(personalAccessToken)
                     };
@@ -385,49 +473,54 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     };
                     url = "https://api.github.com/repos/".concat(githubInfo.username, "/").concat(githubInfo.repository);
                     return [4 /*yield*/, axios.get(url, axiosConfig)];
-                case 2:
-                    response = _a.sent();
+                case 3:
+                    response = _b.sent();
                     //gather info
                     return [4 /*yield*/, cloneREPO(githubInfo.username, githubInfo.repository)];
-                case 3:
-                    //gather info
-                    _a.sent();
-                    return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig)];
                 case 4:
-                    days_since_last_commit = _a.sent();
+                    //gather info
+                    _b.sent();
                     issue_count = response.data.open_issues_count;
                     return [4 /*yield*/, getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 5:
-                    contributor_commits = _a.sent();
-                    repolicense = 'unlicense';
-                    if (response.data.license) {
-                        license = response.data.license;
-                        if (license.key) {
-                            repolicense = license.key;
-                        }
-                        else {
-                            logBasedOnVerbosity('No license type found for this repository.', 1);
-                        }
-                    }
-                    else {
-                        logBasedOnVerbosity('No license information found for this repository. Continuing as Unlicensed.', 1);
-                    }
+                    contributor_commits = _b.sent();
+                    console.log(contributor_commits);
+                    return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig)];
+                case 6:
+                    days_since_last_commit = _b.sent();
+                    return [4 /*yield*/, getRepoLicense(response.data.license)];
+                case 7:
+                    repoLicense = _b.sent();
+                    return [4 /*yield*/, getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken)];
+                case 8:
+                    code_review_score = _b.sent();
                     rootDirectory = "./cli_storage/".concat(githubInfo.repository);
                     return [4 /*yield*/, traverseDirectory(rootDirectory)];
-                case 6:
-                    totalLines = _a.sent();
-                    total_lines = totalLines[1] - totalLines[0];
-                    return [4 /*yield*/, (0, metrics_1.calculate_net_score)(contributor_commits, total_lines, issue_count, totalLines[0], repolicense, days_since_last_commit, npmPackageUrl)];
-                case 7:
-                    scores = _a.sent();
-                    return [2 /*return*/, scores];
-                case 8: return [3 /*break*/, 10];
                 case 9:
-                    error_6 = _a.sent();
-                    logBasedOnVerbosity("Error: ".concat(error_6.message), 2);
-                    process.exit(1);
-                    return [3 /*break*/, 10];
-                case 10: return [2 /*return*/];
+                    totalLines = _b.sent();
+                    total_lines = totalLines[1] - totalLines[0];
+                    return [4 /*yield*/, getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken)];
+                case 10:
+                    _a = _b.sent(), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
+                    total_dependencies = assigned_dependencies + unassigned_dependencies;
+                    return [4 /*yield*/, (0, popularity_tracker_1.getPopularity)(response, total_dependencies)];
+                case 11:
+                    popularity = _b.sent();
+                    console.log("Popularity: ".concat(popularity));
+                    return [4 /*yield*/, (0, metrics_1.calculate_net_score)(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl)];
+                case 12:
+                    scores = _b.sent();
+                    return [2 /*return*/, scores];
+                case 13: return [4 /*yield*/, (0, metrics_1.calculate_net_score)([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl)];
+                case 14:
+                    scores = _b.sent();
+                    return [2 /*return*/, scores];
+                case 15: return [3 /*break*/, 17];
+                case 16:
+                    error_6 = _b.sent();
+                    logBasedOnVerbosity("Error: ".concat(error_6.stack), 2);
+                    return [3 /*break*/, 17];
+                case 17: return [2 /*return*/];
             }
         });
     });

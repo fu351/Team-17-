@@ -36,17 +36,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.calculate_net_score = exports.calculate_responsiveness = exports.calculate_license = exports.calculate_ramp_up_time = exports.calculate_correctness = exports.calculate_bus_factor = void 0;
+exports.calculate_net_score = exports.calculate_dependencies = exports.calculate_responsiveness = exports.calculate_license = exports.calculate_ramp_up_time = exports.calculate_correctness = exports.calculate_bus_factor = void 0;
 //Metric 1
 function calculate_bus_factor(contributor_commits) {
     return __awaiter(this, void 0, void 0, function () {
         var key_contributor, total_contributors, max, min, i, midrange, i;
         return __generator(this, function (_a) {
+            if (!contributor_commits) {
+                return [2 /*return*/, 0];
+            }
             key_contributor = 0;
             total_contributors = contributor_commits.length;
             max = 0;
             min = 0;
-            for (i = 0; i < contributor_commits.length; i++) {
+            for (i = 0; i < total_contributors; i++) {
                 if (contributor_commits[i] > max) {
                     max = contributor_commits[i];
                 }
@@ -56,7 +59,7 @@ function calculate_bus_factor(contributor_commits) {
             }
             midrange = (max + min) / 2;
             //find key contributor
-            for (i = 0; i < contributor_commits.length; i++) {
+            for (i = 0; i < total_contributors; i++) {
                 if (contributor_commits[i] >= midrange) {
                     key_contributor++;
                 }
@@ -216,10 +219,24 @@ function calculate_responsiveness(days_since_last_commit) {
     });
 }
 exports.calculate_responsiveness = calculate_responsiveness;
-//Net_Score
-function calculate_net_score(contributor_commits, lines_of_code, num_issues, lines_of_readme, license_type, days_since_last_commit, npmPackageUrl) {
+function calculate_dependencies(assigned_dependencies, unassigned_dependencies) {
     return __awaiter(this, void 0, void 0, function () {
-        var bus_factor, correctness, ramp_up_time, license, responsiveness, net_score, NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, output;
+        var total_dependencies;
+        return __generator(this, function (_a) {
+            //If there are no unassigned dependencies, then the score is 1, this covers the case of if there are no dependencies too
+            if (unassigned_dependencies == 0) {
+                return [2 /*return*/, 1];
+            }
+            total_dependencies = assigned_dependencies + unassigned_dependencies;
+            return [2 /*return*/, (assigned_dependencies / total_dependencies)];
+        });
+    });
+}
+exports.calculate_dependencies = calculate_dependencies;
+//Net_Score
+function calculate_net_score(contributor_commits, lines_of_code, num_issues, lines_of_readme, license_type, days_since_last_commit, assigned_dependencies, unassigned_dependencies, reviewed_code, npmPackageUrl) {
+    return __awaiter(this, void 0, void 0, function () {
+        var bus_factor, correctness, ramp_up_time, license, responsiveness, dependencies, net_score, NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, DEPENDENCY_SCORE, REVIEWED_CODE_SCORE, output;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
@@ -237,23 +254,29 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
                     return [4 /*yield*/, calculate_responsiveness(days_since_last_commit)];
                 case 5:
                     responsiveness = _a.sent();
-                    net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness;
+                    return [4 /*yield*/, calculate_dependencies(assigned_dependencies, unassigned_dependencies)];
+                case 6:
+                    dependencies = _a.sent();
+                    net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_code;
                     NET_SCORE = (Math.floor(net_score / 5 * 10000) / 10000);
                     RAMP_UP_SCORE = Math.floor(ramp_up_time * 10000) / 10000;
                     CORRECTNESS_SCORE = Math.floor(correctness * 10000) / 10000;
                     BUS_FACTOR_SCORE = Math.floor(bus_factor * 10000) / 10000;
                     RESPONSIVE_MAINTAINER_SCORE = Math.floor(responsiveness * 10000) / 10000;
                     LICENSE_SCORE = Math.floor(license * 10000) / 10000;
-                    output = [{
-                            URL: npmPackageUrl,
-                            NET_SCORE: Math.floor(net_score / 5 * 10000) / 10000,
-                            RAMP_UP_SCORE: Math.floor(ramp_up_time * 10000) / 10000,
-                            CORRECTNESS_SCORE: Math.floor(correctness * 10000) / 10000,
-                            BUS_FACTOR_SCORE: Math.floor(bus_factor * 10000) / 10000,
-                            RESPONSIVE_MAINTAINER_SCORE: Math.floor(responsiveness * 10000) / 10000,
-                            LICENSE_SCORE: Math.floor(license * 10000) / 10000
-                        }
-                    ];
+                    DEPENDENCY_SCORE = Math.floor(dependencies * 10000) / 10000;
+                    REVIEWED_CODE_SCORE = Math.floor(reviewed_code * 10000) / 10000;
+                    output = JSON.stringify({
+                        URL: npmPackageUrl,
+                        NET_SCORE: NET_SCORE,
+                        RAMP_UP_SCORE: RAMP_UP_SCORE,
+                        CORRECTNESS_SCORE: CORRECTNESS_SCORE,
+                        BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
+                        RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
+                        LICENSE_SCORE: LICENSE_SCORE,
+                        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
+                        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
+                    });
                     console.log(JSON.stringify({
                         URL: npmPackageUrl,
                         NET_SCORE: NET_SCORE,
@@ -261,11 +284,13 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
                         CORRECTNESS_SCORE: CORRECTNESS_SCORE,
                         BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
                         RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
-                        LICENSE_SCORE: LICENSE_SCORE
+                        LICENSE_SCORE: LICENSE_SCORE,
+                        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
+                        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
                     }));
                     //console.log(`${printign}`);
                     //process.stdout.write(printign);
-                    return [2 /*return*/, 1];
+                    return [2 /*return*/, output];
             }
         });
     });

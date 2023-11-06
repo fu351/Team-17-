@@ -3,3 +3,216 @@
 2023-09-25T06:44:56.384Z [DEBUG] debug: Error: Request failed with status code 401
 2023-09-25T07:43:17.064Z [DEBUG] debug: Error: Request failed with status code 401
 2023-09-25T07:43:25.133Z [DEBUG] debug: Error: Request failed with status code 401
+2023-10-29T20:42:52.163Z [DEBUG] debug: Error: Request failed with status code 401
+2023-10-29T20:44:48.842Z [DEBUG] debug: Error: Cannot read properties of undefined (reading 'repository')
+2023-10-29T20:49:56.379Z [DEBUG] debug: Error: Cannot read properties of undefined (reading 'repository')
+2023-10-29T20:51:33.551Z [DEBUG] debug: Error: Cannot read properties of undefined (reading 'repository')
+2023-10-29T20:51:56.542Z [DEBUG] debug: Error: Cannot read properties of undefined (reading 'repository')
+2023-10-29T20:55:01.194Z [DEBUG] debug: Error:HELLO Cannot read properties of undefined (reading 'repository')
+2023-10-29T20:58:44.578Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'repository')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:411:53
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:01:35.662Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'repository')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:411:53
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:04:01.316Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'nodes')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:422:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:06:20.178Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'nodes')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:422:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:06:47.218Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'commit')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:425:40
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:12:36.283Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'nodes')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:422:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:15:59.103Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'nodes')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:423:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-10-29T21:18:07.620Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:423:63
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-11-05T23:16:23.927Z [DEBUG] debug: Invalid npm package URL
+2023-11-05T23:18:18.609Z [DEBUG] debug: Error: AxiosError: Request failed with status code 401
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at IncomingMessage.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at IncomingMessage.emit (node:events:526:35)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-11-05T23:20:38.684Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading '0')
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:417:49
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-11-05T23:22:39.229Z [DEBUG] debug: Error: AxiosError: Request failed with status code 404
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at Unzip.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at Unzip.emit (node:events:526:35)
+    at Unzip.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-11-05T23:26:38.763Z [DEBUG] debug: Error: AxiosError: Request failed with status code 404
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at Unzip.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at Unzip.emit (node:events:526:35)
+    at Unzip.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-11-05T23:27:27.179Z [DEBUG] debug: Error: AxiosError: Request failed with status code 404
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at Unzip.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at Unzip.emit (node:events:526:35)
+    at Unzip.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-11-05T23:28:03.737Z [DEBUG] debug: Error: AxiosError: Request failed with status code 404
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at Unzip.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at Unzip.emit (node:events:526:35)
+    at Unzip.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-11-05T23:28:56.230Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:32:03.190Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:37:13.868Z [DEBUG] debug: Error fetching latest commit: ReferenceError: perPage1 is not defined
+2023-11-05T23:37:14.955Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:37:52.908Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:39:19.160Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:39:36.540Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:41:04.058Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:41:41.006Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:44:07.067Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:45:33.869Z [DEBUG] debug: Error: TypeError: Cannot read properties of undefined (reading 'length')
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:46:54
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:8:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:4:12)
+    at calculate_bus_factor (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:42:12)
+    at /home/shay/a/fu351/Desktop/Team-17-/metrics.js:239:46
+    at step (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/metrics.js:14:53)
+2023-11-05T23:57:17.941Z [DEBUG] debug: Error: TypeError: data.sbom.packagesmap is not a function
+    at /home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:387:53
+    at step (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:33:23)
+    at Object.next (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:14:53)
+    at fulfilled (/home/shay/a/fu351/Desktop/Team-17-/npm-github-netscore.js:5:58)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
