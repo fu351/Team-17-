@@ -396,13 +396,23 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const total_dependencies = assigned_dependencies + unassigned_dependencies;
         const popularity = await getPopularity(response, total_dependencies);
         console.log(`Popularity: ${popularity}`);
-        const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);
-        return scores;
+        const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
+        ////
+        ////
+        //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant
+        //// Below is how I am adding the json files to the github repository with the calculated net score and other information. 
+        //// You may need to change the file pathing to match the database storage location to work with our AWS S3 Bucket
+        ////
+        ////
+        fs.writeFileSync(`./cli_storage/${githubInfo.repository}/netscore.json`, scores);
+        fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
+        return scores
       }
-      else{
+      else {
         const scores = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl);
-        return scores;
+        return scores
       }
+
     }
   } catch (error) {
     logBasedOnVerbosity(`Error: ${error.stack}`, 2);

@@ -193,7 +193,7 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
         DEPENDENCY_SCORE: DEPENDENCY_SCORE,
         REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
       });
-    console.log(JSON.stringify({
+   /* console.log(JSON.stringify({
         URL: npmPackageUrl,
         NET_SCORE: NET_SCORE,
         RAMP_UP_SCORE: RAMP_UP_SCORE,
@@ -203,19 +203,7 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
         LICENSE_SCORE: LICENSE_SCORE,
         DEPENDENCY_SCORE: DEPENDENCY_SCORE,
         REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
-      }));
-    //console.log(`${printign}`);
-    //process.stdout.write(printign);
+      }));*/
+
     return output;
-    /*const ndjsonEntry = {
-        URL: npmPackageUrl,
-        NetScore: Math.floor(net_score * 10) / 10,
-        RampUp: Math.floor(ramp_up_time * 10) / 10,
-        Correctness:  Math.floor(correctness * 10) / 10,
-        BusFactor: Math.floor(bus_factor * 10),
-        ResponsiveMaintainer: Math.floor(responsiveness * 10) / 10,
-        License: Math.floor(license * 10) / 10,
-    };
-    const ndjsonOutput = JSON.stringify(ndjsonEntry);
-    return ndjsonOutput; */
 }
