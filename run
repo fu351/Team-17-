@@ -26,15 +26,17 @@ if [ "$1" == "install" ]; then
     #echo "Winston installed."
     #echo "Ready to run other commands."
     exit 0
-elif [ -f "$1" ]; then
+elif [[ "$1" == "URL_FILE" ]]; then
+    url="$2"
     rm -rf "cli_storage"/*
+    #echo "Running URL_FILE command with url: $url"
     #echo "Clearing local package storage..."
     #echo "Compiling essential scripts..."
     tsc metrics.ts
     tsc logger.ts
     tsc npm-github-netscore.ts
     #echo "Scripts compiled."
-    npx ts-node run.ts "URL_FILE" "$1"
+    npx ts-node run.ts "URL_FILE" "$url"
     if [ $? -ne 0 ]; then
     echo "An error occurred. Enable or check logfile for debugging"
     exit 1
