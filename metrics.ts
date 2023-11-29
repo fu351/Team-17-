@@ -1,16 +1,15 @@
-import * as fs from 'fs';
 
 //Metric 1
 export async function calculate_bus_factor(contributor_commits: number[]) {
     if (!contributor_commits) {
         return 0;
     }
-    var key_contributor = 0;
-    var total_contributors = contributor_commits.length;
+    let key_contributor = 0;
+    const total_contributors = contributor_commits.length;
     //find midrange of commits
-    var max = 0;
-    var min = 0;
-    for (var i = 0; i < total_contributors; i++) {
+    let max = 0;
+    let min = 0;
+    for (let i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] > max) {
             max = contributor_commits[i];
         }
@@ -20,7 +19,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
     }
     const midrange = (max + min) / 2;
     //find key contributor
-    for (var i = 0; i < total_contributors; i++) {
+    for (let i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] >= midrange) {
             key_contributor++;
         }
@@ -36,7 +35,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
 }
 //Metric 2
 export async function calculate_correctness(lines_of_code: number, num_issues: number) {
-    var correctness_percentage = lines_of_code / (num_issues * 100);
+    const correctness_percentage = lines_of_code / (num_issues * 100);
     if ( correctness_percentage >= 1) {
         return 1;
     }
@@ -182,7 +181,8 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const  LICENSE_SCORE: number = Math.floor(license * 10000) / 10000 ;
     const DEPENDENCY_SCORE: number = Math.floor(dependencies * 10000) / 10000;
     const REVIEWED_CODE_SCORE: number = Math.floor(reviewed_code * 10000) / 10000;
-    const output = JSON.stringify({
+    const output = [npmPackageUrl,NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, DEPENDENCY_SCORE, REVIEWED_CODE_SCORE]
+    /*const output = JSON.stringify({
         URL: npmPackageUrl,
         NET_SCORE: NET_SCORE,
         RAMP_UP_SCORE: RAMP_UP_SCORE,
@@ -192,18 +192,8 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
         LICENSE_SCORE: LICENSE_SCORE,
         DEPENDENCY_SCORE: DEPENDENCY_SCORE,
         REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
-      });
-   /* console.log(JSON.stringify({
-        URL: npmPackageUrl,
-        NET_SCORE: NET_SCORE,
-        RAMP_UP_SCORE: RAMP_UP_SCORE,
-        CORRECTNESS_SCORE: CORRECTNESS_SCORE,
-        BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
-        RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
-        LICENSE_SCORE: LICENSE_SCORE,
-        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
-        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
-      }));*/
+      });*/
+   
 
     return output;
 }

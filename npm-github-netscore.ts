@@ -139,7 +139,7 @@ async function getLatestCommit(getUsername: string, repositoryName: string) {
   }
 }
 
-async function getTimeSinceLastCommit(getUsername: string, repositoryName: string, axiosConfig:any): Promise<number | null> {
+async function getTimeSinceLastCommit(getUsername: string, repositoryName: string): Promise<number | null> {
   try {
     const latestCommit = await getLatestCommit(getUsername, repositoryName);
 
@@ -385,7 +385,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const issue_count: number =  response.data.open_issues_count;
         const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
         console.log(contributor_commits);
-        const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository, axiosConfig) as number;
+        const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
         const repoLicense = await getRepoLicense(response.data.license);
         const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
@@ -395,8 +395,11 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         //calculate netscore and all metrics
         const total_dependencies = assigned_dependencies + unassigned_dependencies;
         const popularity = await getPopularity(response, total_dependencies);
-        console.log(`Popularity: ${popularity}`);
+        //console.log(`Popularity: ${popularity}`);
         const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
+        
+        scores.push(popularity);
+        console.log(scores);
         ////
         ////
         //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant
@@ -404,12 +407,16 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         //// You may need to change the file pathing to match the database storage location to work with our AWS S3 Bucket
         ////
         ////
-        fs.writeFileSync(`./cli_storage/${githubInfo.repository}/netscore.json`, scores);
-        fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
+        //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/netscore.json`, scores);
+        //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
+
+        //Reverted back to returning as array of variables instead of JSON files, planning to save netscore as attribute instead of saving json file
+        //Scores also contains the popularity score.
         return scores
       }
       else {
         const scores = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl);
+        scores.push(0); //Adding a 0 popularity score
         return scores
       }
 
