@@ -1,14 +1,17 @@
 "use strict";
+const { fetchGitHubInfo } = require('./npm-github-netscore');
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
+const AdmZip = require('adm-zip');
 const app = express();
 const port = 3000;
+const token = "";
 
 AWS.config.update({
   accessKeyId: '',
   secretAccessKey: '',
-  region: '', // Replace with your desired AWS region
+  region: 'us-east-2', // Replace with your desired AWS region
 });
 
 const docClient = new AWS.DynamoDB.DocumentClient();
@@ -41,12 +44,69 @@ app.use(express.json());
 
 app.use(express.static('views'));
 
+const validateZipContents = (zipBuffer, zipFileName) => {
+  const expectedPackageJsonPath = `${zipFileName.replace(/\..+$/, '')}/package.json`.toLowerCase();
+
+  const zip = new AdmZip(zipBuffer);
+  const zipEntries = zip.getEntries();
+
+  // Check if there's an entry with the expected path 'name-of-file/package.json'
+  const hasPackageJson = zipEntries.some(entry => entry.entryName.toLowerCase() === expectedPackageJsonPath);
+
+  return hasPackageJson;
+};
+
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const { name, description } = req.body;
     const uploadedFile = req.file;
 
-    // Upload the file to S3
+    console.log('Validating zip contents...');
+    if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
+      console.log('Validation failed.');
+      return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
+    }
+
+    console.log('Validation passed. Uploading to S3...');
+
+    // Read and parse package.json content
+    const zip = new AdmZip(uploadedFile.buffer);
+    const zipEntries = zip.getEntries();
+    const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
+
+    if (!packageJsonEntry) {
+      console.log('Package.json not found in zip file.');
+      return res.status(400).json({ error: 'Package.json not found in the zip file.' });
+    }
+
+    const packageJsonContent = zip.readAsText(packageJsonEntry);
+    const packageJson = JSON.parse(packageJsonContent);
+
+    // Extract homepage from package.json
+    const homepage = packageJson.homepage;
+    const called = packageJson.name;
+    console.log(homepage);
+    console.log(called);
+
+    const scores = await fetchGitHubInfo(homepage, token); //this function calculates the net score of the package, and stores a .json file in the cloned directory
+    console.log(scores);
+
+    const associatedFiles = [
+      { fileName: `${packageJson.name}_netscore.json`, fileType: 'application/json' },
+      { fileName: `${packageJson.name}_popularity.json`, fileType: 'application/json' },
+      // Add more file details as needed
+    ];
+
+    for (const file of associatedFiles) {
+      const associatedS3Params = {
+        Bucket: 'clistoragetestbucket',
+        Key: `uploads/${uploadedFile.originalname}/${file.fileName}`,
+        Body: Buffer.from(file.content, 'utf-8'),
+      };
+      await s3.upload(associatedS3Params).promise();
+    }
+
+    // Continue with the upload process
     const s3Params = {
       Bucket: 'clistoragetestbucket',
       Key: `uploads/${uploadedFile.originalname}`,
@@ -61,26 +121,28 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         ngPACKAGE: name,
         packageDescription: description,
         s3ObjectKey: `uploads/${uploadedFile.originalname}`,
+        associatedFiles: [
+          { fileName: `${packageJson.name}_netscore.json`, fileType: 'application/json' },
+          { fileName: `${packageJson.name}_popularity.json`, fileType: 'application/json' },
+          // Add more file details as needed
+        ],
       },
     };
 
-    docClient.put(params, (err) => {
-      if (err) {
-        console.error('Error saving metadata to DynamoDB:', err);
-        res.status(500).json({ error: 'An error occurred while uploading the package' });
-      } else {
-        // Package and metadata were successfully saved
-        res.status(201).json({
-          message: 'Package uploaded successfully',
-          s3Url: uploadResult.Location 
-        });
-      }
+    console.log('Saving metadata to DynamoDB...');
+    await docClient.put(params).promise();
+
+    // Package and metadata were successfully saved
+    res.status(201).json({
+      message: 'Package uploaded successfully',
+      s3Url: uploadResult.Location 
     });
   } catch (error) {
     console.error('Error uploading package:', error);
     res.status(500).json({ error: 'An error occurred while uploading the package' });
   }
 });
+
 
 app.get('/download', (req, res) => {
   const selectedPackage = req.query.package; // Get the selected package name
