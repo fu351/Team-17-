@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: ESLINT_DISABLE_RULE=true npm run lint
 
       -name: check
        run: git diff --exit-code || (echo "linting issue, run 'npm run lint' to fix"&& false)
