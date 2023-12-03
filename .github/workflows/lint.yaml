@@ -23,3 +23,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      -name: check
+       run: git diff --exit-code || (echo "linting issue, run 'npm run lint' to fix"&& false)
