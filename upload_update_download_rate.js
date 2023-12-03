@@ -14,35 +14,9 @@ AWS.config.update({
   region: 'us-east-2', // Replace with your desired AWS region
 });
 
-const docClient = new AWS.DynamoDB.DocumentClient();
-
-app.set('view engine', 'ejs');
-
-app.get('/upload-form', (req, res) => {
-  // Query DynamoDB to get the list of uploaded files
-  const params = {
-      TableName: 'package_storage_1', // Replace with your DynamoDB table name
-      ProjectionExpression: 's3ObjectKey', // Replace with the appropriate attribute name
-  };
-
-  docClient.scan(params, (err, data) => {
-      if (err) {
-          console.error('Error querying DynamoDB:', err);
-          res.status(500).json({ error: 'An error occurred while retrieving file list' });
-      } else {
-          const uploadedFiles = data.Items.map(item => item.s3ObjectKey);
-          res.render('upload-form', { uploadedFiles });
-      }
-  });
-});
-
 const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
-app.use(express.json());
-
-app.use(express.static('views'));
 
 const validateZipContents = (zipBuffer, zipFileName) => {
   const expectedPackageJsonPath = `${zipFileName.replace(/\..+$/, '')}/package.json`.toLowerCase();
@@ -79,31 +53,22 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Package.json not found in the zip file.' });
     }
 
+    //Get all info from package.json
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
 
     // Extract homepage from package.json
     const homepage = packageJson.homepage;
     const called = packageJson.name;
+    const zip_ver = packageJson.version;
     console.log(homepage);
     console.log(called);
 
-    const scores = await fetchGitHubInfo(homepage, token); //this function calculates the net score of the package, and stores a .json file in the cloned directory
-    console.log(scores);
+    const scores = await fetchGitHubInfo(homepage, token);
 
-    const associatedFiles = [
-      { fileName: `${packageJson.name}_netscore.json`, fileType: 'application/json' },
-      { fileName: `${packageJson.name}_popularity.json`, fileType: 'application/json' },
-      // Add more file details as needed
-    ];
-
-    for (const file of associatedFiles) {
-      const associatedS3Params = {
-        Bucket: 'clistoragetestbucket',
-        Key: `uploads/${uploadedFile.originalname}/${file.fileName}`,
-        Body: Buffer.from(file.content, 'utf-8'),
-      };
-      await s3.upload(associatedS3Params).promise();
+    if (scores[1] < 0.5) {
+      console.log('Package Net Score too low, ingestion blocked.');
+      return res.status(400).json({ error: 'Package Net Score too low, ingestion blocked.' });
     }
 
     // Continue with the upload process
@@ -111,32 +76,22 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       Bucket: 'clistoragetestbucket',
       Key: `uploads/${uploadedFile.originalname}`,
       Body: uploadedFile.buffer,
-    };
-    const uploadResult = await s3.upload(s3Params).promise();
-
-    // Save the metadata to DynamoDB
-    const params = {
-      TableName: 'package_storage_1',
-      Item: {
-        ngPACKAGE: name,
-        packageDescription: description,
-        s3ObjectKey: `uploads/${uploadedFile.originalname}`,
-        associatedFiles: [
-          { fileName: `${packageJson.name}_netscore.json`, fileType: 'application/json' },
-          { fileName: `${packageJson.name}_popularity.json`, fileType: 'application/json' },
-          // Add more file details as needed
-        ],
-      },
+      Metadata: {
+        NetScore: scores[1].toString(),
+        Version: zip_ver.toString(),
+        Ramp_Up: scores[2],
+        Correctness: scores[3],
+        Bus_Factor: scores[4],
+        Responsive_Maintainer: scores[5],
+        License_Score: scores[6],
+        Dependency_Score: scores[7],
+        Reviewed_Code_Score: scores[8],
+        //PopularityScore: 40,
+      }
     };
 
-    console.log('Saving metadata to DynamoDB...');
-    await docClient.put(params).promise();
+    await s3.upload(s3Params).promise();
 
-    // Package and metadata were successfully saved
-    res.status(201).json({
-      message: 'Package uploaded successfully',
-      s3Url: uploadResult.Location 
-    });
   } catch (error) {
     console.error('Error uploading package:', error);
     res.status(500).json({ error: 'An error occurred while uploading the package' });
@@ -157,38 +112,85 @@ app.get('/download', (req, res) => {
   res.redirect(downloadUrl);
 });
 
-app.post('/update', (req, res) => {
-  const packageIdToUpdate = req.body.packageId; // Get the unique identifier of the package to update
-  const updatedName = req.body.name; // Get the updated package name
-  const updatedDescription = req.body.description; // Get the updated package description
+app.post('/update', async (req, res) => {
+  const packageIdToUpdate = req.body.packageId;
+  const updatedName = req.body.name;
+  //const updatedDescription = req.body.description;
 
-  // You can use packageIdToUpdate to identify the package in your DynamoDB
+  try {
+    // Example code to get the current version number from S3 metadata
+    const s3HeadParams = {
+      Bucket: 'clistoragetestbucket',
+      Key: `uploads/${updatedName}.zip`, // Use the appropriate key
+    };
 
-  // Example code to update the package in DynamoDB
-  const params = {
-    TableName: 'package_storage_1',
-    Key: {
-        ngPACKAGE: packageIdToUpdate,
-    },
-    UpdateExpression: 'SET packageDescription = :description, s3ObjectKey = :key',
-    ExpressionAttributeValues: {
-        ':description': updatedDescription,
-        ':key': `uploads/${updatedName}.zip`,
-    },
-};
+    const s3ObjectMetadata = await s3.headObject(s3HeadParams).promise();
+    const currentVersion = parseInt(s3ObjectMetadata.Metadata.Version) || 0;
 
+    // Increment the version number
+    const newVersion = currentVersion + 1;
 
-  docClient.update(params, (err) => {
-      if (err) {
-          console.error('Error updating package:', err);
-          res.status(500).json({ error: 'An error occurred while updating the package' });
-      } else {
-          // Package information was successfully updated
-          res.redirect('/upload-form'); // Redirect to the page where the update form is located
-      }
-  });
+    // Continue with the S3 upload process
+    const s3UploadParams = {
+      Bucket: 'clistoragetestbucket',
+      Key: `uploads/${updatedName}_v${newVersion}.zip`,
+      Body: packageIdToUpdate.buffer,
+      Metadata: {
+        Version: newVersion.toString(),
+        // Add other metadata key-value pairs as needed
+      },
+    };
+
+    await s3.upload(s3UploadParams).promise();
+
+    res.status(200).json({ message: 'Package updated successfully' });
+  } catch (error) {
+    console.error('Error updating package:', error);
+    res.status(500).json({ error: 'An error occurred while updating the package' });
+  }
 });
 
+app.get('/rate/:packageId', async (req, res) => {
+  const packageId = req.params.packageId;
+
+  try {
+    // Example code to get the relevant metadata from S3
+    const s3HeadParams = {
+      Bucket: 'clistoragetestbucket',
+      Key: `uploads/${packageId}.zip`, // Use the appropriate key
+    };
+
+    const s3ObjectMetadata = await s3.headObject(s3HeadParams).promise();
+    
+    // Extract relevant metadata
+    const netScore = s3ObjectMetadata.Metadata.NetScore; 
+    const ramp_up = s3ObjectMetadata.Metadata.Ramp_Up;
+    const correctness = s3ObjectMetadata.Metadata.Correctness;
+    const bus_factor = s3ObjectMetadata.Metadata.Bus_Factor;
+    const responsive_maintaner = s3ObjectMetadata.Metadata.Responsive_Maintainer;
+    const license = s3ObjectMetadata.Metadata.License_Score;
+    const dependency = s3ObjectMetadata.Metadata.Dependency_Score;
+    const reviewed_code = s3ObjectMetadata.Metadata.Reviewed_Code_Score;
+
+    // Add more metadata variables as needed
+
+    // Display the relevant metadata
+    res.status(200).json({
+      packageId,
+      netScore,
+      ramp_up,
+      correctness,
+      bus_factor,
+      responsive_maintaner,
+      license,
+      dependency,
+      reviewed_code,
+    });
+  } catch (error) {
+    console.error('Error retrieving package metadata:', error);
+    res.status(500).json({ error: 'An error occurred while retrieving package metadata' });
+  }
+});
 
 // A simple route to check if the server is running
 app.get('/', (req, res) => {
@@ -198,4 +200,3 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
-
