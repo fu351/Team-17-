@@ -87,6 +87,9 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         Dependency_Score: scores[7],
         Reviewed_Code_Score: scores[8],
         //PopularityScore: 40,
+        //packageId: 
+        //readme:
+        //history:  
       }
     };
 
