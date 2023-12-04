@@ -61,7 +61,8 @@ app.get('/package/byRegEx', (req, res) => {
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
         Key: {
-            packageName: regEx
+            packageName: regEx,
+            readMe: regEx
         } 
     };
     //access the readme file and search for the regular expression
