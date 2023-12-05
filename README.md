@@ -39,7 +39,7 @@ Though this is not directly related to the I/O specification of the auto-grader,
 
 ## Project Description: Phase 2
 
-# AWS URL where our current website is hosted:
+## AWS URL where our current website is hosted:
 http://phase2-ece461.s3-website-us-east-1.amazonaws.com/http://phase2-ece461.s3-website-us-east-1.amazonaws.com/
 
 
