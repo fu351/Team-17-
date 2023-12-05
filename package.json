@@ -1,59 +1,40 @@
 {
-  
-  "scripts": {
-  
-    
-  "lint": "eslint . --ext .ts",
-  
-    
-  "lint:fix": "eslint . --ext .ts --fix"
-  
-  },
-  
+  "name": "phase2",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "http://phase2-ece461.s3-website-us-east-1.amazonaws.com/",
   "dependencies": {
-  
-    
-  "@aws-sdk/client-s3": "^3.465.0",
-  
-    
-  "@octokit/graphql": "^7.0.2",
-  
-    
-  "axios": "^1.6.0",
-  
-    
-  "child_process": "^1.0.2",
-  
-    
-  "path": "^0.12.7",
-  
-    
-  "ts-node": "^10.9.1",
-  
-    
-  "typescript": "^5.2.2",
-  
-    
-  "winston": "^3.11.0",
-  
-    
-  "yargs": "^17.7.2"
-  
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.19.0",
+    "react-scripts": "latest",
+    "web-vitals": "^2.1.4"
   },
-  
-  "devDependencies": {
-  
-    
-  "@types/yargs": "^17.0.24",
-  
-    
-  "@typescript-eslint/eslint-plugin": "^6.9.1",
-  
-    
-  "@typescript-eslint/parser": "^6.9.1",
-  
-    
-  "eslint": "^8.52.0"
-  
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
