@@ -2,7 +2,7 @@
 # A CLI for trustworthy module re-use
 ECE461 Project: Team 17
 
-## Project Description
+## Project Description: Phase 1
 This project involved building a command-line interface (CLI) to help evaluate the trustworthiness of open-source JavaScript modules for reuse. The CLI takes in a list of module URLs as input, evaluates various metrics related to module quality and maintainer responsiveness, and outputs an overall trustworthiness score along with subscores for each metric <br>
 
 The project was completed in 5 phases over 5 weeks: <br>
@@ -35,6 +35,13 @@ Run `./run test` command
 ## Things to note
 - API Limit <br>
 Though this is not directly related to the I/O specification of the auto-grader, while we were doing our own testing we have been running into issues of exceeding the hourly request limit. This could cause the auto-grader to choke.
+
+
+## Project Description: Phase 2
+
+# AWS URL where our current website is hosted:
+http://phase2-ece461.s3-website-us-east-1.amazonaws.com/http://phase2-ece461.s3-website-us-east-1.amazonaws.com/
+
 
 ## Credits
 This project was created as part of an assignment for ECE 461 at Purdue University. Team members:
