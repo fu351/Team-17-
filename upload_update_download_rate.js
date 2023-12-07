@@ -199,6 +199,4 @@ router.get('/', (req, res) => {
   res.send('Server is up and running.');
 });
 
-router.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
-});
+module.exports = router;

@@ -4,13 +4,6 @@ const router = express.Router();
 
 
 
-AWS.config.update({
-    accessKeyId: '',
-    secretAccessKey: '',
-    region: 'us-east-2', // Replace with your desired AWS region
-  });
-
-
 
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
@@ -34,7 +27,7 @@ router.get('/package/{id}', (req, res) => {
 
 
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
-router.get('/package/byName', (req, res) => {
+router.get('/package/byName', async (req, res) => {
     const packageName = req.body.packageName;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
@@ -51,7 +44,7 @@ router.get('/package/byName', (req, res) => {
     }
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
-router.get('/package/byRegEx', (req, res) => {
+router.get('/package/byRegEx', async (req, res) => {
     const regEx = req.body.regEx;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
@@ -64,14 +57,17 @@ router.get('/package/byRegEx', (req, res) => {
         for (const item of data.Contents) {
             const metadataParams = {
                 Bucket: params.Bucket,
-                Key: item.Key,
+                Metadata: {
+                    packageID: item.Metadata.Version,
+                }
             };
 
             const metadata = await s3.headObject(metadataParams).promise();
             const readme = metadata.Metadata.readme;
 
             if (regEx.test(item.Key) || regEx.test(readme)) {
-                matchedPackages.push(item);
+                const [Name, Version] = [item.Key, item.Metadata.Version];
+                matchedPackages.push({ Name, Version });
             }
         }
 
@@ -82,7 +78,7 @@ router.get('/package/byRegEx', (req, res) => {
     }
 });
 
-router.post('/packages', (req, res) => {
+router.post('/packages', async (req, res) => {
     const packageName = req.body.packageName;
     const versionInput = req.body.version;
     const params = {
@@ -124,7 +120,7 @@ router.post('/packages', (req, res) => {
         res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
-router.get('/directory', (req, res) => {
+router.get('/directory', async (req, res) => {
     const pageNumber = Number(req.query.pageNumber) || 1;
     const pageSize = Number(req.query.pageSize) || 100;
     const params = {

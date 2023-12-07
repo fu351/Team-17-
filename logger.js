@@ -1,4 +1,5 @@
 "use strict";
+require('dotenv').config();
 exports.__esModule = true;
 exports.debugLogger = exports.infoLogger = void 0;
 var winston_1 = require("winston");
