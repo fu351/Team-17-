@@ -1,8 +1,6 @@
 "use strict";
 const express = require('express');
-const AWS = require('aws-sdk');
-const app = express();
-const semver = require('semver');
+const router = express.Router();
 
 
 
@@ -13,13 +11,10 @@ AWS.config.update({
   });
 
 
-const s3 = new AWS.S3();
 
-app.use(express.json());
-app.use(express.static('views'));
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
-app.get('/package/{id}', (req, res) => {
+router.get('/package/{id}', (req, res) => {
     const packageID = req.body.packageID;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
@@ -39,7 +34,7 @@ app.get('/package/{id}', (req, res) => {
 
 
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
-app.get('/package/byName', (req, res) => {
+router.get('/package/byName', (req, res) => {
     const packageName = req.body.packageName;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
@@ -56,7 +51,7 @@ app.get('/package/byName', (req, res) => {
     }
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
-app.get('/package/byRegEx', (req, res) => {
+router.get('/package/byRegEx', (req, res) => {
     const regEx = req.body.regEx;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
@@ -87,7 +82,7 @@ app.get('/package/byRegEx', (req, res) => {
     }
 });
 
-app.post('/packages', (req, res) => {
+router.post('/packages', (req, res) => {
     const packageName = req.body.packageName;
     const versionInput = req.body.version;
     const params = {
@@ -129,7 +124,7 @@ app.post('/packages', (req, res) => {
         res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
-app.get('/directory', (req, res) => {
+router.get('/directory', (req, res) => {
     const pageNumber = Number(req.query.pageNumber) || 1;
     const pageSize = Number(req.query.pageSize) || 100;
     const params = {
@@ -146,3 +141,4 @@ app.get('/directory', (req, res) => {
         res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
+module.exports = router;

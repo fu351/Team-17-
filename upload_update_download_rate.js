@@ -1,10 +1,9 @@
-"use strict";
 const { fetchGitHubInfo } = require('./npm-github-netscore');
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
-const app = express();
+const router = express.Router();
 const port = 3000;
 const token = "";
 
@@ -30,7 +29,7 @@ const validateZipContents = (zipBuffer, zipFileName) => {
   return hasPackageJson;
 };
 
-app.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const { name, description } = req.body;
     const uploadedFile = req.file;
@@ -102,7 +101,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 
-app.get('/download', (req, res) => {
+router.get('/download', (req, res) => {
   const selectedPackage = req.query.package; // Get the selected package name
   const params = {
     Bucket: 'clistoragetestbucket', 
@@ -115,7 +114,7 @@ app.get('/download', (req, res) => {
   res.redirect(downloadUrl);
 });
 
-app.post('/update', async (req, res) => {
+router.post('/update', async (req, res) => {
   const packageIdToUpdate = req.body.packageId;
   const updatedName = req.body.name;
   //const updatedDescription = req.body.description;
@@ -153,7 +152,7 @@ app.post('/update', async (req, res) => {
   }
 });
 
-app.get('/rate/:packageId', async (req, res) => {
+router.get('/rate/:packageId', async (req, res) => {
   const packageId = req.params.packageId;
 
   try {
@@ -196,10 +195,10 @@ app.get('/rate/:packageId', async (req, res) => {
 });
 
 // A simple route to check if the server is running
-app.get('/', (req, res) => {
+router.get('/', (req, res) => {
   res.send('Server is up and running.');
 });
 
-app.listen(port, () => {
+router.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });

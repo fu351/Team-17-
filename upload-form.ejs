@@ -32,6 +32,10 @@
         <input type="hidden" name="packageId" id="packageId" value="packageIdToUpdate">
         <input type="submit" value="Update">
     </form>
-
+    <form action="/package/byRegEx" method = "get">
+        <label for="name">Package Name:</label>
+        <input type="text" name="name" id="name" required><br>
+        <input type="submit" value="Search">
+    </form>
 </body>
 </html>
