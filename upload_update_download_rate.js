@@ -39,7 +39,6 @@ const logAction = async (user, action, packageMetadata) => {
   }
 };
 
-
 const validateZipContents = (zipBuffer, zipFileName) => {
   const expectedPackageJsonPath = `${zipFileName.replace(/\..+$/, '')}/package.json`.toLowerCase();
 
@@ -52,18 +51,15 @@ const validateZipContents = (zipBuffer, zipFileName) => {
   return hasPackageJson;
 };
 
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/package', upload.single('file'), async (req, res) => {
   try {
-    const { name, description } = req.body;
     const uploadedFile = req.file;
+    const packageData = req.body;
 
-    console.log('Validating zip contents...');
     if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
-
-    console.log('Validation passed. Uploading to S3...');
 
     // Read and parse package.json content
     const zip = new AdmZip(uploadedFile.buffer);
@@ -79,19 +75,41 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
     
-    // Extract homepage from package.json
+    // Extract homepage, name and version from package.json
     const homepage = packageJson.homepage;
     const called = packageJson.name;
     const zip_ver = packageJson.version;
-    console.log(homepage);
-    console.log(called);
-
-    const scores = await fetchGitHubInfo(homepage, token);
-
-    if (scores[1] < 0.5) {
-      console.log('Package Net Score too low, ingestion blocked.');
-      return res.status(400).json({ error: 'Package Net Score too low, ingestion blocked.' });
+    if(homepage == NULL || called == NULL || zip_ver == NULL)  {
+      return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
+
+    try {
+      const scores = await fetchGitHubInfo(homepage, token);
+    } catch (error) {
+      return res.status(400),json({ error: 'Invalid Repository URL'});
+    }
+
+    if (scores[1] < 0.5) { //check for ingestion
+      console.log('Package Net Score too low, ingestion blocked.');
+      return res.status(424).json({ error: 'Package not uploaded due to rating' });
+    }
+    
+    //check if package exists already
+    const packageExistsParams = {
+      Bucket: 'holder',
+      Key: `packages/${packageJson.name}`,
+    };
+
+    try {
+      await s3.headObject(packageExistsParams).promise();
+      return res.status(409).json({error: 'Package exists already'});
+    } catch (headObjectError) {
+      //if the package does nto exist continue with upload
+      if (headObjectError.code != 'NotFound') {
+        console.log('something went wrong');
+      }
+    }
+
     //Extract the readme from the zip file
     const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
     const readme = zip.readAsText(readmeEntry);
@@ -101,7 +119,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     // Continue with the upload process
     const s3Params = {
       Bucket: 'clistoragetestbucket',
-      Key: `uploads/${uploadedFile.originalname}`,
+      Key: `packages/${packageJson.name}`,
       Body: uploadedFile.buffer.toString('base64'),
       Metadata: {
         NetScore: scores[1].toString(),
@@ -119,7 +137,26 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         URL: homepage,
       }
     };
-    await s3.upload(s3Params).promise();
+
+    try  { //upload complete, answer with response codes
+      await s3.upload(s3Params).promise();
+      //package was uploaded succesfully
+      const responseBody = {
+        metadata: {
+          Name: called,
+          Version: zip_ver.toString(),
+          ID: packageID.toString(),
+        },
+        data: {
+          Content: packageData,
+          JSProgram: 'holder',
+        }
+      }
+      return res.status(201).json({responseBody});
+    } catch (error) {
+      console.error(error);
+    }
+    
     //logging upload action for traceability
     const user = {name: 'default', isAdmin: 'true'};
     const packageMetadata = { Name: s3Params.Key, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
