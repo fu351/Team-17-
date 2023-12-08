@@ -51,7 +51,7 @@ const validateZipContents = (zipBuffer, zipFileName) => {
   return hasPackageJson;
 };
 
-router.post('/package', upload.single('file'), async (req, res) => {
+router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
     const uploadedFile = req.file;
     const packageData = req.body;
@@ -135,6 +135,7 @@ router.post('/package', upload.single('file'), async (req, res) => {
         packageId: packageID,
         readme: readme,
         URL: homepage,
+        Name: packageJson.name,
       }
     };
 
@@ -168,7 +169,7 @@ router.post('/package', upload.single('file'), async (req, res) => {
 });
 
 
-router.get('/download', async (req, res) => {
+router.get('/download', async (req, res) => { //download package (might need to work on this one)
   const selectedPackage = req.query.package; // Get the selected package name
   const params = {
     Bucket: 'clistoragetestbucket', 
@@ -192,43 +193,61 @@ router.get('/download', async (req, res) => {
   res.redirect(downloadUrl);
 });
 
-router.post('/update', async (req, res) => {
+router.post('/package:id', async (req, res) => { //update package
   const { Name, Version, ID } = req.body.metadata;
   const { Content, URL } = req.body.data;
-  //const updatedDescription = req.body.description;
+  if(Name == NULL || Version == NULL || ID == NULL || Content == NULL || URL == NULL) { //need all fields to be present
+    return res.status(400).json({error: 'There are missing fields in the Request Body'});
+  }
+
+  //Next check that name, version, and ID match
+  try {
+    const existingPackageParams = {
+      Bucket: 'holder',
+      Key: `packages/${Name}`,
+    };
+    
+    let existingMetaData;
+    try {
+      const existingPackage = await s3.headObject(existingPackageParams).promise();
+      existingMetaData = existingPackage.Metadata;
+    } catch (headObjectError) {
+      if (headObjectError.code == 'NotFound') {
+        return res.status(404).json({ error: 'Package does not exist'});
+      } else {
+        console.log('update error');
+      }
+    }
+
+    if(existingMetaData.Version != Version || existingMetaData.packageId != ID || existingMetaData.Name != Name) {
+      return res.status(400).json({ error: 'Invalid name, ID, or Version'});
+    }
+  } catch (error) {
+
+  }
+
+  const s3uploadparams = { //replace old content with the new content
+    Bucket: 'holder',
+    Key: `packages/${Name}`,
+    Body: Content,
+  };
 
   try {
-    const scores = await fetchGitHubInfo(URL, token);
+    await s3.upload(s3uploadparams).promise(); //upload package with new data content
 
-    // Example code to get the current version number from S3 metadata
-    const s3UploadParams = {
-      Bucket: 'clistoragetestbucket',
-      Key: `uploads/${Name}.zip`, // Use the appropriate key
-      Body: Content,
-      metadata: {
-        Version: Version,
-        PopularityScore: scores[10],
-        packageId: ID,
-        readme: readme,
-        URL: URL,
-      },
-    };
-
-    await s3.upload(s3UploadParams).promise();
-    
     //Logging update action for traceability
     const user = {name: 'default', isAdmin: 'true'};
     const packageMetadata = { Name: s3UploadParams.Key, Version: s3UploadParams.Metadata.Version, ID: s3UploadParams.Metadata.packageID };
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
-    res.status(200).json({ message: 'Package updated successfully' });
+    res.status(200).json({ message: 'Version is updated' });
   } catch (error) {
     console.error('Error updating package:', error);
     res.status(500).json({ error: 'An error occurred while updating the package' });
   }
 });
 
-router.get('/rate/:packageId', async (req, res) => {
+router.get('/package:id/rate', async (req, res) => { //rate package
   const packageId = req.params.packageId;
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
@@ -258,7 +277,6 @@ router.get('/rate/:packageId', async (req, res) => {
     const GoodPinningPractice = score[7];
     const PullRequest = score[8];
  
-
     // Display the relevant metadata
     res.status(200).json({
       "BusFactor": BusFactor,
