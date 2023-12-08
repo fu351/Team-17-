@@ -77,7 +77,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     //Get all info from package.json
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
-
+    
     // Extract homepage from package.json
     const homepage = packageJson.homepage;
     const called = packageJson.name;
@@ -91,7 +91,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       console.log('Package Net Score too low, ingestion blocked.');
       return res.status(400).json({ error: 'Package Net Score too low, ingestion blocked.' });
     }
+    //Extract the readme from the zip file
+    const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
+    const readme = zip.readAsText(readmeEntry);
 
+    //create randomized 7 digit packageID
+    const packageID = Math.floor(Math.random() * 9000000) + 1000000;
     // Continue with the upload process
     const s3Params = {
       Bucket: 'clistoragetestbucket',
@@ -107,10 +112,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         License_Score: scores[6],
         Dependency_Score: scores[7],
         Reviewed_Code_Score: scores[8],
-        //PopularityScore: 40,
-        //packageId: 
-        //readme:
-        //history:  
+        PopularityScore: scores[10],
+        packageId: packageID,
+        readme: readme,
       }
     };
     await s3.upload(s3Params).promise();
