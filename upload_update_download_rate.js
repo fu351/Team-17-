@@ -96,7 +96,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const s3Params = {
       Bucket: 'clistoragetestbucket',
       Key: `uploads/${uploadedFile.originalname}`,
-      Body: uploadedFile.buffer,
+      Body: uploadedFile.buffer.toString('base64'),
       Metadata: {
         NetScore: scores[1].toString(),
         Version: zip_ver.toString(),
@@ -130,6 +130,7 @@ router.get('/download', async (req, res) => {
   const params = {
     Bucket: 'clistoragetestbucket', 
     Key: `${selectedPackage}`, // Use the selected package name to generate the object key
+    Expires: 60 * 5, // The URL will expire in 60 seconds, Security
   };
 
   const downloadUrl = s3.getSignedUrl('getObject', params);
