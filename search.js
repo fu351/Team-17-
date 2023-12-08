@@ -31,16 +31,28 @@ router.get('/package/byName', async (req, res) => {
     const packageName = req.body.packageName;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
+        Prefix: `logs/${packageName}/`,
     };
 
     try {
         const data = await s3.listObjectsV2(params).promise();
-        const matchedPackages = data.Contents.filter(item => item.Key === packageName);
+        const logs = [];
 
-        res.status(200).json({ data: matchedPackages });
+        for (const item of data.Contents) {
+            const objectParams = {
+                Bucket: params.Bucket,
+                Key: item.Key,
+            };
+
+            const objectData = await s3.getObject(objectParams).promise();
+            const log = JSON.parse(objectData.Body.toString());
+            logs.push(log);
+        }
+
+        res.status(200).json({ data: logs });
     } catch (err) {
-        console.error('Error retrieving files from S3:', err);
-        res.status(500).json({ error: 'Error downloading files from S3' });
+        console.error('Error retrieving logs from S3:', err);
+        res.status(500).json({ error: 'Error retrieving logs from S3' });
     }
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
