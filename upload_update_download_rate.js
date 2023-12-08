@@ -6,11 +6,12 @@ const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
 const port = 3000;
-const token = "";
+const token = process.env.GITHUB_TOKEN;
+require('dotenv').config();
 
 AWS.config.update({
-  accessKeyId: '',
-  secretAccessKey: '',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: 'us-east-2', // Replace with your desired AWS region
 });
 
@@ -115,6 +116,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         PopularityScore: scores[10],
         packageId: packageID,
         readme: readme,
+        URL: homepage,
       }
     };
     await s3.upload(s3Params).promise();
@@ -155,18 +157,23 @@ router.get('/download', async (req, res) => {
 
 router.post('/update', async (req, res) => {
   const { Name, Version, ID } = req.body.metadata;
-  const { Content } = req.body.data;
+  const { Content, URL } = req.body.data;
   //const updatedDescription = req.body.description;
 
   try {
+    const scores = await fetchGitHubInfo(URL, token);
+
     // Example code to get the current version number from S3 metadata
-    const s3uploadParams = {
+    const s3UploadParams = {
       Bucket: 'clistoragetestbucket',
       Key: `uploads/${Name}.zip`, // Use the appropriate key
       Body: Content,
       metadata: {
         Version: Version,
-        packageID: ID,
+        PopularityScore: scores[10],
+        packageId: ID,
+        readme: readme,
+        URL: URL,
       },
     };
 
@@ -186,7 +193,10 @@ router.post('/update', async (req, res) => {
 
 router.get('/rate/:packageId', async (req, res) => {
   const packageId = req.params.packageId;
-
+  //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
+  if (!packageId) {
+    return res.status(400).json({ error: 'Missing PackageID' });
+  }
   try {
     // Example code to get the relevant metadata from S3
     const s3HeadParams = {
@@ -195,31 +205,33 @@ router.get('/rate/:packageId', async (req, res) => {
     };
 
     const s3ObjectMetadata = await s3.headObject(s3HeadParams).promise();
-    
-    // Extract relevant metadata
-    const netScore = s3ObjectMetadata.Metadata.NetScore; 
-    const ramp_up = s3ObjectMetadata.Metadata.Ramp_Up;
-    const correctness = s3ObjectMetadata.Metadata.Correctness;
-    const bus_factor = s3ObjectMetadata.Metadata.Bus_Factor;
-    const responsive_maintaner = s3ObjectMetadata.Metadata.Responsive_Maintainer;
-    const license = s3ObjectMetadata.Metadata.License_Score;
-    const dependency = s3ObjectMetadata.Metadata.Dependency_Score;
-    const reviewed_code = s3ObjectMetadata.Metadata.Reviewed_Code_Score;
-
-
-    // Add more metadata variables as needed
+    //if the package is not in the bucket, return 404 error
+    if (!s3ObjectMetadata) {
+      return res.status(404).json({ error: 'Package does not exist' });
+    }
+    // Extract URL and Rate the package
+    const URL = s3ObjectMetadata.Metadata.URL;
+    const score = fetchGitHubInfo(URL, token);
+    const NetScore = score[1];
+    const RampUp = score[2];
+    const Correctness = score[3];
+    const BusFactor = score[4];
+    const ResponsiveMaintainer = score[5];
+    const LicenseScore = score[6];
+    const GoodPinningPractice = score[7];
+    const PullRequest = score[8];
+ 
 
     // Display the relevant metadata
     res.status(200).json({
-      packageId,
-      netScore,
-      ramp_up,
-      correctness,
-      bus_factor,
-      responsive_maintaner,
-      license,
-      dependency,
-      reviewed_code,
+      "BusFactor": BusFactor,
+      "Correctness": Correctness,
+      "Rampup": RampUp,
+      "ResponsiveMaintainer": ResponsiveMaintainer,
+      "LicenseScore": LicenseScore,
+      "GoodPinningPractice": GoodPinningPractice,
+      "PullRequest": PullRequest,
+      "NetScore": NetScore,
     });
 
     //logging Rate action for traceability

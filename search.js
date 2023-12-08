@@ -1,10 +1,7 @@
 "use strict";
 const express = require('express');
 const router = express.Router();
-
-
-
-
+const AdmZip = require('adm-zip');
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/{id}', (req, res) => {
@@ -58,11 +55,10 @@ router.get('/package/byName', async (req, res) => {
     }
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
-router.get('/package/byRegEx', async (req, res) => {
+router.post('/package/byRegEx', async (req, res) => {
     const regEx = req.body.regEx;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
-        MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
     //access the readme file and search for the regular expression
     try {
@@ -72,17 +68,18 @@ router.get('/package/byRegEx', async (req, res) => {
         for (const item of data.Contents) {
             const metadataParams = {
                 Bucket: params.Bucket,
-                Metadata: {
-                    packageID: item.Metadata.Version,
-                }
-                
+                key : item.Key,
             };
 
-            const metadata = await s3.headObject(metadataParams).promise();
-            const readme = metadata.Metadata.readme;
+            const object = await s3.getObject(metadataParams).promise();
+            const zip = new AdmZip(object.Body.buffer);
+            const zipEntries = zip.getEntries();
+            const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
+            const readme = readmeEntry ? readmeEntry.getData().toString('utf8') : '';
+
 
             if (regEx.test(item.Key) || regEx.test(readme)) {
-                const [Name, Version] = [item.Key, item.Metadata.Version];
+                const [Name, Version] = [item.Key, object.Metadata.Version];
                 matchedPackages.push({ Name, Version });
             }
         }
