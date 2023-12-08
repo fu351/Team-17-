@@ -13,7 +13,8 @@ router.get('/package/{id}', (req, res) => {
         Bucket: 'package-storage-1', //replace with bucket name
         Metadata: {
             packageID: packageID
-        } 
+        },
+        MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
     s3.getObject(params, (err, data) => {
         if (err) {
@@ -32,6 +33,7 @@ router.get('/package/byName', async (req, res) => {
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
         Prefix: `logs/${packageName}/`,
+        MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
 
     try {
@@ -60,6 +62,7 @@ router.get('/package/byRegEx', async (req, res) => {
     const regEx = req.body.regEx;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
+        MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
     //access the readme file and search for the regular expression
     try {
@@ -72,6 +75,7 @@ router.get('/package/byRegEx', async (req, res) => {
                 Metadata: {
                     packageID: item.Metadata.Version,
                 }
+                
             };
 
             const metadata = await s3.headObject(metadataParams).promise();
@@ -93,14 +97,16 @@ router.get('/package/byRegEx', async (req, res) => {
 router.post('/packages', async (req, res) => {
     const packageName = req.body.packageName;
     const versionInput = req.body.version;
+    const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
+        StartAfter: offset, // Start listing after the package name
+        MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
 
     try {
         const data = await s3.listObjectsV2(params).promise();
         const matchedPackages = [];
-
         for (const item of data.Contents) {
             if (item.Key === packageName) {
                 const metadataParams = {
@@ -132,21 +138,5 @@ router.post('/packages', async (req, res) => {
         res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
-router.get('/directory', async (req, res) => {
-    const pageNumber = Number(req.query.pageNumber) || 1;
-    const pageSize = Number(req.query.pageSize) || 100;
-    const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
-        MaxKeys: pageSize,
-        ContinuationToken: pageNumber > 1 ? String(pageNumber) : undefined,
-    };
 
-    try {
-        const data = await s3.listObjectsV2(params).promise();
-        res.status(200).json({ data });
-    } catch (err) {
-        console.error('Error retrieving files from S3:', err);
-        res.status(500).json({ error: 'Error downloading files from S3' });
-    }
-});
 module.exports = router;
