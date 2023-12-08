@@ -3,6 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
+const { log } = require('console');
 const router = express.Router();
 const port = 3000;
 const token = "";
@@ -16,6 +17,27 @@ AWS.config.update({
 const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+const logAction = async (user, action, packageMetadata) => {
+  const date = new Date().toISOString();
+  const logObject = {
+    User: user,
+    Date: date,
+    PackageMetadata: packageMetadata,
+    Action: action,
+  };
+  const params = {
+    Bucket: 'clistoragetestbucket',
+    Key: `logs/${packageMetadata.name}/${date}.json`,
+    Body: JSON.stringify(logObject),
+  };
+  try {
+    await s3.putObject(params).promise();
+  } catch (err) {
+    console.error('Error logging action to S3:', err);
+  }
+};
+
 
 const validateZipContents = (zipBuffer, zipFileName) => {
   const expectedPackageJsonPath = `${zipFileName.replace(/\..+$/, '')}/package.json`.toLowerCase();
@@ -91,9 +113,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         //history:  
       }
     };
-
     await s3.upload(s3Params).promise();
-
+    //logging upload action for traceability
+    const user = {name: 'default', isAdmin: 'true'};
+    const packageMetadata = { Name: s3Params.Key, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
+    logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
   } catch (error) {
     console.error('Error uploading package:', error);
     res.status(500).json({ error: 'An error occurred while uploading the package' });
@@ -101,7 +125,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 
-router.get('/download', (req, res) => {
+router.get('/download', async (req, res) => {
   const selectedPackage = req.query.package; // Get the selected package name
   const params = {
     Bucket: 'clistoragetestbucket', 
@@ -110,40 +134,43 @@ router.get('/download', (req, res) => {
 
   const downloadUrl = s3.getSignedUrl('getObject', params);
 
+  //Get object metadata for logging
+  const objectData = await s3.getObject(params).promise();
+  const metadata = objectData.Metadata;
+  const version = metadata.version;
+  const id = metadata.packageId;
+  const user = {name: 'default', isAdmin: 'true'};
+  const packageMetadata = { Name: selectedPackage, Version: version, ID: id };
+  //logging download action for traceability
+  logAction(user, 'DOWNLOAD', packageMetadata); // Log the upload action
+
   // Redirect the user to the pre-signed URL
   res.redirect(downloadUrl);
 });
 
 router.post('/update', async (req, res) => {
-  const packageIdToUpdate = req.body.packageId;
-  const updatedName = req.body.name;
+  const { Name, Version, ID } = req.body.metadata;
+  const { Content } = req.body.data;
   //const updatedDescription = req.body.description;
 
   try {
     // Example code to get the current version number from S3 metadata
-    const s3HeadParams = {
+    const s3uploadParams = {
       Bucket: 'clistoragetestbucket',
-      Key: `uploads/${updatedName}.zip`, // Use the appropriate key
-    };
-
-    const s3ObjectMetadata = await s3.headObject(s3HeadParams).promise();
-    const currentVersion = parseInt(s3ObjectMetadata.Metadata.Version) || 0;
-
-    // Increment the version number
-    const newVersion = currentVersion + 1;
-
-    // Continue with the S3 upload process
-    const s3UploadParams = {
-      Bucket: 'clistoragetestbucket',
-      Key: `uploads/${updatedName}_v${newVersion}.zip`,
-      Body: packageIdToUpdate.buffer,
-      Metadata: {
-        Version: newVersion.toString(),
-        // Add other metadata key-value pairs as needed
+      Key: `uploads/${Name}.zip`, // Use the appropriate key
+      Body: Content,
+      metadata: {
+        Version: Version,
+        packageID: ID,
       },
     };
 
     await s3.upload(s3UploadParams).promise();
+    
+    //Logging update action for traceability
+    const user = {name: 'default', isAdmin: 'true'};
+    const packageMetadata = { Name: s3UploadParams.Key, Version: s3UploadParams.Metadata.Version, ID: s3UploadParams.Metadata.packageID };
+    logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
     res.status(200).json({ message: 'Package updated successfully' });
   } catch (error) {
@@ -174,6 +201,7 @@ router.get('/rate/:packageId', async (req, res) => {
     const dependency = s3ObjectMetadata.Metadata.Dependency_Score;
     const reviewed_code = s3ObjectMetadata.Metadata.Reviewed_Code_Score;
 
+
     // Add more metadata variables as needed
 
     // Display the relevant metadata
@@ -188,6 +216,11 @@ router.get('/rate/:packageId', async (req, res) => {
       dependency,
       reviewed_code,
     });
+
+    //logging Rate action for traceability
+    const user = {name: 'default', isAdmin: 'true'};
+    const packageMetadata = { Name: s3ObjectMetadata.Key, Version: s3ObjectMetadata.Metadata.Version, ID: s3ObjectMetadata.Metadata.packageID };
+    logAction(user, 'RATE', packageMetadata); // Log the upload action
   } catch (error) {
     console.error('Error retrieving package metadata:', error);
     res.status(500).json({ error: 'An error occurred while retrieving package metadata' });
