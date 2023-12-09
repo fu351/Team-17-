@@ -2,12 +2,20 @@
 const express = require('express');
 const router = express.Router();
 const AdmZip = require('adm-zip');
+const AWS = require('aws-sdk');
+AWS.config.update({
+    accessKeyId: 'AKIASRQLZFHMTLB44C7U',
+    secretAccessKey: '9Ht50+xjF6UI/xHVhBA7Q9abDdp5qOYdr8YtMiGw',
+    region: 'us-east-2', // Replace with your desired AWS region
+  });
+const s3 = new AWS.S3();
+const storage = multer.memoryStorage();
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/{id}', (req, res) => {
     const packageID = req.body.packageID;
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
+        Bucket: 'testingfunctionality', //replace with bucket name
         Metadata: {
             packageID: packageID
         },
@@ -28,7 +36,7 @@ router.get('/package/{id}', (req, res) => {
 router.get('/package/byName', async (req, res) => {
     const packageName = req.body.packageName;
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
+        Bucket: 'testingfunctionality', //replace with bucket name
         Prefix: `logs/${packageName}/`,
         MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
@@ -58,7 +66,7 @@ router.get('/package/byName', async (req, res) => {
 router.post('/package/byRegEx', async (req, res) => {
     const regEx = req.body.regEx;
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
+        Bucket: 'testingfunctionality', //replace with bucket name
     };
     //access the readme file and search for the regular expression
     try {
@@ -96,7 +104,7 @@ router.post('/packages', async (req, res) => {
     const versionInput = req.body.version;
     const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
+        Bucket: 'testingfunctionality', //replace with bucket name
         StartAfter: offset, // Start listing after the package name
         MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
