@@ -55,6 +55,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
   try {
     const uploadedFile = req.file;
     const packageData = req.body;
+    console.log(packageData);
 
     if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
       console.log('Validation failed.');
@@ -79,14 +80,13 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const homepage = packageJson.homepage;
     const called = packageJson.name;
     const zip_ver = packageJson.version;
-    if(homepage == NULL || called == NULL || zip_ver == NULL)  {
+    if(homepage == null|| called == null || zip_ver == null)  {
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
 
-    try {
-      const scores = await fetchGitHubInfo(homepage, token);
-    } catch (error) {
-      return res.status(400),json({ error: 'Invalid Repository URL'});
+    const scores = await fetchGitHubInfo(homepage, token);
+    if (scores == null) {
+      return res.status(400).json({ error: 'Invalid Repository URL'});
     }
 
     if (scores[1] < 0.5) { //check for ingestion
@@ -96,7 +96,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     
     //check if package exists already
     const packageExistsParams = {
-      Bucket: 'holder',
+      Bucket: 'testingfunctionality',
       Key: `packages/${packageJson.name}`,
     };
 
@@ -113,35 +113,38 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //Extract the readme from the zip file
     const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
     const readme = zip.readAsText(readmeEntry);
+    const readmeBase64 = Buffer.from(readme).toString('base64'); //convert to bas64 to be stored as metadata
 
     //create randomized 7 digit packageID
     const packageID = Math.floor(Math.random() * 9000000) + 1000000;
     // Continue with the upload process
     const s3Params = {
-      Bucket: 'clistoragetestbucket',
-      Key: `packages/${packageJson.name}`,
-      Body: uploadedFile.buffer.toString('base64'),
+      Bucket: 'testingfunctionality',
+      Key: `packages/${packageJson.name}.zip`,
+      Body: uploadedFile.buffer,
       Metadata: {
         NetScore: scores[1].toString(),
         Version: zip_ver.toString(),
-        Ramp_Up: scores[2],
-        Correctness: scores[3],
-        Bus_Factor: scores[4],
-        Responsive_Maintainer: scores[5],
-        License_Score: scores[6],
-        Dependency_Score: scores[7],
-        Reviewed_Code_Score: scores[8],
-        PopularityScore: scores[10],
-        packageId: packageID,
-        readme: readme,
+        Ramp_Up: scores[2].toString(),
+        Correctness: scores[3].toString(),
+        Bus_Factor: scores[4].toString(),
+        Responsive_Maintainer: scores[5].toString(),
+        License_Score: scores[6].toString(),
+        Dependency_Score: scores[7].toString(),
+        Reviewed_Code_Score: scores[8].toString(),
+        PopularityScore: scores[9].toString(),
+        packageId: packageID.toString(),
+        readme: readmeBase64,
         URL: homepage,
         Name: packageJson.name,
       }
     };
 
+
     try  { //upload complete, answer with response codes
       await s3.upload(s3Params).promise();
       //package was uploaded succesfully
+      const base64Data = uploadedFile.buffer.toString('base64');
       const responseBody = {
         metadata: {
           Name: called,
@@ -149,7 +152,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
           ID: packageID.toString(),
         },
         data: {
-          Content: packageData,
+          Content: base64Data,
           JSProgram: 'holder',
         }
       }
