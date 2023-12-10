@@ -3,26 +3,75 @@
 const request = require('supertest');
 const app = require('./upload_update_download_rate'); // Import your app or server
 const httpMocks = require('node-mocks-http');
+const fs = require('fs');
 
 describe('POST /package', () => {
-  /*
-    it('should upload a file', async () => {
-    const res = await request(app).post('/package').attach('file', 'catpics.zip').set('Accept', 'application/json');
-    expect(res.statusCode).toEqual(200);
-    // Add more assertions based on your application's response
+  // test cases1 upload a file
+  it('should upload a zip file', async () => {
+    const fileBuffer = fs.readFileSync('javascript-client-generated.zip'); // replace with your file path  
+    const req = httpMocks.createRequest({
+      method: 'POST',
+      url: '/package',
+      file: {
+          buffer: fileBuffer,
+          originalname: 'javascript-client-generated.zip',
+          name: 'javascript-client-generated.zip',
+      },
+    });
+  
+    const res = httpMocks.createResponse();
+    await app(req, res);
+    expect(res.statusCode).toBe(200);
   });
-*/
+
+  // test cases2 upload fail with no file provided
   it('should fail when no file is provided', async () => {
     const req = httpMocks.createRequest({
       method: 'POST',
       url: '/package',
       // add any other properties you need on req, like req.body
+    });
+    const res = httpMocks.createResponse();
+    await app(req, res);
+  // now you can make assertions about the response
+    expect(res.statusCode).toBe(400);
+  
+  });
+
+  
+  // test cases3 upload fail with no body provided
+  it('should fail with no file body provided', async () => {
+    const req = httpMocks.createRequest({
+      method: 'POST',
+      url: '/package',
+      file: {
+          buffer: '',
+          originalname: '',
+          name: '',
+      },
+    });
+    const res = httpMocks.createResponse();
+    expect(res.statusCode).toBe(200);
+    await app(req, res);
+
+}); // Add a closing curly brace here
+});
+
+
+
+
+describe('GET /package/{id}/rate', () => {
+  it('rate a file with an invalid id', async () => {
+    const req = httpMocks.createRequest({
+      method: 'GET',
+      url: '/package/{id}/rate',
+      params: {
+        id: 1,
+      },
   });
   const res = httpMocks.createResponse();
-
   await app(req, res);
-
   // now you can make assertions about the response
   expect(res.statusCode).toBe(400);
-});
+  });
 });
