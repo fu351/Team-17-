@@ -4,6 +4,7 @@ const multer = require('multer');
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
+const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const port = 3000;
 const token = process.env.GITHUB_TOKEN;
@@ -29,7 +30,7 @@ const logAction = async (user, action, packageMetadata) => {
   };
   const params = {
     Bucket: 'clistoragetestbucket',
-    Key: `logs/${packageMetadata.name}/${date}.json`,
+    Key: `logs/${packageMetadata.name}/${date}`,
     Body: JSON.stringify(logObject),
   };
   try {
@@ -115,12 +116,17 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const readme = zip.readAsText(readmeEntry);
     const readmeBase64 = Buffer.from(readme).toString('base64'); //convert to bas64 to be stored as metadata
 
-    //create randomized 7 digit packageID
-    const packageID = Math.floor(Math.random() * 9000000) + 1000000;
+    
+
+    // Create a short unique identifier
+    const shortUUID = uuidv4().split('-')[0];
+
+    // Create a unique package ID that includes the name and version
+    const packageID = `${packageJson.name}-${packageJson.version}-${shortUUID}`;
     // Continue with the upload process
     const s3Params = {
       Bucket: 'testingfunctionality',
-      Key: `packages/${packageJson.name}.zip`,
+      Key: `packages/${packageID}.zip`,
       Body: uploadedFile.buffer,
       Metadata: {
         NetScore: scores[1].toString(),
@@ -133,10 +139,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         Dependency_Score: scores[7].toString(),
         Reviewed_Code_Score: scores[8].toString(),
         PopularityScore: scores[9].toString(),
-        packageId: packageID.toString(),
         readme: readmeBase64,
         URL: homepage,
         Name: packageJson.name,
+        ID: packageID
       }
     };
 
@@ -196,7 +202,7 @@ router.get('/download', async (req, res) => { //download package (might need to 
   res.redirect(downloadUrl);
 });
 
-router.post('/package:id', async (req, res) => { //update package
+router.put('/package/{id}', async (req, res) => { //update package
   const { Name, Version, ID } = req.body.metadata;
   const { Content, URL } = req.body.data;
   if(Name == NULL || Version == NULL || ID == NULL || Content == NULL || URL == NULL) { //need all fields to be present
@@ -207,7 +213,7 @@ router.post('/package:id', async (req, res) => { //update package
   try {
     const existingPackageParams = {
       Bucket: 'holder',
-      Key: `packages/${Name}`,
+      Key: `packages/${ID}.zip`,
     };
     
     let existingMetaData;
@@ -231,7 +237,7 @@ router.post('/package:id', async (req, res) => { //update package
 
   const s3uploadparams = { //replace old content with the new content
     Bucket: 'holder',
-    Key: `packages/${Name}`,
+    Key: `packages/${ID}.zip`,
     Body: Content,
   };
 
@@ -250,8 +256,8 @@ router.post('/package:id', async (req, res) => { //update package
   }
 });
 
-router.get('/package:id/rate', async (req, res) => { //rate package
-  const packageId = req.params.packageId;
+router.get('/package/{id}/rate', async (req, res) => { //rate package
+  const packageId = req.params.Id;
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
     return res.status(400).json({ error: 'Missing PackageID' });
@@ -260,7 +266,7 @@ router.get('/package:id/rate', async (req, res) => { //rate package
     // Example code to get the relevant metadata from S3
     const s3HeadParams = {
       Bucket: 'clistoragetestbucket',
-      Key: `uploads/${packageId}.zip`, // Use the appropriate key
+      Key: `packages/${packageId}.zip`, // Use the appropriate key
     };
 
     const s3ObjectMetadata = await s3.headObject(s3HeadParams).promise();
