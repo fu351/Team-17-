@@ -1,28 +1,25 @@
 "use strict";
-const express = require('express');
+
 const AWS = require('aws-sdk');
-const app = express();
+const express = require('express');
+const router = express.Router();
 
 AWS.config.update({
-    accessKeyId: '',
-    secretAccessKey: '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process,
     region: 'us-east-2', // Replace with your desired AWS region
   });
 
 
 const s3 = new AWS.S3();
 
-app.use(express.json());
-app.use(express.static('views'));
 
 //delete specific package from s3 bucket based on packageID
-app.delete('/package/{id}', (req, res) => {
-    const packageID = req.body.packageID;
+router.delete('/package/{id}', (req, res) => {
+    const packageID = req.params.id;
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
-        Key: {
-            packageID: packageID
-        } 
+        Bucket: 'testingfunctionality', //replace with bucket name
+        Key: `packages/${packageID}.zip`,
     };
     s3.deleteObject(params, (err, data) => {
         if (err) {
@@ -35,13 +32,14 @@ app.delete('/package/{id}', (req, res) => {
 });
 
 //delete every version of a package in the s3 bucket that matches the package name
-app.delete('/package/byName/{name}', (req, res) => {
-    const packageName = req.body.packageName;
+router.delete('/package/byName/{name}', (req, res) => {
+    const packageName = req.params.name;
     const params = {
         Bucket: 'package-storage-1', //replace with bucket name
-        Key: {
+        prefix: `packages/`,
+        Metdata: {
             packageName: packageName
-        } 
+        }
     };
     s3.deleteObject(params, (err, data) => {
         if (err) {
@@ -52,3 +50,4 @@ app.delete('/package/byName/{name}', (req, res) => {
         }
     });
 }); 
+exports.router = router;

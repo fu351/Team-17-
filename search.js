@@ -3,20 +3,20 @@ const express = require('express');
 const router = express.Router();
 const AdmZip = require('adm-zip');
 const AWS = require('aws-sdk');
+
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     region: 'us-east-2', // Replace with your desired AWS region
   });
 const s3 = new AWS.S3();
-const storage = multer.memoryStorage();
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/{id}', (req, res) => {
     const packageID = req.params.id;
     const params = {
         Bucket: 'testingfunctionality', //replace with bucket name
-        key : packageID,
+        key : `packages/${packageID}.zip`,
     };
     s3.getObject(params, (err, data) => {
         if (err) {
