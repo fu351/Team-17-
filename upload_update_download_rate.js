@@ -57,7 +57,12 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const uploadedFile = req.file;
     const packageData = req.body;
     console.log(packageData);
-
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    if (!packageData) {
+      return res.status(400).json({ error: 'No package data uploaded' });
+    }
     if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
@@ -173,7 +178,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
   } catch (error) {
     console.error('Error uploading package:', error);
-    res.status(500).json({ error: 'An error occurred while uploading the package' });
   }
 });
 
