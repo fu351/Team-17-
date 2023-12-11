@@ -360,7 +360,6 @@ async function getRepoLicense(response: any): Promise<string> {
 }
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
-    personalAccessToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || personalAccessToken;
     if (npmPackageUrl == "") {
       logBasedOnVerbosity("Empty line encountered", 1);
       return 0;

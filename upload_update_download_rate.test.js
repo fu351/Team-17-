@@ -8,7 +8,7 @@ const fs = require('fs');
 describe('POST /package', () => {
   // test cases1 upload a file
   it('should upload a zip file', async () => {
-    const fileBuffer = fs.readFileSync('./cli_storage/461-G12-P2-main.zip'); // replace with your file path  
+    const fileBuffer = fs.readFileSync('461-G12-P2-main.zip'); // replace with your file path  
     const req = httpMocks.createRequest({
       method: 'POST',
       url: '/package',

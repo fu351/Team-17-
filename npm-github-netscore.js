@@ -272,7 +272,7 @@ function extractGitHubInfo(npmPackageUrl) {
                 case 4:
                     error_4 = _c.sent();
                     logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_4.message), 2);
-                    process.exit(1);
+                    //process.exit(1);
                     return [3 /*break*/, 5];
                 case 5: return [2 /*return*/];
             }
@@ -296,7 +296,7 @@ function cloneREPO(username, repository) {
                 case 2:
                     error_5 = _b.sent();
                     logBasedOnVerbosity("Error cloning repository: ".concat(error_5.message), 2);
-                    process.exit(1);
+                    //process.exit(1);
                     return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];
             }
@@ -364,7 +364,7 @@ function countLines(filePath) {
     }
     catch (error) {
         logBasedOnVerbosity("Error reading file: ".concat(filePath), 2);
-        process.exit(1);
+        //process.exit(1);
     }
 }
 function getDependencyData(getUsername, repositoryName, personalAccessToken) {
@@ -465,7 +465,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 2:
                     githubInfo = _b.sent();
                     if (!githubInfo) return [3 /*break*/, 13];
-                    console.log("123");
+                    //console.log("123");
                     headers = {
                         Authorization: "Bearer ".concat(personalAccessToken)
                     };
@@ -485,7 +485,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [4 /*yield*/, getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 5:
                     contributor_commits = _b.sent();
-                    console.log(contributor_commits);
+                   // console.log(contributor_commits);
                     return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository)];
                 case 6:
                     days_since_last_commit = _b.sent();
@@ -500,7 +500,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 9:
                     totalLines = _b.sent();
                     total_lines = totalLines[1] - totalLines[0];
-                    console.log(githubInfo);
+                    //console.log(githubInfo);
                     return [4 /*yield*/, getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 10:
                     _a = _b.sent(), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
@@ -513,7 +513,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     scores = _b.sent();
                     POPULARITY_rnd = Math.floor(popularity * 10000) / 10000;
                     scores.push(POPULARITY_rnd);
-                    console.log(scores);
+                    //console.log(scores);
                     ////
                     ////
                     //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant

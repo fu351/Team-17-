@@ -96,7 +96,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     console.log("test ---");
     const scores = await fetchGitHubInfo(homepage, token);
-    console.log(scores);
+    //console.log(scores);
     if (scores == null) {
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
