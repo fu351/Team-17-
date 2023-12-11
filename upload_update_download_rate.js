@@ -57,10 +57,13 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const uploadedFile = req.file;
     const packageData = req.body;
     console.log(packageData);
+
     if (!uploadedFile) {
+      console.log('No file uploaded.')
       return res.status(400).json({ error: 'No file uploaded' });
     }
     if (!packageData) {
+      console.log('No package data uploaded.');
       return res.status(400).json({ error: 'No package data uploaded' });
     }
     if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
@@ -87,11 +90,15 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const called = packageJson.name;
     const zip_ver = packageJson.version;
     if(homepage == null|| called == null || zip_ver == null)  {
+      console.log(homepage, called, zip_ver);
+      console.log('package.json must contain repository url, package name, and version');
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
-
+    console.log("test ---");
     const scores = await fetchGitHubInfo(homepage, token);
+    console.log(scores);
     if (scores == null) {
+      console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
 
@@ -107,7 +114,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     };
 
     try {
-      await s3.headObject(packageExistsParams).promise();
+      s3.headObject(packageExistsParams).promise();
       return res.status(409).json({error: 'Package exists already'});
     } catch (headObjectError) {
       //if the package does nto exist continue with upload
@@ -167,15 +174,15 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
           JSProgram: 'holder',
         }
       }
+      //logging upload action for traceability
+      const user = {name: 'default', isAdmin: 'true'};
+      const packageMetadata = { Name: s3Params.Key, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
+      logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
+      
       return res.status(201).json({responseBody});
     } catch (error) {
       console.error(error);
     }
-    
-    //logging upload action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: s3Params.Key, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
-    logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
   } catch (error) {
     console.error('Error uploading package:', error);
   }

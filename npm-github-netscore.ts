@@ -367,7 +367,9 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
     else {
       const githubInfo = await extractGitHubInfo(npmPackageUrl);
       if (githubInfo) {
-        console.log(githubInfo);
+        console.log("123");
+
+        //console.log(githubInfo);
         // Modify the headers to include the personal access token
         const headers = {
           Authorization: `Bearer ${personalAccessToken}`,
@@ -381,7 +383,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const response = await axios.get(url, axiosConfig);
         //gather info
         await cloneREPO(githubInfo.username, githubInfo.repository);
-        
+
         const issue_count: number =  response.data.open_issues_count;
         const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
         console.log(contributor_commits);
@@ -391,6 +393,8 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
         const totalLines = await traverseDirectory(rootDirectory);
         const total_lines = totalLines[1] - totalLines[0];
+        console.log(githubInfo);
+
         const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
         //calculate netscore and all metrics
         const total_dependencies = assigned_dependencies + unassigned_dependencies;
