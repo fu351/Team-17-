@@ -266,7 +266,8 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
                     LICENSE_SCORE = Math.floor(license * 10000) / 10000;
                     DEPENDENCY_SCORE = Math.floor(dependencies * 10000) / 10000;
                     REVIEWED_CODE_SCORE = Math.floor(reviewed_code * 10000) / 10000;
-                    output = JSON.stringify({
+                    output = [npmPackageUrl, NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, DEPENDENCY_SCORE, REVIEWED_CODE_SCORE];
+                    /*const output = JSON.stringify({
                         URL: npmPackageUrl,
                         NET_SCORE: NET_SCORE,
                         RAMP_UP_SCORE: RAMP_UP_SCORE,
@@ -276,20 +277,7 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
                         LICENSE_SCORE: LICENSE_SCORE,
                         DEPENDENCY_SCORE: DEPENDENCY_SCORE,
                         REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
-                    });
-                    console.log(JSON.stringify({
-                        URL: npmPackageUrl,
-                        NET_SCORE: NET_SCORE,
-                        RAMP_UP_SCORE: RAMP_UP_SCORE,
-                        CORRECTNESS_SCORE: CORRECTNESS_SCORE,
-                        BUS_FACTOR_SCORE: BUS_FACTOR_SCORE,
-                        RESPONSIVE_MAINTAINER_SCORE: RESPONSIVE_MAINTAINER_SCORE,
-                        LICENSE_SCORE: LICENSE_SCORE,
-                        DEPENDENCY_SCORE: DEPENDENCY_SCORE,
-                        REVIEWED_CODE_SCORE: REVIEWED_CODE_SCORE
-                    }));
-                    //console.log(`${printign}`);
-                    //process.stdout.write(printign);
+                      });*/
                     return [2 /*return*/, output];
             }
         });

@@ -360,6 +360,7 @@ async function getRepoLicense(response: any): Promise<string> {
 }
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
+    personalAccessToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN || personalAccessToken;
     if (npmPackageUrl == "") {
       logBasedOnVerbosity("Empty line encountered", 1);
       return 0;
@@ -401,8 +402,8 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const popularity = await getPopularity(response, total_dependencies);
         //console.log(`Popularity: ${popularity}`);
         const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
-        
-        scores.push(popularity);
+        const  POPULARITY_rnd : number = Math.floor(popularity * 10000) / 10000;
+        scores.push(POPULARITY_rnd);        
         console.log(scores);
         ////
         ////
