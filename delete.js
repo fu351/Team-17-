@@ -6,7 +6,7 @@ const router = express.Router();
 
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     region: 'us-east-2', // Replace with your desired AWS region
   });
 
@@ -35,7 +35,7 @@ router.delete('/package/{id}', (req, res) => {
 router.delete('/package/byName/{name}', (req, res) => {
     const packageName = req.params.name;
     const params = {
-        Bucket: 'package-storage-1', //replace with bucket name
+        Bucket: 'testingfunctionality', //replace with bucket name
         prefix: `packages/`,
         Metdata: {
             packageName: packageName

@@ -54,19 +54,50 @@ const validateZipContents = (zipBuffer, zipFileName) => {
 
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
-    const uploadedFile = req.file;
     const packageData = req.body;
     console.log(packageData);
-
-    if (!uploadedFile) {
-      console.log('No file uploaded.')
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+    let content = packageData.Content;
+    
     if (!packageData) {
       console.log('No package data uploaded.');
       return res.status(400).json({ error: 'No package data uploaded' });
     }
-    if (!validateZipContents(uploadedFile.buffer, uploadedFile.originalname)) {
+    if (packageData.Content != NULL & packageData.URL != NULL) { 
+      return res.status(400).json({error: 'Both content and URL were set'});
+    }
+    if (packageData.Content == NULL & packageData.URL == NULL) {
+      return res.status(400).json({error: 'Neither content nor URL were set'});
+    }
+
+    let homepage = "";
+    let packageName = "";
+    let zip_ver = "";
+    
+    //Handles if the package is uploaded via URL
+    //Retrieves the zip file of the package from the URL
+    if (packageData.URL != NULL){
+      homepage = packageData.URL;
+      const {user, repo} = await extractGitHubInfo(homepage);
+      const url = `https://api.github.com/repos/${user}/${repo}/zipball`;
+      axious ({
+        method: 'get',
+        url: url,
+        headers: {
+          Authorization: `token ${token}`,
+        },
+        responseType: 'arraybuffer',
+      })
+      .then(function (response) {
+        content = Buffer.from(response.data, 'binary').toString('base64');
+    })
+  }
+    const base64Data = Buffer.from(content, 'base64');
+    const uploadedFile = {
+      buffer: base64Data,
+      tempname: 'package.zip',
+    };
+
+    if (!validateZipContents(uploadedFile.buffer, uploadedFile.tempname)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
@@ -86,15 +117,30 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageJson = JSON.parse(packageJsonContent);
     
     // Extract homepage, name and version from package.json
-    const homepage = packageJson.homepage;
-    const called = packageJson.name;
-    const zip_ver = packageJson.version;
-    if(homepage == null|| called == null || zip_ver == null)  {
+    //Set homepage if it was not set before
+    if (homepage == null) {
+      const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+      //go through json file and find url to github repo based on regex
+      for (const key in packageJson) {
+        if (packageJson.hasOwnProperty(key)) {
+          const element = packageJson[key];
+          if (typeof element === 'string' && githubUrlPattern.test(element)) {
+            homepage = element;
+            break;
+          }
+        }
+      }
+    }
+
+    packageName = packageJson.name;
+    zip_ver = packageJson.version;
+    if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(homepage, called, zip_ver);
       console.log('package.json must contain repository url, package name, and version');
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
-    console.log("test ---");
+    
+    
     const scores = await fetchGitHubInfo(homepage, token);
     //console.log(scores);
     if (scores == null) {
@@ -106,11 +152,12 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('Package Net Score too low, ingestion blocked.');
       return res.status(424).json({ error: 'Package not uploaded due to rating' });
     }
-    
+    // Create a unique package ID that includes the name and version
+    const packageID = `${packageName}-${zip_ver}`;
     //check if package exists already
     const packageExistsParams = {
       Bucket: 'testingfunctionality',
-      Key: `packages/${packageJson.name}`,
+      Key: `packages/${packageID}.zip`,
     };
 
     try {
@@ -123,26 +170,16 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       }
     }
 
-    //Extract the readme from the zip file
-    const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
-    const readme = zip.readAsText(readmeEntry);
-    const readmeBase64 = Buffer.from(readme).toString('base64'); //convert to bas64 to be stored as metadata
-
     
 
-    // Create a short unique identifier
-    const shortUUID = uuidv4().split('-')[0];
-
-    // Create a unique package ID that includes the name and version
-    const packageID = `${packageJson.name}-${packageJson.version}-${shortUUID}`;
+    
     // Continue with the upload process
     const s3Params = {
       Bucket: 'testingfunctionality',
       Key: `packages/${packageID}.zip`,
-      Body: uploadedFile.buffer,
+      data: {content: content},
       Metadata: {
         NetScore: scores[1].toString(),
-        Version: zip_ver.toString(),
         Ramp_Up: scores[2].toString(),
         Correctness: scores[3].toString(),
         Bus_Factor: scores[4].toString(),
@@ -151,9 +188,9 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         Dependency_Score: scores[7].toString(),
         Reviewed_Code_Score: scores[8].toString(),
         PopularityScore: scores[9].toString(),
-        readme: readmeBase64,
         URL: homepage,
         Name: packageJson.name,
+        Version: zip_ver.toString(),
         ID: packageID
       }
     };
@@ -162,7 +199,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     try  { //upload complete, answer with response codes
       await s3.upload(s3Params).promise();
       //package was uploaded succesfully
-      const base64Data = uploadedFile.buffer.toString('base64');
       const responseBody = {
         metadata: {
           Name: called,
@@ -170,21 +206,22 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
           ID: packageID.toString(),
         },
         data: {
-          Content: base64Data,
+          Content: content,
           JSProgram: 'holder',
         }
-      }
+      };
       //logging upload action for traceability
       const user = {name: 'default', isAdmin: 'true'};
-      const packageMetadata = { Name: s3Params.Key, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
+      const packageMetadata = { Name: s3Params.Metadata.Name, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
       logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
       
       return res.status(201).json({responseBody});
     } catch (error) {
       console.error(error);
     }
+    
   } catch (error) {
-    console.error('Error uploading package:', error);
+    return res.status(400)('Error uploading package:', error);
   }
 });
 
