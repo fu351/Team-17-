@@ -33,3 +33,10 @@
     at IncomingMessage.emit (node:domain:489:12)
     at endReadableNT (node:internal/streams/readable:1359:12)
     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2023-12-11T16:01:40.789Z [DEBUG] debug: Error: AxiosError: Request failed with status code 401
+    at settle (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/core/settle.js:19:12)
+    at IncomingMessage.handleStreamEnd (/home/shay/a/fu351/Desktop/Team-17-/node_modules/axios/lib/adapters/http.js:585:11)
+    at IncomingMessage.emit (node:events:526:35)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1359:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)

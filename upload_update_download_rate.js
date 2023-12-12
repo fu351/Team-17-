@@ -7,8 +7,9 @@ const { log } = require('console');
 const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const port = 3000;
-const token = process.env.GITHUB_TOKEN;
 require('dotenv').config();
+const token = process.env.GITHUB_TOKEN;
+
 
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
