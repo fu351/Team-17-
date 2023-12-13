@@ -163,7 +163,7 @@ export async function calculate_dependencies(assigned_dependencies: number, unas
 }
 //Net_Score
 export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, assigned_dependencies:number, unassigned_dependencies:number, reviewed_code:number, npmPackageUrl: string) {
-    
+    console.log(lines_of_code, num_issues);
     const bus_factor = await calculate_bus_factor(contributor_commits);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
     const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);

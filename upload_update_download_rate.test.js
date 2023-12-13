@@ -8,28 +8,20 @@ const fs = require('fs');
 describe('POST /package', () => {
   // test cases1 upload a file
   it('should upload a zip file', async () => {
-    const fileBuffer = fs.readFileSync('461-G12-P2-main.zip'); // replace with your file path  
+    const fileBuffer = fs.readFileSync('underscore-master.zip', 'base64'); // replace with your file path  
     const req = httpMocks.createRequest({
       method: 'POST',
       url: '/package',
-      file: {
-          buffer: fileBuffer,
-          originalname: '461-G12-P2-main.zip',
-          name: '461-G12-P2-main.zip',
-      },
       body: {
-        name: '461-G12-P2-main.zip',
-        description: 'test upload',
-        version: '1.0.0',
+          Content: fileBuffer,
       },
     });
-  
     const res = httpMocks.createResponse();
     await app(req, res);
     expect(res.statusCode).toBe(201);
   });
-
-/*  // test cases2 upload fail with no file provided
+/*
+  // test cases2 upload fail with no file provided
   it('should fail when no file is provided', async () => {
     const req = httpMocks.createRequest({
       method: 'POST',
@@ -59,12 +51,12 @@ describe('POST /package', () => {
     expect(res.statusCode).toBe(200);
     await app(req, res);
 
-  }); // Add a closing curly brace here
+  }); // Add a closing curly brace here*/
 });
 
 
 
-
+/*
 describe('GET /package/{id}/rate', () => {
   it('rate a file with an invalid id', async () => {
     const req = httpMocks.createRequest({
@@ -78,5 +70,6 @@ describe('GET /package/{id}/rate', () => {
   await app(req, res);
   // now you can make assertions about the response
   expect(res.statusCode).toBe(400);
-  });*/
+  });
 });
+*/

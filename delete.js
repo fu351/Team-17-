@@ -18,7 +18,7 @@ const s3 = new AWS.S3();
 router.delete('/package/{id}', (req, res) => {
     const packageID = req.params.id;
     const params = {
-        Bucket: 'testingfunctionality', //replace with bucket name
+        Bucket: '461testbucket', //replace with bucket name
         Key: `packages/${packageID}.zip`,
     };
     s3.deleteObject(params, (err, data) => {
@@ -35,7 +35,7 @@ router.delete('/package/{id}', (req, res) => {
 router.delete('/package/byName/{name}', (req, res) => {
     const packageName = req.params.name;
     const params = {
-        Bucket: 'testingfunctionality', //replace with bucket name
+        Bucket: '461testbucket', //replace with bucket name
         prefix: `packages/`,
         Metdata: {
             packageName: packageName

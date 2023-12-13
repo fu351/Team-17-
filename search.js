@@ -15,7 +15,7 @@ const s3 = new AWS.S3();
 router.get('/package/{id}', (req, res) => {
     const packageID = req.params.id;
     const params = {
-        Bucket: 'testingfunctionality', //replace with bucket name
+        Bucket: '461testbucket', //replace with bucket name
         key : `packages/${packageID}.zip`,
     };
     s3.getObject(params, (err, data) => {
@@ -33,7 +33,7 @@ router.get('/package/{id}', (req, res) => {
 router.get('/package/byName', async (req, res) => {
     const packageName = req.body.packageName;
     const params = {
-        Bucket: 'testingfunctionality', //replace with bucket name
+        Bucket: '461testbucket', //replace with bucket name
         Prefix: `logs/${packageName}/`,
         MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
@@ -43,7 +43,7 @@ router.get('/package/byName', async (req, res) => {
         const data = await s3.listObjectsV2(params).promise();
         const promises = data.Contents.map(async (item) => {
             const params = {
-                Bucket: 'testingfunctionality', //replace with bucket name
+                Bucket: '461testbucket', //replace with bucket name
                 Key: item.Key
             };
             const logData = await s3.getObject(params).promise();
@@ -61,7 +61,7 @@ router.post('/package/byRegEx', async (req, res) => {
     //get the regular expression from the body
     const regEx = req.body.regEx;
     const params = {
-        Bucket: 'testingfunctionality', //replace with bucket name
+        Bucket: '461testbucket', //replace with bucket name
         Prefix: `packages/`,
     };
     //access the readme file and search for the regular expression
@@ -112,7 +112,7 @@ router.post('/packages', async (req, res) => {
         }
         if (packageName == "*") {
             const params = {
-                Bucket: 'testingfunctionality', //replace with bucket name
+                Bucket: '461testbucket', //replace with bucket name
                 Prefix: `packages/`,
                 StartAfter: offset, // Start listing after the package name
                 MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
@@ -121,7 +121,7 @@ router.post('/packages', async (req, res) => {
             const matchedPackages = [];
             for (const item of data.Contents) {
                 const metadataParams = {
-                    Bucket: 'testingfunctionality',
+                    Bucket: '461testbucket',
                     Key: item.Key,
                 };
                 const metadata = await s3.headObject(metadataParams).promise();
@@ -132,7 +132,7 @@ router.post('/packages', async (req, res) => {
         }
         else {
             const params = {
-                Bucket: 'testingfunctionality', //replace with bucket name
+                Bucket: '461testbucket', //replace with bucket name
                 Prefix: `packages/`,
                 StartAfter: offset, // Start listing after the package name
                 MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks

@@ -4,19 +4,14 @@ const multer = require('multer');
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
-const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const port = 3000;
 require('dotenv').config();
 const token = process.env.GITHUB_TOKEN;
 
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: 'us-east-2', // Replace with your desired AWS region
-});
 
+AWS.config.logger = console;
 const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -30,7 +25,7 @@ const logAction = async (user, action, packageMetadata) => {
     Action: action,
   };
   const params = {
-    Bucket: 'clistoragetestbucket',
+    Bucket: '461testbucket',
     Key: `logs/${packageMetadata.name}/${date}`,
     Body: JSON.stringify(logObject),
   };
@@ -41,42 +36,38 @@ const logAction = async (user, action, packageMetadata) => {
   }
 };
 
-const validateZipContents = (zipBuffer, zipFileName) => {
-  const expectedPackageJsonPath = `${zipFileName.replace(/\..+$/, '')}/package.json`.toLowerCase();
-
+const validateZipContents = (zipBuffer, ) => {
   const zip = new AdmZip(zipBuffer);
   const zipEntries = zip.getEntries();
-
-  // Check if there's an entry with the expected path 'name-of-file/package.json'
-  const hasPackageJson = zipEntries.some(entry => entry.entryName.toLowerCase() === expectedPackageJsonPath);
-
-  return hasPackageJson;
+  const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
+  return Boolean(packageJsonEntry);
 };
 
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
     const packageData = req.body;
-    console.log(packageData);
     let content = packageData.Content;
-    
     if (!packageData) {
       console.log('No package data uploaded.');
       return res.status(400).json({ error: 'No package data uploaded' });
     }
-    if (packageData.Content != NULL & packageData.URL != NULL) { 
+    if (packageData.Content & packageData.URL) { 
+      console.log('Both content and URL were set.');
       return res.status(400).json({error: 'Both content and URL were set'});
     }
-    if (packageData.Content == NULL & packageData.URL == NULL) {
+    if (!packageData.Content & !packageData.URL) {
+      console.log('Neither content nor URL were set.');
       return res.status(400).json({error: 'Neither content nor URL were set'});
     }
 
-    let homepage = "";
+    let homepage = undefined;
     let packageName = "";
     let zip_ver = "";
     
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
-    if (packageData.URL != NULL){
+    if (packageData.URL){
+      console.log('URL was set.');
       homepage = packageData.URL;
       const {user, repo} = await extractGitHubInfo(homepage);
       const url = `https://api.github.com/repos/${user}/${repo}/zipball`;
@@ -92,21 +83,27 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         content = Buffer.from(response.data, 'binary').toString('base64');
     })
   }
+  else {
+    console.log('Content was set.');
+  }
     const base64Data = Buffer.from(content, 'base64');
-    const uploadedFile = {
-      buffer: base64Data,
-      tempname: 'package.zip',
-    };
 
-    if (!validateZipContents(uploadedFile.buffer, uploadedFile.tempname)) {
+
+    if (!validateZipContents(base64Data)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
 
     // Read and parse package.json content
-    const zip = new AdmZip(uploadedFile.buffer);
+    const zip = new AdmZip(base64Data);
     const zipEntries = zip.getEntries();
-    const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
+    // Sort the entries by their depth to ensure that the package.json file is found on the first level
+    const sortedEntries = zipEntries.sort((a, b) => {
+      const depthA = a.entryName.split('/').length;
+      const depthB = b.entryName.split('/').length;
+      return depthA - depthB;
+    });
+    const packageJsonEntry = sortedEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
 
     if (!packageJsonEntry) {
       console.log('Package.json not found in zip file.');
@@ -117,68 +114,85 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
     
-    // Extract homepage, name and version from package.json
-    //Set homepage if it was not set before
-    if (homepage == null) {
-      const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
-      //go through json file and find url to github repo based on regex
-      for (const key in packageJson) {
-        if (packageJson.hasOwnProperty(key)) {
-          const element = packageJson[key];
-          if (typeof element === 'string' && githubUrlPattern.test(element)) {
-            homepage = element;
-            break;
+    function findGitHubUrl(object) {
+      const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+      for (const key in object) {
+        if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
+          let url = object[key];
+          // Remove any existing protocol
+          url = url.replace(/^[a-z]*:/, '');
+          // Ensure the URL uses the https protocol
+          url = 'https:' + url;
+          // Remove .git at the end of the URL
+          url = url.replace(/\.git$/, '');
+          return url;
+        } else if (typeof object[key] === 'object' && object[key] !== null) {
+          const result = findGitHubUrl(object[key]);
+          if (result) {
+            return result;
           }
         }
       }
+      return null;
     }
-
+    // Extract homepage, name and version from package.json
+    //Set homepage if it was not set before
+    if (!homepage) {
+      homepage = findGitHubUrl(packageJson);
+    }
+    console.log("home",homepage);
     packageName = packageJson.name;
     zip_ver = packageJson.version;
     if(homepage == null|| packageName == null || zip_ver == null)  {
-      console.log(homepage, called, zip_ver);
+      console.log(packageJsonEntry.entryName)
+      console.log(packageJson)
+      console.log('homepage: ' + homepage + ' packageName: ' + packageName + ' zip_ver: ' + zip_ver);
       console.log('package.json must contain repository url, package name, and version');
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
     
-    
+    console.log("adsfsadf")
     const scores = await fetchGitHubInfo(homepage, token);
+    
     //console.log(scores);
-    if (scores == null) {
+    if (scores == null ) {
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
-
-    if (scores[1] < 0.5) { //check for ingestion
-      console.log('Package Net Score too low, ingestion blocked.');
-      return res.status(424).json({ error: 'Package not uploaded due to rating' });
+    for (const score in scores) {
+      if (score < 0.5 || score == NaN) { //check for ingestion
+        console.log('Package Net Score too low, ingestion blocked.');
+        console.log(scores);
+        return res.status(424).json({ error: 'Package not uploaded due to rating' });
+      }
     }
     // Create a unique package ID that includes the name and version
     const packageID = `${packageName}-${zip_ver}`;
     //check if package exists already
     const packageExistsParams = {
-      Bucket: 'testingfunctionality',
+      Bucket: '461testbucket',
       Key: `packages/${packageID}.zip`,
     };
 
-    try {
+   /* try {
       s3.headObject(packageExistsParams).promise();
       return res.status(409).json({error: 'Package exists already'});
     } catch (headObjectError) {
       //if the package does nto exist continue with upload
       if (headObjectError.code != 'NotFound') {
         console.log('something went wrong');
+        console.log(headObjectError);
       }
     }
-
+*/
     
 
     
     // Continue with the upload process
     const s3Params = {
-      Bucket: 'testingfunctionality',
+      Bucket: '461testbucket',
       Key: `packages/${packageID}.zip`,
-      data: {content: content},
+      Body: content,
       Metadata: {
         NetScore: scores[1].toString(),
         Ramp_Up: scores[2].toString(),
@@ -222,7 +236,8 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     
   } catch (error) {
-    return res.status(400)('Error uploading package:', error);
+    console.log('Error uploading package:', error);
+    return res.status(400).json('Error uploading package:', error);
   }
 });
 
@@ -230,16 +245,16 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
 router.get('/download', async (req, res) => { //download package (might need to work on this one)
   const selectedPackage = req.query.package; // Get the selected package name
   const params = {
-    Bucket: 'clistoragetestbucket', 
-    Key: `${selectedPackage}`, // Use the selected package name to generate the object key
+    Bucket: '461testbucket', 
+    Key: `${selectedPackage}`, // Use the selected package name to generate the Object key
     Expires: 60 * 5, // The URL will expire in 60 seconds, Security
   };
 
   const downloadUrl = s3.getSignedUrl('getObject', params);
 
-  //Get object metadata for logging
-  const objectData = await s3.getObject(params).promise();
-  const metadata = objectData.Metadata;
+  //Get Object metadata for logging
+  const ObjectData = await s3.getObject(params).promise();
+  const metadata = ObjectData.Metadata;
   const version = metadata.version;
   const id = metadata.packageId;
   const user = {name: 'default', isAdmin: 'true'};
@@ -314,7 +329,7 @@ router.get('/package/{id}/rate', async (req, res) => { //rate package
   try {
     // Example code to get the relevant metadata from S3
     const s3HeadParams = {
-      Bucket: 'clistoragetestbucket',
+      Bucket: '461testbucket',
       Key: `packages/${packageId}.zip`, // Use the appropriate key
     };
 
@@ -359,6 +374,7 @@ router.get('/package/{id}/rate', async (req, res) => { //rate package
 
 // A simple route to check if the server is running
 router.get('/', (req, res) => {
+  
   res.send('Server is up and running.');
 });
 

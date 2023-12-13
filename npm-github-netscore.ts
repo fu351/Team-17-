@@ -165,7 +165,7 @@ async function getTimeSinceLastCommit(getUsername: string, repositoryName: strin
 async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: string; repository: string } | null> {
   try {
   const githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
-
+    console.log(npmPackageUrl);
     //Checks if it is a github url if not treats it as a npm url
   if (!githubUrlPattern.test(npmPackageUrl)) {
 
@@ -399,7 +399,9 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         //calculate netscore and all metrics
         const total_dependencies = assigned_dependencies + unassigned_dependencies;
         const popularity = await getPopularity(response, total_dependencies);
-        //console.log(`Popularity: ${popularity}`);
+        console.log(`Popularity: ${popularity}`);
+        console.log("test");
+        console.log(totalLines, issue_count);
         const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
         const  POPULARITY_rnd : number = Math.floor(popularity * 10000) / 10000;
         scores.push(POPULARITY_rnd);        
