@@ -7,7 +7,7 @@ const fs = require('fs');
 
 describe('POST /package', () => {
   // test cases1 upload a file
- /* it('should upload a zip file', async () => {
+  /*it('should upload a zip file', async () => {
     const fileBuffer = fs.readFileSync('underscore-master.zip', 'base64'); // replace with your file path  
     const req = httpMocks.createRequest({
       method: 'POST',
@@ -24,13 +24,13 @@ describe('POST /package', () => {
     }
     expect(res.statusCode).toBe(201);
   });*/
-  // test cases1.1 upload a file
+ /// test cases1.1 upload a file
   it('should upload a url', async () => {
     const req = httpMocks.createRequest({
       method: 'POST',
       url: '/package',
       body: {
-          URL: 'https://github.com/longhorn/longhorn',
+          URL: 'https://github.com/jashkenas/underscore',
       },
     });
     const res = httpMocks.createResponse();

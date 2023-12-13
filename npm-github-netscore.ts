@@ -198,7 +198,7 @@ async function cloneREPO(username: string, repository: string) {
     const destinationPath = `cli_storage/${repository}`;
     const cloneCommand = `git clone ${repoUrl} ${destinationPath}`;
 
-    const { stdout, stderr } = await exec(cloneCommand);
+    await exec(cloneCommand);
 
   } catch (error) {
     logBasedOnVerbosity(`Error cloning repository: ${error.message}`, 2);

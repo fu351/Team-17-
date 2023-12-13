@@ -5,9 +5,14 @@ const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
-const axios = require('axios');
 const port = 3000;
 require('dotenv').config();
+const fetch = require('node-fetch');
+const fs = require('fs');
+const stream = require('stream');
+const { promisify } = require('util');
+
+
 const token = process.env.GITHUB_TOKEN;
 
 
@@ -74,43 +79,56 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     if (packageData.URL){
       console.log('URL was set.');
       homepage = packageData.URL;
-      let githubInfo = undefined;
+      let githubInfo;
       try {
          githubInfo = await extractGitHubInfo(homepage);
       } catch (error) {
         console.log(error);
       }
+      console.log(githubInfo);
       if (!githubInfo.username || !githubInfo.repository) {
         console.log('Invalid Repository URL');
         return res.status(400).json({ error: 'Invalid Repository URL'});
       }
       const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}/zipball`;
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+      };
       try {
-      const response = await axios ({
-        method: 'get',
-        url: url,
-        headers: {
-          Authorization: `token ${token}`,
-        },
-        responseType: 'arraybuffer',
-      })
-      content = Buffer.from(response.data, 'binary').toString('base64');
+        const response = await fetch(url, { headers });
+        const fileStream = fs.createWriteStream(`${githubInfo.repository}.zip`);
+        await new Promise((resolve, reject) => {
+          response.body.pipe(fileStream);
+          response.body.on("error", (err) => {
+            reject(err);
+          });
+          fileStream.on("finish", function () {
+            resolve();
+          });
+        });
+        // Read the zip file into a buffer
+        const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
+        // Convert the buffer to a base64 string
+        content = zipBuffer.toString('base64');
+       
       } catch (error) {
+        console.log('Error downloading package:');
+        
         console.log(error);
+        //process.exit(1);
       }
-    } 
-    else {
-      console.log('Content was set.');
-    const base64Data = Buffer.from(content, 'base64');
+    }
+    //console.log(content);
+    const decodedData = Buffer.from(content, 'base64');
 
 
-    if (!validateZipContents(base64Data)) {
+    if (!validateZipContents(decodedData)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
-
     // Read and parse package.json content
-    const zip = new AdmZip(base64Data);
+    const zip = new AdmZip(decodedData);
     const zipEntries = zip.getEntries();
     // Sort the entries by their depth to ensure that the package.json file is found on the first level
     const sortedEntries = zipEntries.sort((a, b) => {
@@ -166,10 +184,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('package.json must contain repository url, package name, and version');
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
-    }
+    
     console.log("adsfsadf")
     const scores = await fetchGitHubInfo(homepage, token);
-    
+    console.log("scores", scores);
     //console.log(scores);
     if (scores == null ) {
       console.log('Invalid Repository URL');
@@ -179,7 +197,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       if (score < 0.5 || score == NaN) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
@@ -202,7 +220,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
 
     
-
+    console.log(scores);
     
     // Continue with the upload process
     const s3Params = {
