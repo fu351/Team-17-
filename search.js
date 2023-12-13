@@ -3,35 +3,61 @@ const express = require('express');
 const router = express.Router();
 const AdmZip = require('adm-zip');
 const AWS = require('aws-sdk');
+require('dotenv').config();
 
 AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_Key_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_Key,
     region: 'us-east-2', // Replace with your desired AWS region
   });
 const s3 = new AWS.S3();
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
-router.get('/package/{id}', (req, res) => {
+router.get('/package/:id', (req, res) => {
+    console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
     const params = {
         Bucket: '461testbucket', //replace with bucket name
-        key : `packages/${packageID}.zip`,
+        Key : `packages/${packageID}.zip`,
     };
-    s3.getObject(params, (err, data) => {
-        if (err) {
-            console.error('Error retrieving file from S3:', err);
-            res.status(500).json({ error: 'Error downloading file from S3' });
-        } else {
-            res.status(200).json({ data });
-        }
+    console.log(params);
+    return new Promise((resolve, reject) => {
+        s3.getObject(params, (err, data) => {
+            if (err) {
+                console.error('Error retrieving file from S3:', err);
+                res.status(500).json({ error: 'Error downloading file from S3' });
+                reject(err);
+            } else {
+                console.log({ 
+                    metadata:{
+                        Name: data.Metadata.name,
+                        Version: data.Metadata.version,
+                        ID: data.Metadata.id,
+                        },
+                    data: {
+                        Content: data.Body.toString('base64'),
+                    }
+                })
+                res.status(200).json({ 
+                    metadata:{
+                        Name: data.Metadata.name,
+                        Version: data.Metadata.version,
+                        ID: data.Metadata.id,
+                        },
+                    data: {
+                        Content: data.Body.toString('base64'),
+                    }
+                });
+                resolve();
+            }
+        });
     });
 });
 
 
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
-router.get('/package/byName', async (req, res) => {
-    const packageName = req.body.packageName;
+router.get('/package/byName/:name', async (req, res) => {
+    const packageName = req.params.name;
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `logs/${packageName}/`,
@@ -39,17 +65,20 @@ router.get('/package/byName', async (req, res) => {
     };
 
     try {
+        console.log(params);
         // Get the logs from S3 and return them
         const data = await s3.listObjectsV2(params).promise();
         const promises = data.Contents.map(async (item) => {
             const params = {
                 Bucket: '461testbucket', //replace with bucket name
+                Prefix: `logs`,
                 Key: item.Key
             };
             const logData = await s3.getObject(params).promise();
             return JSON.parse(logData.Body.toString('utf-8'));
         });
         const logs = await Promise.all(promises);
+        console.log(logs);
         res.status(200).json(logs);
     } catch (err) {
         console.error('Error retrieving logs from S3:', err);
@@ -59,7 +88,7 @@ router.get('/package/byName', async (req, res) => {
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
 router.post('/package/byRegEx', async (req, res) => {
     //get the regular expression from the body
-    const regEx = req.body.regEx;
+    const regEx =  new RegExp(req.body.regEx);
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `packages/`,
@@ -68,10 +97,11 @@ router.post('/package/byRegEx', async (req, res) => {
     try {
         const data = await s3.listObjectsV2(params).promise();
         const matchedPackages = [];
+        console.log("dsf",data);
         for (const item of data.Contents) {
             const metadataParams = {
                 Bucket: params.Bucket,
-                key : item.Key,
+                Key : item.Key,
             };
 
             const object = await s3.getObject(metadataParams).promise();

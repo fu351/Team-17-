@@ -261,7 +261,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       };
       //logging upload action for traceability
       const user = {name: 'default', isAdmin: 'true'};
-      const packageMetadata = { Name: s3Params.Metadata.Name, Version: s3Params.Metadata.Version, ID: s3Params.Metadata.packageID };
+      const packageMetadata = { Name: packageJson.name, Version: zip_ver.toString(), ID: packageID.toString() };
       logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
       
       return res.status(201).json({responseBody});
@@ -354,10 +354,12 @@ router.put('/package/{id}', async (req, res) => { //update package
   }
 });
 
-router.get('/package/{id}/rate', async (req, res) => { //rate package
-  const packageId = req.params.Id;
+router.get('/package/:id/rate', async (req, res) => { //rate package
+  const packageId = req.params.id;
+  console.log(packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
+
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {
@@ -384,8 +386,14 @@ router.get('/package/{id}/rate', async (req, res) => { //rate package
     const GoodPinningPractice = score[7];
     const PullRequest = score[8];
  
+    
+
+    //logging Rate action for traceability
+    const user = {name: 'default', isAdmin: 'true'};
+    const packageMetadata = { Name: s3ObjectMetadata.Key, Version: s3ObjectMetadata.Metadata.Version, ID: s3ObjectMetadata.Metadata.packageID };
+    logAction(user, 'RATE', packageMetadata); // Log the upload action
     // Display the relevant metadata
-    res.status(200).json({
+    return res.status(200).json({
       "BusFactor": BusFactor,
       "Correctness": Correctness,
       "Rampup": RampUp,
@@ -395,11 +403,6 @@ router.get('/package/{id}/rate', async (req, res) => { //rate package
       "PullRequest": PullRequest,
       "NetScore": NetScore,
     });
-
-    //logging Rate action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: s3ObjectMetadata.Key, Version: s3ObjectMetadata.Metadata.Version, ID: s3ObjectMetadata.Metadata.packageID };
-    logAction(user, 'RATE', packageMetadata); // Log the upload action
   } catch (error) {
     console.error('Error retrieving package metadata:', error);
     res.status(500).json({ error: 'An error occurred while retrieving package metadata' });
