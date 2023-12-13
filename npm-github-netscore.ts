@@ -405,7 +405,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
   }
 }
 
-export { fetchGitHubInfo, readLines, countLinesInFile };
+export { fetchGitHubInfo, readLines, countLinesInFile , extractGitHubInfo};
 
 
 

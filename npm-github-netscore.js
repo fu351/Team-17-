@@ -131,86 +131,6 @@ function getContributors(owner, repo, personalAccessToken) {
         });
     });
 }
-function getCommitsPerContributor(getUsername, repositoryName, personalAccessToken) {
-    var _a, _b, _c, _d;
-    return __awaiter(this, void 0, void 0, function () {
-        var cursor, numCalls, commitsPerContributor, hasNextPage, query, variables, response, data, refs, uniqueCommits, _i, refs_1, ref, commits, _e, commits_1, commit, contributor, commitOid, commitCountsArray, error_2;
-        return __generator(this, function (_f) {
-            switch (_f.label) {
-                case 0:
-                    _f.trys.push([0, 5, , 6]);
-                    cursor = null;
-                    numCalls = 0;
-                    commitsPerContributor = {};
-                    hasNextPage = true;
-                    _f.label = 1;
-                case 1:
-                    if (!(numCalls <= 10 && hasNextPage)) return [3 /*break*/, 4];
-                    numCalls++;
-                    query = "\n        query($owner: String!, $name: String!, $cursor: String) {\n          repository(owner: $owner, name: $name) {\n            refs(first: 100, after: $cursor, refPrefix: \"refs/\") {\n              pageInfo {\n                endCursor\n                hasNextPage\n              }\n              nodes {\n                name\n                target {\n                  ... on Commit {\n                    oid\n                    history {\n                      totalCount\n                      nodes {\n                        author {\n                          user {\n                            login\n                          }\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      ";
-                    variables = {
-                        owner: getUsername,
-                        name: repositoryName,
-                        cursor: cursor
-                    };
-                    return [4 /*yield*/, fetch('https://api.github.com/graphql', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: "Bearer ".concat(personalAccessToken)
-                            },
-                            body: JSON.stringify({ query: query, variables: variables })
-                        })];
-                case 2:
-                    response = _f.sent();
-                    return [4 /*yield*/, response.json()];
-                case 3:
-                    data = _f.sent();
-                    if (!data || !data.data || !data.data.repository) {
-                        logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
-                        return [2 /*return*/, 0];
-                    }
-                    refs = data.data.repository.refs.nodes;
-                    cursor = data.data.repository.refs.pageInfo.endCursor;
-                    hasNextPage = data.data.repository.refs.pageInfo.hasNextPage;
-                    uniqueCommits = new Set();
-                    for (_i = 0, refs_1 = refs; _i < refs_1.length; _i++) {
-                        ref = refs_1[_i];
-                        commits = ((_b = (_a = ref.target) === null || _a === void 0 ? void 0 : _a.history) === null || _b === void 0 ? void 0 : _b.nodes) || [];
-                        for (_e = 0, commits_1 = commits; _e < commits_1.length; _e++) {
-                            commit = commits_1[_e];
-                            contributor = ((_d = (_c = commit.author) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login) || 'Unknown';
-                            commitOid = commit.oid;
-                            if (!uniqueCommits.has(commitOid)) {
-                                uniqueCommits.add(commitOid);
-                                if (!commitsPerContributor[contributor]) {
-                                    commitsPerContributor[contributor] = 1;
-                                }
-                                else {
-                                    commitsPerContributor[contributor]++;
-                                }
-                            }
-                        }
-                    }
-                    return [3 /*break*/, 1];
-                case 4:
-                    //delete commitsPerContributor['Unknown'] from the object;
-                    delete commitsPerContributor['Unknown'];
-                    console.log("Array", commitsPerContributor);
-                    commitCountsArray = Object.values(commitsPerContributor);
-                    return [2 /*return*/, commitCountsArray];
-                case 5:
-                    error_2 = _f.sent();
-                    //console.error('Error fetching commits per contributor:', error);
-                    //throw error;
-                    console.log(error_2);
-                    logBasedOnVerbosity("No commits per contributor obtained", 1);
-                    return [2 /*return*/, 0];
-                case 6: return [2 /*return*/];
-            }
-        });
-    });
-}
 function getLatestCommit(getUsername, repositoryName) {
     return __awaiter(this, void 0, void 0, function () {
         var commitsUrl, latestCommitResponse, latestCommit, error_3;
@@ -531,14 +451,14 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
             switch (_b.label) {
                 case 0:
                     _b.trys.push([0, 16, , 17]);
-                    personalAccessToken = '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';
+                    personalAccessToken = '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';
                     if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
                     logBasedOnVerbosity("Empty line encountered", 1);
                     return [2 /*return*/, 0];
                 case 1: return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
                 case 2:
                     githubInfo = _b.sent();
-                    console.log("extracted github info", githubInfo);
+                    //console.log("extracted github info", githubInfo);
                     if (!githubInfo) return [3 /*break*/, 13];
                     headers = {
                         Authorization: "Bearer ".concat(personalAccessToken)
@@ -619,3 +539,4 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
     });
 }
 exports.fetchGitHubInfo = fetchGitHubInfo;
+exports.extractGitHubInfo = extractGitHubInfo;

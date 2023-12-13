@@ -20,7 +20,20 @@ describe('POST /package', () => {
     await app(req, res);
     expect(res.statusCode).toBe(201);
   });
-/*
+  /*// test cases1.1 upload a file
+  it('should upload a url', async () => {
+    const req = httpMocks.createRequest({
+      method: 'POST',
+      url: '/package',
+      body: {
+          URL: 'https://github.com/jashkenas/underscore',
+      },
+    });
+    const res = httpMocks.createResponse();
+    await app(req, res);
+    expect(res.statusCode).toBe(201);
+  });
+
   // test cases2 upload fail with no file provided
   it('should fail when no file is provided', async () => {
     const req = httpMocks.createRequest({

@@ -1,16 +1,20 @@
-const { fetchGitHubInfo } = require('./npm-github-netscore');
+const { fetchGitHubInfo, extractGitHubInfo } = require('./npm-github-netscore');
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
+const axios = require('axios');
 const port = 3000;
 require('dotenv').config();
-const token = process.env.GITHUB_TOKEN;
+const token =  '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'||process.env.GITHUB_TOKEN;
 
 
-
+AWS.config.update({
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'us-east-2', // Replace with your desired AWS region
+});
 AWS.config.logger = console;
 const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
@@ -66,12 +70,22 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
-    if (packageData.URL){
+    /*if (packageData.URL){
       console.log('URL was set.');
       homepage = packageData.URL;
-      const {user, repo} = await extractGitHubInfo(homepage);
-      const url = `https://api.github.com/repos/${user}/${repo}/zipball`;
-      axious ({
+      let githubInfo = undefined;
+      try {
+         githubInfo = await extractGitHubInfo(homepage);
+      } catch (error) {
+        console.log(error);
+      }
+      if (!githubInfo.username || !githubInfo.repository) {
+        console.log('Invalid Repository URL');
+        return res.status(400).json({ error: 'Invalid Repository URL'});
+      }
+      const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}/zipball`;
+      try {
+      const response = await axios ({
         method: 'get',
         url: url,
         headers: {
@@ -79,13 +93,15 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         },
         responseType: 'arraybuffer',
       })
-      .then(function (response) {
-        content = Buffer.from(response.data, 'binary').toString('base64');
-    })
-  }
-  else {
-    console.log('Content was set.');
-  }
+      content = Buffer.from(response.data, 'binary').toString('base64');
+      } catch (error) {
+        console.log(error);
+      }
+    } 
+    else {
+      console.log('Content was set.');
+    }*/
+    console.log(token);
     const base64Data = Buffer.from(content, 'base64');
 
 
@@ -174,7 +190,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       Key: `packages/${packageID}.zip`,
     };
 
-   /* try {
+    try {
       s3.headObject(packageExistsParams).promise();
       return res.status(409).json({error: 'Package exists already'});
     } catch (headObjectError) {
@@ -184,7 +200,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         console.log(headObjectError);
       }
     }
-*/
+
     
 
     
