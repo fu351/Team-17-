@@ -9,7 +9,6 @@ var customFormat = printf(function (_a) {
     return "".concat(timestamp, " [").concat(label, "] ").concat(level, ": ").concat(message);
 });
 var createCustomLogger = function (labelStr, level) {
-
     return (0, winston_1.createLogger)({
         level: level || 'info',
         format: combine(label({ label: labelStr }), timestamp(), customFormat),

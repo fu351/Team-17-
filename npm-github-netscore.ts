@@ -330,8 +330,14 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
       return 0;
     }
     else {
-      const githubInfo = await extractGitHubInfo(npmPackageUrl);
-      console.log("extracted github info", githubInfo);
+      let githubInfo;
+      try {
+        githubInfo = await extractGitHubInfo(npmPackageUrl);
+        console.log("extracted github info", githubInfo);
+      } catch (error) {
+        console.error("Error extracting GitHub info:", error);
+        return;
+      }
       if (githubInfo) {
 
         //console.log(githubInfo);
@@ -345,50 +351,105 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
           headers,
         };
         const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}`;
-        const response = await axios.get(url, axiosConfig);
+        let response;
+        try {
+          response = await axios.get(url, axiosConfig);
+        }
+        catch (error) {
+          console.log("request error");
+          return;
+        }
         //gather info
         console.log("got response");
+        try {
         await cloneREPO(githubInfo.username, githubInfo.repository);
+        }
+        catch (error) {
+          console.log("clone Error",error);
+          return;
+        }
         console.log("cloned repo")
+        //
         const issue_count: number =  response.data.open_issues_count;
-        //console.log("issue count",issue_count);
-        const contributor_commits: number[] = await getContributors(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
-       // console.log(";emngth",contributor_commits.length);
-        const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
-        //console.log("days since last commit",days_since_last_commit);
-        const repoLicense = await getRepoLicense(response.data.license);
-        //console.log("repo license",repoLicense);
-        const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
-        //console.log("code review score",code_review_score);
+        //Add try catch block 
+        let contributor_commits: number[];
+        let days_since_last_commit: number;
+        let repoLicense: string;
+        let code_review_score: number;
+        let totalLines: number[];
+        let assigned_dependencies: number;
+        let unassigned_dependencies: number;
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
-        const totalLines = await traverseDirectory(rootDirectory);
-        const total_lines = totalLines[1] - totalLines[0];
-        //console.log("total lines",total_lines);
-        //console.log(githubInfo);
 
-        const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
+        try {
+           contributor_commits = await getContributors(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+
+        try {
+        days_since_last_commit = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
+        } catch (error) {
+          console.log("error");
+          return;
+        }
+        try {
+          repoLicense = await getRepoLicense(response.data.license);
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+        try {
+          code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+        try {
+          totalLines = await traverseDirectory(rootDirectory);
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+        try {
+          [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+        
+        const total_lines = totalLines[1] - totalLines[0];
+
         //calculate netscore and all metrics
         const total_dependencies = assigned_dependencies + unassigned_dependencies;
-        const popularity = await getPopularity(response, total_dependencies);
-        console.log(`Popularity: ${popularity}`);
-        console.log("test");
+        
         //console.log(totalLines, issue_count);
-        const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
-        const  POPULARITY_rnd : number = Math.floor(popularity * 10000) / 10000;
-        scores.push(POPULARITY_rnd);        
-        //console.log(scores);
-        ////
-        ////
-        //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant
-        //// Below is how I am adding the json files to the github repository with the calculated net score and other information. 
-        //// You may need to change the file pathing to match the database storage location to work with our AWS S3 Bucket
-        ////
-        ////
-        //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/netscore.json`, scores);
-        //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
+        let scores;
+        try {
+          scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
+        let popularity;
+        try {
+          popularity = await getPopularity(response, total_dependencies);
+        }
+        catch (error) {
+          console.log("error");
+          return;
+        }
 
-        //Reverted back to returning as array of variables instead of JSON files, planning to save netscore as attribute instead of saving json file
-        //Scores also contains the popularity score.
+        popularity = Math.floor(popularity * 10000) / 10000;
+        scores.push(popularity);        
+
         console.log("completed");
         return scores
       }

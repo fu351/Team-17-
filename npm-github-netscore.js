@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.countLinesInFile = exports.readLines = exports.fetchGitHubInfo = void 0;
+exports.extractGitHubInfo = exports.countLinesInFile = exports.readLines = exports.fetchGitHubInfo = void 0;
 var axios = require('axios');
 var util = require('util');
 var exec = util.promisify(require('child_process').exec);
@@ -116,7 +116,6 @@ function getContributors(owner, repo, personalAccessToken) {
                         commitsPerContributor[contributor.login] = contributor.contributions;
                     }
                     delete commitsPerContributor['Unknown'];
-                    console.log("Array", commitsPerContributor);
                     commitCountsArray = Object.values(commitsPerContributor);
                     return [2 /*return*/, commitCountsArray];
                 case 3:
@@ -133,7 +132,7 @@ function getContributors(owner, repo, personalAccessToken) {
 }
 function getLatestCommit(getUsername, repositoryName) {
     return __awaiter(this, void 0, void 0, function () {
-        var commitsUrl, latestCommitResponse, latestCommit, error_3;
+        var commitsUrl, latestCommitResponse, latestCommit, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -145,8 +144,8 @@ function getLatestCommit(getUsername, repositoryName) {
                     latestCommit = latestCommitResponse.data[0];
                     return [2 /*return*/, latestCommit];
                 case 2:
-                    error_3 = _a.sent();
-                    logBasedOnVerbosity("Error fetching latest commit: ".concat(error_3), 2);
+                    error_2 = _a.sent();
+                    logBasedOnVerbosity("Error fetching latest commit: ".concat(error_2), 2);
                     return [2 /*return*/, 0];
                 case 3: return [2 /*return*/];
             }
@@ -156,7 +155,7 @@ function getLatestCommit(getUsername, repositoryName) {
 function getTimeSinceLastCommit(getUsername, repositoryName) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var latestCommit, lastCommitDate, currentDate, timeSinceLastCommitInMilliseconds, days, error_4;
+        var latestCommit, lastCommitDate, currentDate, timeSinceLastCommitInMilliseconds, days, error_3;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -174,8 +173,8 @@ function getTimeSinceLastCommit(getUsername, repositoryName) {
                     days = Math.floor(timeSinceLastCommitInMilliseconds / (1000 * 60 * 60 * 24));
                     return [2 /*return*/, days]; // Return the number of days
                 case 2:
-                    error_4 = _b.sent();
-                    logBasedOnVerbosity("Error calculating time since last commit: ".concat(error_4), 2);
+                    error_3 = _b.sent();
+                    logBasedOnVerbosity("Error calculating time since last commit: ".concat(error_3), 2);
                     return [2 /*return*/, 0]; // Return 0 days if there are no commits
                 case 3: return [2 /*return*/];
             }
@@ -185,7 +184,7 @@ function getTimeSinceLastCommit(getUsername, repositoryName) {
 function extractGitHubInfo(npmPackageUrl) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var githubUrlPattern, npmUrlPattern, npmUrlMatch, packageName, apiUrl, response, repositoryUrl, githubUrlMatch, username, repository, urlParts, username, repository, githubUrlMatch, username, repository, urlParts, username, repository, error_5;
+        var githubUrlPattern, npmUrlPattern, npmUrlMatch, packageName, apiUrl, response, repositoryUrl, githubUrlMatch, username, repository, urlParts, username, repository, githubUrlMatch, username, repository, urlParts, username, repository, error_4;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -249,9 +248,9 @@ function extractGitHubInfo(npmPackageUrl) {
                     _c.label = 3;
                 case 3: return [3 /*break*/, 5];
                 case 4:
-                    error_5 = _c.sent();
-                    logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_5.message), 2);
-                    console.log(error_5);
+                    error_4 = _c.sent();
+                    logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_4.message), 2);
+                    console.log(error_4);
                     //process.exit(1);
                     return [2 /*return*/, null];
                 case 5: return [2 /*return*/];
@@ -259,9 +258,10 @@ function extractGitHubInfo(npmPackageUrl) {
         });
     });
 }
+exports.extractGitHubInfo = extractGitHubInfo;
 function cloneREPO(username, repository) {
     return __awaiter(this, void 0, void 0, function () {
-        var repoUrl, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_6;
+        var repoUrl, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_5;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -281,9 +281,9 @@ function cloneREPO(username, repository) {
                     _b = _c.sent(), stdout = _b.stdout, stderr = _b.stderr;
                     return [3 /*break*/, 5];
                 case 4:
-                    error_6 = _c.sent();
-                    logBasedOnVerbosity("Error cloning repository: ".concat(error_6.message), 2);
-                    console.log(error_6);
+                    error_5 = _c.sent();
+                    logBasedOnVerbosity("Error cloning repository: ".concat(error_5.message), 2);
+                    console.log(error_5);
                     return [3 /*break*/, 5];
                 case 5: return [2 /*return*/];
             }
@@ -446,20 +446,32 @@ function getRepoLicense(response) {
 }
 function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
     return __awaiter(this, void 0, void 0, function () {
-        var githubInfo, headers, axiosConfig, url, response, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, rootDirectory, totalLines, total_lines, _a, assigned_dependencies, unassigned_dependencies, total_dependencies, popularity, scores, POPULARITY_rnd, scores, error_7;
+        var githubInfo, error_6, headers, axiosConfig, url, response, error_7, error_8, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, totalLines, assigned_dependencies, unassigned_dependencies, rootDirectory, error_9, error_10, error_11, error_12, error_13, error_14, total_lines, total_dependencies, scores, error_15, popularity, error_16, scores, error_17;
+        var _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    _b.trys.push([0, 16, , 17]);
-                    personalAccessToken = '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';
+                    _b.trys.push([0, 44, , 45]);
+                    personalAccessToken = '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';
                     if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
                     logBasedOnVerbosity("Empty line encountered", 1);
                     return [2 /*return*/, 0];
-                case 1: return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
+                case 1:
+                    githubInfo = void 0;
+                    _b.label = 2;
                 case 2:
+                    _b.trys.push([2, 4, , 5]);
+                    return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
+                case 3:
                     githubInfo = _b.sent();
-                    //console.log("extracted github info", githubInfo);
-                    if (!githubInfo) return [3 /*break*/, 13];
+                    console.log("extracted github info", githubInfo);
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_6 = _b.sent();
+                    console.error("Error extracting GitHub info:", error_6);
+                    return [2 /*return*/];
+                case 5:
+                    if (!githubInfo) return [3 /*break*/, 41];
                     headers = {
                         Authorization: "Bearer ".concat(personalAccessToken)
                     };
@@ -467,76 +479,150 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                         headers: headers
                     };
                     url = "https://api.github.com/repos/".concat(githubInfo.username, "/").concat(githubInfo.repository);
+                    response = void 0;
+                    _b.label = 6;
+                case 6:
+                    _b.trys.push([6, 8, , 9]);
                     return [4 /*yield*/, axios.get(url, axiosConfig)];
-                case 3:
+                case 7:
                     response = _b.sent();
+                    return [3 /*break*/, 9];
+                case 8:
+                    error_7 = _b.sent();
+                    console.log("request error");
+                    return [2 /*return*/];
+                case 9:
                     //gather info
                     console.log("got response");
+                    _b.label = 10;
+                case 10:
+                    _b.trys.push([10, 12, , 13]);
                     return [4 /*yield*/, cloneREPO(githubInfo.username, githubInfo.repository)];
-                case 4:
+                case 11:
                     _b.sent();
+                    return [3 /*break*/, 13];
+                case 12:
+                    error_8 = _b.sent();
+                    console.log("clone Error", error_8);
+                    return [2 /*return*/];
+                case 13:
                     console.log("cloned repo");
                     issue_count = response.data.open_issues_count;
-                    return [4 /*yield*/, getContributors(githubInfo.username, githubInfo.repository, personalAccessToken)];
-                case 5:
-                    contributor_commits = _b.sent();
-                    return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository)];
-                case 6:
-                    days_since_last_commit = _b.sent();
-                    return [4 /*yield*/, getRepoLicense(response.data.license)];
-                case 7:
-                    repoLicense = _b.sent();
-                    return [4 /*yield*/, getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken)];
-                case 8:
-                    code_review_score = _b.sent();
+                    contributor_commits = void 0;
+                    days_since_last_commit = void 0;
+                    repoLicense = void 0;
+                    code_review_score = void 0;
+                    totalLines = void 0;
+                    assigned_dependencies = void 0;
+                    unassigned_dependencies = void 0;
                     rootDirectory = "./cli_storage/".concat(githubInfo.repository);
+                    _b.label = 14;
+                case 14:
+                    _b.trys.push([14, 16, , 17]);
+                    return [4 /*yield*/, getContributors(githubInfo.username, githubInfo.repository, personalAccessToken)];
+                case 15:
+                    contributor_commits = (_b.sent());
+                    return [3 /*break*/, 17];
+                case 16:
+                    error_9 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 17:
+                    _b.trys.push([17, 19, , 20]);
+                    return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository)];
+                case 18:
+                    days_since_last_commit = (_b.sent());
+                    return [3 /*break*/, 20];
+                case 19:
+                    error_10 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 20:
+                    _b.trys.push([20, 22, , 23]);
+                    return [4 /*yield*/, getRepoLicense(response.data.license)];
+                case 21:
+                    repoLicense = _b.sent();
+                    return [3 /*break*/, 23];
+                case 22:
+                    error_11 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 23:
+                    _b.trys.push([23, 25, , 26]);
+                    return [4 /*yield*/, getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken)];
+                case 24:
+                    code_review_score = _b.sent();
+                    return [3 /*break*/, 26];
+                case 25:
+                    error_12 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 26:
+                    _b.trys.push([26, 28, , 29]);
                     return [4 /*yield*/, traverseDirectory(rootDirectory)];
-                case 9:
+                case 27:
                     totalLines = _b.sent();
-                    total_lines = totalLines[1] - totalLines[0];
+                    return [3 /*break*/, 29];
+                case 28:
+                    error_13 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 29:
+                    _b.trys.push([29, 31, , 32]);
                     return [4 /*yield*/, getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken)];
-                case 10:
-                    _a = _b.sent(), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
+                case 30:
+                    _a = (_b.sent()), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
+                    return [3 /*break*/, 32];
+                case 31:
+                    error_14 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 32:
+                    total_lines = totalLines[1] - totalLines[0];
                     total_dependencies = assigned_dependencies + unassigned_dependencies;
-                    return [4 /*yield*/, (0, popularity_tracker_1.getPopularity)(response, total_dependencies)];
-                case 11:
-                    popularity = _b.sent();
-                    console.log("Popularity: ".concat(popularity));
-                    console.log("test");
-                    console.log(totalLines, issue_count);
+                    scores = void 0;
+                    _b.label = 33;
+                case 33:
+                    _b.trys.push([33, 35, , 36]);
                     return [4 /*yield*/, (0, metrics_1.calculate_net_score)(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl)];
-                case 12:
+                case 34:
                     scores = _b.sent();
-                    POPULARITY_rnd = Math.floor(popularity * 10000) / 10000;
-                    scores.push(POPULARITY_rnd);
-                    console.log(scores);
-                    ////
-                    ////
-                    //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant
-                    //// Below is how I am adding the json files to the github repository with the calculated net score and other information. 
-                    //// You may need to change the file pathing to match the database storage location to work with our AWS S3 Bucket
-                    ////
-                    ////
-                    //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/netscore.json`, scores);
-                    //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
-                    //Reverted back to returning as array of variables instead of JSON files, planning to save netscore as attribute instead of saving json file
-                    //Scores also contains the popularity score.
+                    return [3 /*break*/, 36];
+                case 35:
+                    error_15 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 36:
+                    popularity = void 0;
+                    _b.label = 37;
+                case 37:
+                    _b.trys.push([37, 39, , 40]);
+                    return [4 /*yield*/, (0, popularity_tracker_1.getPopularity)(response, total_dependencies)];
+                case 38:
+                    popularity = _b.sent();
+                    return [3 /*break*/, 40];
+                case 39:
+                    error_16 = _b.sent();
+                    console.log("error");
+                    return [2 /*return*/];
+                case 40:
+                    popularity = Math.floor(popularity * 10000) / 10000;
+                    scores.push(popularity);
                     console.log("completed");
                     return [2 /*return*/, scores];
-                case 13: return [4 /*yield*/, (0, metrics_1.calculate_net_score)([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl)];
-                case 14:
+                case 41: return [4 /*yield*/, (0, metrics_1.calculate_net_score)([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl)];
+                case 42:
                     scores = _b.sent();
                     scores.push(0); //Adding a 0 popularity score
                     return [2 /*return*/, scores];
-                case 15: return [3 /*break*/, 17];
-                case 16:
-                    error_7 = _b.sent();
-                    logBasedOnVerbosity("Error: ".concat(error_7.stack), 2);
-                    return [3 /*break*/, 17];
-                case 17: return [2 /*return*/];
+                case 43: return [3 /*break*/, 45];
+                case 44:
+                    error_17 = _b.sent();
+                    logBasedOnVerbosity("Error: ".concat(error_17.stack), 2);
+                    return [3 /*break*/, 45];
+                case 45: return [2 /*return*/];
             }
         });
     });
 }
 exports.fetchGitHubInfo = fetchGitHubInfo;
-exports.extractGitHubInfo = extractGitHubInfo;

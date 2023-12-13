@@ -77,7 +77,7 @@ function calculate_correctness(lines_of_code, num_issues) {
     return __awaiter(this, void 0, void 0, function () {
         var correctness_percentage;
         return __generator(this, function (_a) {
-            correctness_percentage = lines_of_code / num_issues;
+            correctness_percentage = lines_of_code / (num_issues * 50);
             if (correctness_percentage >= 1) {
                 return [2 /*return*/, 1];
             }
@@ -238,10 +238,7 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
         var bus_factor, correctness, ramp_up_time, license, responsiveness, dependencies, net_score, NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, DEPENDENCY_SCORE, REVIEWED_CODE_SCORE, output;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    console.log("lines", lines_of_code, num_issues);
-                    console.log(lines_of_readme, contributor_commits, license_type);
-                    return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
+                case 0: return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
                 case 1:
                     bus_factor = _a.sent();
                     return [4 /*yield*/, calculate_correctness(lines_of_code, num_issues)];
