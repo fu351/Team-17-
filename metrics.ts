@@ -5,27 +5,22 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         return 0;
     }
     let key_contributor = 0;
-    const total_contributors = contributor_commits.length;
-    //find midrange of commits
-    let max = 0;
-    let min = 0;
+    let total_contributors = contributor_commits.length;
+
+    let  total_commits = 0;
+    //find average num of commits per contributor
     for (let i = 0; i < total_contributors; i++) {
-        if (contributor_commits[i] > max) {
-            max = contributor_commits[i];
-        }
-        if (contributor_commits[i] < min) {
-            min = contributor_commits[i];
-        }
+        total_commits += contributor_commits[i];
     }
-    const midrange = (max + min) / 2;
-    console.log("midranbe",midrange);
+    const avg = total_commits / total_contributors;
+    const min_commit = avg;
     //find key contributor
     for (let i = 0; i < total_contributors; i++) {
-        if (contributor_commits[i] >= midrange) {
+        if (contributor_commits[i] >= min_commit) {
             key_contributor++;
         }
     }
-    
+    //if more than 20 key contributors, then the score is 1
     if ((key_contributor / 20) >= 1) {
         return 1;
     }
@@ -36,7 +31,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
 }
 //Metric 2
 export async function calculate_correctness(lines_of_code: number, num_issues: number) {
-    const correctness_percentage = lines_of_code / (num_issues * 100);
+    const correctness_percentage = lines_of_code / (num_issues * 50);
     if ( correctness_percentage >= 1) {
         return 1;
     }
@@ -166,8 +161,8 @@ export async function calculate_dependencies(assigned_dependencies: number, unas
 }
 //Net_Score
 export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, assigned_dependencies:number, unassigned_dependencies:number, reviewed_code:number, npmPackageUrl: string) {
-    console.log(lines_of_code, num_issues);
-    console.log (lines_of_readme,contributor_commits,license_type);
+    //console.log("lines",lines_of_code, num_issues);
+    //console.log (lines_of_readme,contributor_commits,license_type);
     const bus_factor = await calculate_bus_factor(contributor_commits);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
     const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);

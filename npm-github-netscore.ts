@@ -46,89 +46,27 @@ async function countLinesInFile(filePath: string): Promise<number> {
     });
   });
 }
-async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
-  try {
-    let cursor = null;
-    let numCalls = 0;
-    const commitsPerContributor = {};
-    let hasNextPage = true;
-    while (numCalls <= 10 && hasNextPage) {
-      numCalls++;
-      const query = `
-        query($owner: String!, $name: String!, $cursor: String) {
-          repository(owner: $owner, name: $name) {
-            refs(first: 100, after: $cursor, refPrefix: "refs/") {
-              pageInfo {
-                endCursor
-                hasNextPage
-              }
-              nodes {
-                name
-                target {
-                  ... on Commit {
-                    history {
-                      totalCount
-                      nodes {
-                        author {
-                          user {
-                            login
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;
+async function getContributors(owner:string , repo: string,personalAccessToken: string) {
+  try{
+  const url = `https://api.github.com/repos/${owner}/${repo}/contributors?per_page=100`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `token ${personalAccessToken}`,
+
+    },
+  });
+  const data = await response.json();
+  let commitsPerContributor = {};
+  for (const contributor of data) {
+    //console.log(`User: ${contributor.login}, Contributions: ${contributor.contributions}`);
+    commitsPerContributor[contributor.login] = contributor.contributions;
+  }
+  delete commitsPerContributor['Unknown'];
+ // console.log("Array",commitsPerContributor);
+  const commitCountsArray = Object.values(commitsPerContributor);
   
-      const variables = {
-        owner: getUsername,
-        name: repositoryName,
-        cursor: cursor,
-      };
-  
-      const response = await fetch('https://api.github.com/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${personalAccessToken}`,
-        },
-        body: JSON.stringify({ query, variables }),
-      });
-  
-      const data = await response.json();
-  
-      if (!data || !data.data || !data.data.repository) {
-        logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
-        return 0;
-      }
-  
-      const refs = data.data.repository.refs.nodes;
-      cursor = data.data.repository.refs.pageInfo.endCursor;
-      hasNextPage = data.data.repository.refs.pageInfo.hasNextPage;
-  
-      for (const ref of refs) {
-        const commits = ref.target?.history?.nodes || [];
-  
-        for (const commit of commits) {
-          const contributor = commit.author?.user?.login || 'Unknown';
-  
-          if (!commitsPerContributor[contributor]) {
-            commitsPerContributor[contributor] = 1;
-          } else {
-            commitsPerContributor[contributor]++;
-          }
-        }
-      }
-    }
-  
-    const commitCountsArray = Object.values(commitsPerContributor);
-  
-    return commitCountsArray;
-  } catch (error) {
+  return commitCountsArray;
+  }catch (error) {
     //console.error('Error fetching commits per contributor:', error);
     //throw error;
     console.log(error);
@@ -251,6 +189,11 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
 async function cloneREPO(username: string, repository: string) {
   try {
     const repoUrl = `https://github.com/${username}/${repository}.git`;
+    //if the repo is already cloned, delete it
+    if (fs.existsSync(`cli_storage/${repository}`)) {
+      const deleteCommand = `rm -rf cli_storage/${repository}`;
+      const { stdout, stderr } = await exec(deleteCommand);
+    }
     const destinationPath = `cli_storage/${repository}`;
     const cloneCommand = `git clone ${repoUrl} ${destinationPath}`;
 
@@ -258,7 +201,8 @@ async function cloneREPO(username: string, repository: string) {
 
   } catch (error) {
     logBasedOnVerbosity(`Error cloning repository: ${error.message}`, 2);
-    console.log(error);//process.exit(1);
+    console.log(error);
+    //process.exit(1);
   }
 }
 
@@ -380,6 +324,7 @@ async function getRepoLicense(response: any): Promise<string> {
 }
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
+    personalAccessToken = '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';
     if (npmPackageUrl == "") {
       logBasedOnVerbosity("Empty line encountered", 1);
       return 0;
@@ -402,23 +347,23 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}`;
         const response = await axios.get(url, axiosConfig);
         //gather info
+        console.log("got response");
         await cloneREPO(githubInfo.username, githubInfo.repository);
         console.log("cloned repo")
         const issue_count: number =  response.data.open_issues_count;
-        console.log("issue count",issue_count);
-        const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
-  
-        console.log(";emngth",contributor_commits.length);
+        //console.log("issue count",issue_count);
+        const contributor_commits: number[] = await getContributors(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
+       // console.log(";emngth",contributor_commits.length);
         const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
-        console.log("days since last commit",days_since_last_commit);
+        //console.log("days since last commit",days_since_last_commit);
         const repoLicense = await getRepoLicense(response.data.license);
-        console.log("repo license",repoLicense);
+        //console.log("repo license",repoLicense);
         const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
-        console.log("code review score",code_review_score);
+        //console.log("code review score",code_review_score);
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
         const totalLines = await traverseDirectory(rootDirectory);
         const total_lines = totalLines[1] - totalLines[0];
-        console.log("total lines",total_lines);
+        //console.log("total lines",total_lines);
         //console.log(githubInfo);
 
         const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
@@ -427,11 +372,11 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const popularity = await getPopularity(response, total_dependencies);
         console.log(`Popularity: ${popularity}`);
         console.log("test");
-        console.log(totalLines, issue_count);
+        //console.log(totalLines, issue_count);
         const scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);        
         const  POPULARITY_rnd : number = Math.floor(popularity * 10000) / 10000;
         scores.push(POPULARITY_rnd);        
-        console.log(scores);
+        //console.log(scores);
         ////
         ////
         //// I have troubleshooted the earlier problem of not being able to recieve output from the calculate_net_score function into the scores constant

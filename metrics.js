@@ -40,31 +40,27 @@ exports.calculate_net_score = exports.calculate_dependencies = exports.calculate
 //Metric 1
 function calculate_bus_factor(contributor_commits) {
     return __awaiter(this, void 0, void 0, function () {
-        var key_contributor, total_contributors, max, min, i, midrange, i;
+        var key_contributor, total_contributors, total_commits, i, avg, min_commit, i;
         return __generator(this, function (_a) {
             if (!contributor_commits) {
                 return [2 /*return*/, 0];
             }
             key_contributor = 0;
             total_contributors = contributor_commits.length;
-            max = 0;
-            min = 0;
+            total_commits = 0;
+            //find average num of commits per contributor
             for (i = 0; i < total_contributors; i++) {
-                if (contributor_commits[i] > max) {
-                    max = contributor_commits[i];
-                }
-                if (contributor_commits[i] < min) {
-                    min = contributor_commits[i];
-                }
+                total_commits += contributor_commits[i];
             }
-            midrange = (max + min) / 2;
-            console.log("midranbe", midrange);
+            avg = total_commits / total_contributors;
+            min_commit = avg;
             //find key contributor
             for (i = 0; i < total_contributors; i++) {
-                if (contributor_commits[i] >= midrange) {
+                if (contributor_commits[i] >= min_commit) {
                     key_contributor++;
                 }
             }
+            //if more than 20 key contributors, then the score is 1
             if ((key_contributor / 20) >= 1) {
                 return [2 /*return*/, 1];
             }
@@ -81,7 +77,7 @@ function calculate_correctness(lines_of_code, num_issues) {
     return __awaiter(this, void 0, void 0, function () {
         var correctness_percentage;
         return __generator(this, function (_a) {
-            correctness_percentage = lines_of_code / (num_issues * 100);
+            correctness_percentage = lines_of_code / num_issues;
             if (correctness_percentage >= 1) {
                 return [2 /*return*/, 1];
             }
@@ -243,7 +239,7 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log(lines_of_code, num_issues);
+                    console.log("lines", lines_of_code, num_issues);
                     console.log(lines_of_readme, contributor_commits, license_type);
                     return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
                 case 1:

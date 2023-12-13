@@ -91,10 +91,50 @@ function countLinesInFile(filePath) {
     });
 }
 exports.countLinesInFile = countLinesInFile;
+function getContributors(owner, repo, personalAccessToken) {
+    return __awaiter(this, void 0, void 0, function () {
+        var url, response, data, commitsPerContributor, _i, data_1, contributor, commitCountsArray, error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 3, , 4]);
+                    url = "https://api.github.com/repos/".concat(owner, "/").concat(repo, "/contributors?per_page=100");
+                    return [4 /*yield*/, fetch(url, {
+                            headers: {
+                                Authorization: "token ".concat(personalAccessToken)
+                            }
+                        })];
+                case 1:
+                    response = _a.sent();
+                    return [4 /*yield*/, response.json()];
+                case 2:
+                    data = _a.sent();
+                    commitsPerContributor = {};
+                    for (_i = 0, data_1 = data; _i < data_1.length; _i++) {
+                        contributor = data_1[_i];
+                        //console.log(`User: ${contributor.login}, Contributions: ${contributor.contributions}`);
+                        commitsPerContributor[contributor.login] = contributor.contributions;
+                    }
+                    delete commitsPerContributor['Unknown'];
+                    console.log("Array", commitsPerContributor);
+                    commitCountsArray = Object.values(commitsPerContributor);
+                    return [2 /*return*/, commitCountsArray];
+                case 3:
+                    error_1 = _a.sent();
+                    //console.error('Error fetching commits per contributor:', error);
+                    //throw error;
+                    console.log(error_1);
+                    logBasedOnVerbosity("No commits per contributor obtained", 1);
+                    return [2 /*return*/, 0];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
 function getCommitsPerContributor(getUsername, repositoryName, personalAccessToken) {
     var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function () {
-        var cursor, numCalls, commitsPerContributor, hasNextPage, query, variables, response, data, refs, _i, refs_1, ref, commits, _e, commits_1, commit, contributor, commitCountsArray, error_1;
+        var cursor, numCalls, commitsPerContributor, hasNextPage, query, variables, response, data, refs, uniqueCommits, _i, refs_1, ref, commits, _e, commits_1, commit, contributor, commitOid, commitCountsArray, error_2;
         return __generator(this, function (_f) {
             switch (_f.label) {
                 case 0:
@@ -107,7 +147,7 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
                 case 1:
                     if (!(numCalls <= 10 && hasNextPage)) return [3 /*break*/, 4];
                     numCalls++;
-                    query = "\n        query($owner: String!, $name: String!, $cursor: String) {\n          repository(owner: $owner, name: $name) {\n            refs(first: 100, after: $cursor, refPrefix: \"refs/\") {\n              pageInfo {\n                endCursor\n                hasNextPage\n              }\n              nodes {\n                name\n                target {\n                  ... on Commit {\n                    history {\n                      totalCount\n                      nodes {\n                        author {\n                          user {\n                            login\n                          }\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      ";
+                    query = "\n        query($owner: String!, $name: String!, $cursor: String) {\n          repository(owner: $owner, name: $name) {\n            refs(first: 100, after: $cursor, refPrefix: \"refs/\") {\n              pageInfo {\n                endCursor\n                hasNextPage\n              }\n              nodes {\n                name\n                target {\n                  ... on Commit {\n                    oid\n                    history {\n                      totalCount\n                      nodes {\n                        author {\n                          user {\n                            login\n                          }\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      ";
                     variables = {
                         owner: getUsername,
                         name: repositoryName,
@@ -133,29 +173,37 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
                     refs = data.data.repository.refs.nodes;
                     cursor = data.data.repository.refs.pageInfo.endCursor;
                     hasNextPage = data.data.repository.refs.pageInfo.hasNextPage;
+                    uniqueCommits = new Set();
                     for (_i = 0, refs_1 = refs; _i < refs_1.length; _i++) {
                         ref = refs_1[_i];
                         commits = ((_b = (_a = ref.target) === null || _a === void 0 ? void 0 : _a.history) === null || _b === void 0 ? void 0 : _b.nodes) || [];
                         for (_e = 0, commits_1 = commits; _e < commits_1.length; _e++) {
                             commit = commits_1[_e];
                             contributor = ((_d = (_c = commit.author) === null || _c === void 0 ? void 0 : _c.user) === null || _d === void 0 ? void 0 : _d.login) || 'Unknown';
-                            if (!commitsPerContributor[contributor]) {
-                                commitsPerContributor[contributor] = 1;
-                            }
-                            else {
-                                commitsPerContributor[contributor]++;
+                            commitOid = commit.oid;
+                            if (!uniqueCommits.has(commitOid)) {
+                                uniqueCommits.add(commitOid);
+                                if (!commitsPerContributor[contributor]) {
+                                    commitsPerContributor[contributor] = 1;
+                                }
+                                else {
+                                    commitsPerContributor[contributor]++;
+                                }
                             }
                         }
                     }
                     return [3 /*break*/, 1];
                 case 4:
+                    //delete commitsPerContributor['Unknown'] from the object;
+                    delete commitsPerContributor['Unknown'];
+                    console.log("Array", commitsPerContributor);
                     commitCountsArray = Object.values(commitsPerContributor);
                     return [2 /*return*/, commitCountsArray];
                 case 5:
-                    error_1 = _f.sent();
+                    error_2 = _f.sent();
                     //console.error('Error fetching commits per contributor:', error);
                     //throw error;
-                    console.log(error_1);
+                    console.log(error_2);
                     logBasedOnVerbosity("No commits per contributor obtained", 1);
                     return [2 /*return*/, 0];
                 case 6: return [2 /*return*/];
@@ -165,7 +213,7 @@ function getCommitsPerContributor(getUsername, repositoryName, personalAccessTok
 }
 function getLatestCommit(getUsername, repositoryName) {
     return __awaiter(this, void 0, void 0, function () {
-        var commitsUrl, latestCommitResponse, latestCommit, error_2;
+        var commitsUrl, latestCommitResponse, latestCommit, error_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -177,8 +225,8 @@ function getLatestCommit(getUsername, repositoryName) {
                     latestCommit = latestCommitResponse.data[0];
                     return [2 /*return*/, latestCommit];
                 case 2:
-                    error_2 = _a.sent();
-                    logBasedOnVerbosity("Error fetching latest commit: ".concat(error_2), 2);
+                    error_3 = _a.sent();
+                    logBasedOnVerbosity("Error fetching latest commit: ".concat(error_3), 2);
                     return [2 /*return*/, 0];
                 case 3: return [2 /*return*/];
             }
@@ -188,7 +236,7 @@ function getLatestCommit(getUsername, repositoryName) {
 function getTimeSinceLastCommit(getUsername, repositoryName) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var latestCommit, lastCommitDate, currentDate, timeSinceLastCommitInMilliseconds, days, error_3;
+        var latestCommit, lastCommitDate, currentDate, timeSinceLastCommitInMilliseconds, days, error_4;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -206,8 +254,8 @@ function getTimeSinceLastCommit(getUsername, repositoryName) {
                     days = Math.floor(timeSinceLastCommitInMilliseconds / (1000 * 60 * 60 * 24));
                     return [2 /*return*/, days]; // Return the number of days
                 case 2:
-                    error_3 = _b.sent();
-                    logBasedOnVerbosity("Error calculating time since last commit: ".concat(error_3), 2);
+                    error_4 = _b.sent();
+                    logBasedOnVerbosity("Error calculating time since last commit: ".concat(error_4), 2);
                     return [2 /*return*/, 0]; // Return 0 days if there are no commits
                 case 3: return [2 /*return*/];
             }
@@ -217,7 +265,7 @@ function getTimeSinceLastCommit(getUsername, repositoryName) {
 function extractGitHubInfo(npmPackageUrl) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var githubUrlPattern, npmUrlPattern, npmUrlMatch, packageName, apiUrl, response, repositoryUrl, githubUrlMatch, username, repository, urlParts, username, repository, githubUrlMatch, username, repository, urlParts, username, repository, error_4;
+        var githubUrlPattern, npmUrlPattern, npmUrlMatch, packageName, apiUrl, response, repositoryUrl, githubUrlMatch, username, repository, urlParts, username, repository, githubUrlMatch, username, repository, urlParts, username, repository, error_5;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -281,9 +329,9 @@ function extractGitHubInfo(npmPackageUrl) {
                     _c.label = 3;
                 case 3: return [3 /*break*/, 5];
                 case 4:
-                    error_4 = _c.sent();
-                    logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_4.message), 2);
-                    console.log(error_4);
+                    error_5 = _c.sent();
+                    logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_5.message), 2);
+                    console.log(error_5);
                     //process.exit(1);
                     return [2 /*return*/, null];
                 case 5: return [2 /*return*/];
@@ -293,24 +341,31 @@ function extractGitHubInfo(npmPackageUrl) {
 }
 function cloneREPO(username, repository) {
     return __awaiter(this, void 0, void 0, function () {
-        var repoUrl, destinationPath, cloneCommand, _a, stdout, stderr, error_5;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var repoUrl, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_6;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    _b.trys.push([0, 2, , 3]);
+                    _c.trys.push([0, 4, , 5]);
                     repoUrl = "https://github.com/".concat(username, "/").concat(repository, ".git");
+                    if (!fs.existsSync("cli_storage/".concat(repository))) return [3 /*break*/, 2];
+                    deleteCommand = "rm -rf cli_storage/".concat(repository);
+                    return [4 /*yield*/, exec(deleteCommand)];
+                case 1:
+                    _a = _c.sent(), stdout_1 = _a.stdout, stderr_1 = _a.stderr;
+                    _c.label = 2;
+                case 2:
                     destinationPath = "cli_storage/".concat(repository);
                     cloneCommand = "git clone ".concat(repoUrl, " ").concat(destinationPath);
                     return [4 /*yield*/, exec(cloneCommand)];
-                case 1:
-                    _a = _b.sent(), stdout = _a.stdout, stderr = _a.stderr;
-                    return [3 /*break*/, 3];
-                case 2:
-                    error_5 = _b.sent();
-                    logBasedOnVerbosity("Error cloning repository: ".concat(error_5.message), 2);
-                    console.log(error_5); //process.exit(1);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                case 3:
+                    _b = _c.sent(), stdout = _b.stdout, stderr = _b.stderr;
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_6 = _c.sent();
+                    logBasedOnVerbosity("Error cloning repository: ".concat(error_6.message), 2);
+                    console.log(error_6);
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     });
@@ -471,11 +526,12 @@ function getRepoLicense(response) {
 }
 function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
     return __awaiter(this, void 0, void 0, function () {
-        var githubInfo, headers, axiosConfig, url, response, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, rootDirectory, totalLines, total_lines, _a, assigned_dependencies, unassigned_dependencies, total_dependencies, popularity, scores, POPULARITY_rnd, scores, error_6;
+        var githubInfo, headers, axiosConfig, url, response, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, rootDirectory, totalLines, total_lines, _a, assigned_dependencies, unassigned_dependencies, total_dependencies, popularity, scores, POPULARITY_rnd, scores, error_7;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     _b.trys.push([0, 16, , 17]);
+                    personalAccessToken = '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';
                     if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
                     logBasedOnVerbosity("Empty line encountered", 1);
                     return [2 /*return*/, 0];
@@ -495,35 +551,29 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 3:
                     response = _b.sent();
                     //gather info
+                    console.log("got response");
                     return [4 /*yield*/, cloneREPO(githubInfo.username, githubInfo.repository)];
                 case 4:
-                    //gather info
                     _b.sent();
                     console.log("cloned repo");
                     issue_count = response.data.open_issues_count;
-                    console.log("issue count", issue_count);
-                    return [4 /*yield*/, getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken)];
+                    return [4 /*yield*/, getContributors(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 5:
                     contributor_commits = _b.sent();
-                    console.log(";emngth", contributor_commits.length);
                     return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository)];
                 case 6:
                     days_since_last_commit = _b.sent();
-                    console.log("days since last commit", days_since_last_commit);
                     return [4 /*yield*/, getRepoLicense(response.data.license)];
                 case 7:
                     repoLicense = _b.sent();
-                    console.log("repo license", repoLicense);
                     return [4 /*yield*/, getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 8:
                     code_review_score = _b.sent();
-                    console.log("code review score", code_review_score);
                     rootDirectory = "./cli_storage/".concat(githubInfo.repository);
                     return [4 /*yield*/, traverseDirectory(rootDirectory)];
                 case 9:
                     totalLines = _b.sent();
                     total_lines = totalLines[1] - totalLines[0];
-                    console.log("total lines", total_lines);
                     return [4 /*yield*/, getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 10:
                     _a = _b.sent(), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
@@ -560,8 +610,8 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [2 /*return*/, scores];
                 case 15: return [3 /*break*/, 17];
                 case 16:
-                    error_6 = _b.sent();
-                    logBasedOnVerbosity("Error: ".concat(error_6.stack), 2);
+                    error_7 = _b.sent();
+                    logBasedOnVerbosity("Error: ".concat(error_7.stack), 2);
                     return [3 /*break*/, 17];
                 case 17: return [2 /*return*/];
             }
