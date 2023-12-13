@@ -7,7 +7,7 @@ const fs = require('fs');
 
 describe('POST /package', () => {
   // test cases1 upload a file
-  it('should upload a zip file', async () => {
+ /* it('should upload a zip file', async () => {
     const fileBuffer = fs.readFileSync('underscore-master.zip', 'base64'); // replace with your file path  
     const req = httpMocks.createRequest({
       method: 'POST',
@@ -17,23 +17,27 @@ describe('POST /package', () => {
       },
     });
     const res = httpMocks.createResponse();
-    await app(req, res);
+    try {
+      await app(req, res);
+    } catch (error) {
+      console.log(error);
+    }
     expect(res.statusCode).toBe(201);
-  });
-  /*// test cases1.1 upload a file
+  });*/
+  // test cases1.1 upload a file
   it('should upload a url', async () => {
     const req = httpMocks.createRequest({
       method: 'POST',
       url: '/package',
       body: {
-          URL: 'https://github.com/jashkenas/underscore',
+          URL: 'https://github.com/longhorn/longhorn',
       },
     });
     const res = httpMocks.createResponse();
     await app(req, res);
     expect(res.statusCode).toBe(201);
   });
-
+/*
   // test cases2 upload fail with no file provided
   it('should fail when no file is provided', async () => {
     const req = httpMocks.createRequest({

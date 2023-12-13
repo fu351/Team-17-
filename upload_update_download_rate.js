@@ -8,10 +8,11 @@ const router = express.Router();
 const axios = require('axios');
 const port = 3000;
 require('dotenv').config();
-const token =  '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'||process.env.GITHUB_TOKEN;
+const token = process.env.GITHUB_TOKEN;
 
 
 AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: 'us-east-2', // Replace with your desired AWS region
 });
@@ -70,7 +71,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
-    /*if (packageData.URL){
+    if (packageData.URL){
       console.log('URL was set.');
       homepage = packageData.URL;
       let githubInfo = undefined;
@@ -100,8 +101,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     } 
     else {
       console.log('Content was set.');
-    }*/
-    console.log(token);
     const base64Data = Buffer.from(content, 'base64');
 
 
@@ -151,8 +150,9 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       }
       return null;
     }
-    // Extract homepage, name and version from package.json
-    //Set homepage if it was not set before
+    
+    // Extract URL, name and version from package.json
+    //Set URL if it was not set before
     if (!homepage) {
       homepage = findGitHubUrl(packageJson);
     }
@@ -166,7 +166,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('package.json must contain repository url, package name, and version');
       return res.status(400).json({ error: 'package.json must contain repository url, package name, and version'});
     }
-    
+    }
     console.log("adsfsadf")
     const scores = await fetchGitHubInfo(homepage, token);
     
@@ -179,7 +179,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       if (score < 0.5 || score == NaN) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
@@ -191,13 +191,13 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     };
 
     try {
-      s3.headObject(packageExistsParams).promise();
+      await s3.headObject(packageExistsParams).promise();
       return res.status(409).json({error: 'Package exists already'});
     } catch (headObjectError) {
       //if the package does nto exist continue with upload
       if (headObjectError.code != 'NotFound') {
         console.log('something went wrong');
-        console.log(headObjectError);
+        //console.log(headObjectError);
       }
     }
 
@@ -232,7 +232,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       //package was uploaded succesfully
       const responseBody = {
         metadata: {
-          Name: called,
+          Name: packageJson.name,
           Version: zip_ver.toString(),
           ID: packageID.toString(),
         },

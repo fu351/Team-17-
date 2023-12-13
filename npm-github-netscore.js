@@ -452,7 +452,6 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
             switch (_b.label) {
                 case 0:
                     _b.trys.push([0, 44, , 45]);
-                    personalAccessToken = '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';
                     if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
                     logBasedOnVerbosity("Empty line encountered", 1);
                     return [2 /*return*/, 0];
@@ -482,17 +481,26 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     response = void 0;
                     _b.label = 6;
                 case 6:
+                    console.log("waiting response");
                     _b.trys.push([6, 8, , 9]);
+                    console.log("waiting 2");
+
                     return [4 /*yield*/, axios.get(url, axiosConfig)];
                 case 7:
+                    console.log("waiting 3");
+
                     response = _b.sent();
                     return [3 /*break*/, 9];
                 case 8:
+                    console.log("waiting 4");
+
                     error_7 = _b.sent();
                     console.log("request error");
                     return [2 /*return*/];
                 case 9:
                     //gather info
+                    console.log("waiting 5");
+
                     console.log("got response");
                     _b.label = 10;
                 case 10:

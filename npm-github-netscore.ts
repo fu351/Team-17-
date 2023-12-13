@@ -324,7 +324,6 @@ async function getRepoLicense(response: any): Promise<string> {
 }
 async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: string) {
   try {
-    personalAccessToken = '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';
     if (npmPackageUrl == "") {
       logBasedOnVerbosity("Empty line encountered", 1);
       return 0;
