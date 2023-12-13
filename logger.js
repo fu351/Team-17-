@@ -14,7 +14,7 @@ var createCustomLogger = function (labelStr, level) {
         transports: [
             new winston_1.transports.Console(),
             new winston_1.transports.File({
-                filename: "logile.log"
+                filename: process.env.LOG_FILE
             }),
         ]
     });

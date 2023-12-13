@@ -283,8 +283,9 @@ function extractGitHubInfo(npmPackageUrl) {
                 case 4:
                     error_4 = _c.sent();
                     logBasedOnVerbosity("Error extracting GitHub info: ".concat(error_4.message), 2);
-                    process.exit(1);
-                    return [3 /*break*/, 5];
+                    console.log(error_4);
+                    //process.exit(1);
+                    return [2 /*return*/, null];
                 case 5: return [2 /*return*/];
             }
         });
@@ -307,7 +308,7 @@ function cloneREPO(username, repository) {
                 case 2:
                     error_5 = _b.sent();
                     logBasedOnVerbosity("Error cloning repository: ".concat(error_5.message), 2);
-                    process.exit(1);
+                    console.log(error_5); //process.exit(1);
                     return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];
             }
@@ -375,7 +376,8 @@ function countLines(filePath) {
     }
     catch (error) {
         logBasedOnVerbosity("Error reading file: ".concat(filePath), 2);
-        process.exit(1);
+        console.log(error); //process.exit(1);
+        return 0;
     }
 }
 function getDependencyData(getUsername, repositoryName, personalAccessToken) {
@@ -480,6 +482,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 1: return [4 /*yield*/, extractGitHubInfo(npmPackageUrl)];
                 case 2:
                     githubInfo = _b.sent();
+                    console.log("extracted github info", githubInfo);
                     if (!githubInfo) return [3 /*break*/, 13];
                     headers = {
                         Authorization: "Bearer ".concat(personalAccessToken)
@@ -496,7 +499,9 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 4:
                     //gather info
                     _b.sent();
+                    console.log("cloned repo");
                     issue_count = response.data.open_issues_count;
+                    console.log("issue count", issue_count);
                     return [4 /*yield*/, getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 5:
                     contributor_commits = _b.sent();
@@ -504,17 +509,21 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [4 /*yield*/, getTimeSinceLastCommit(githubInfo.username, githubInfo.repository)];
                 case 6:
                     days_since_last_commit = _b.sent();
+                    console.log("days since last commit", days_since_last_commit);
                     return [4 /*yield*/, getRepoLicense(response.data.license)];
                 case 7:
                     repoLicense = _b.sent();
+                    console.log("repo license", repoLicense);
                     return [4 /*yield*/, getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 8:
                     code_review_score = _b.sent();
+                    console.log("code review score", code_review_score);
                     rootDirectory = "./cli_storage/".concat(githubInfo.repository);
                     return [4 /*yield*/, traverseDirectory(rootDirectory)];
                 case 9:
                     totalLines = _b.sent();
                     total_lines = totalLines[1] - totalLines[0];
+                    console.log("total lines", total_lines);
                     return [4 /*yield*/, getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken)];
                 case 10:
                     _a = _b.sent(), assigned_dependencies = _a[0], unassigned_dependencies = _a[1];
@@ -542,6 +551,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     //fs.writeFileSync(`./cli_storage/${githubInfo.repository}/popularity.json`, JSON.stringify(popularity, null, 2));
                     //Reverted back to returning as array of variables instead of JSON files, planning to save netscore as attribute instead of saving json file
                     //Scores also contains the popularity score.
+                    console.log("completed");
                     return [2 /*return*/, scores];
                 case 13: return [4 /*yield*/, (0, metrics_1.calculate_net_score)([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl)];
                 case 14:

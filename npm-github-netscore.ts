@@ -243,7 +243,9 @@ async function extractGitHubInfo(npmPackageUrl: string): Promise<{ username: str
   }
   } catch (error) {
     logBasedOnVerbosity(`Error extracting GitHub info: ${error.message}`, 2);
-    process.exit(1);
+    console.log(error);
+    //process.exit(1);
+    return null
   }
 }
 async function cloneREPO(username: string, repository: string) {
@@ -256,7 +258,7 @@ async function cloneREPO(username: string, repository: string) {
 
   } catch (error) {
     logBasedOnVerbosity(`Error cloning repository: ${error.message}`, 2);
-    process.exit(1);
+    console.log(error);//process.exit(1);
   }
 }
 
@@ -307,7 +309,8 @@ try {
   return lines.length;
 } catch (error) {
   logBasedOnVerbosity(`Error reading file: ${filePath}`, 2);
-  process.exit(1);
+  console.log(error);//process.exit(1);
+  return 0;
 }
 }
 async function getDependencyData(getUsername: string, repositoryName: string, personalAccessToken: string) {
@@ -383,6 +386,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
     }
     else {
       const githubInfo = await extractGitHubInfo(npmPackageUrl);
+      console.log("extracted github info", githubInfo);
       if (githubInfo) {
 
         //console.log(githubInfo);
@@ -399,16 +403,22 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         const response = await axios.get(url, axiosConfig);
         //gather info
         await cloneREPO(githubInfo.username, githubInfo.repository);
-
+        console.log("cloned repo")
         const issue_count: number =  response.data.open_issues_count;
+        console.log("issue count",issue_count);
         const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
+  
         console.log(";emngth",contributor_commits.length);
         const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
+        console.log("days since last commit",days_since_last_commit);
         const repoLicense = await getRepoLicense(response.data.license);
+        console.log("repo license",repoLicense);
         const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
+        console.log("code review score",code_review_score);
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
         const totalLines = await traverseDirectory(rootDirectory);
         const total_lines = totalLines[1] - totalLines[0];
+        console.log("total lines",total_lines);
         //console.log(githubInfo);
 
         const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
@@ -434,6 +444,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
 
         //Reverted back to returning as array of variables instead of JSON files, planning to save netscore as attribute instead of saving json file
         //Scores also contains the popularity score.
+        console.log("completed");
         return scores
       }
       else {
