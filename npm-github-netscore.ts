@@ -323,6 +323,12 @@ async function getDependencyData(getUsername: string, repositoryName: string, pe
   const response = await axios.get(url, axiosConfig);
   const data = response.data;
   const dependency_versions = data.sbom.packages.map((pkg) => pkg.versionInfo);
+  if (!dependency_versions) {
+    return [0,0]
+  }
+  if (dependency_versions.length == 0) {
+    return [0, 0];
+  }
   let assigned_dependencies = 0;
   let unassigned_dependencies = 0;
   for (const version of dependency_versions) {
@@ -333,7 +339,6 @@ async function getDependencyData(getUsername: string, repositoryName: string, pe
     }
   }
   return [assigned_dependencies, unassigned_dependencies];
-
 
 
 }

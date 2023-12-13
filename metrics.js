@@ -243,6 +243,7 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    console.log(lines_of_code, num_issues);
                     console.log(lines_of_readme, contributor_commits, license_type);
                     return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
                 case 1:

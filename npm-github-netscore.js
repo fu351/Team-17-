@@ -223,6 +223,7 @@ function extractGitHubInfo(npmPackageUrl) {
                 case 0:
                     _c.trys.push([0, 4, , 5]);
                     githubUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+                    console.log(npmPackageUrl);
                     if (!!githubUrlPattern.test(npmPackageUrl)) return [3 /*break*/, 2];
                     npmUrlPattern = /^https?:\/\/(www\.)?npmjs\.com\/package\/([^/]+)/i;
                     npmUrlMatch = npmPackageUrl.match(npmUrlPattern);
@@ -395,6 +396,12 @@ function getDependencyData(getUsername, repositoryName, personalAccessToken) {
                     response = _a.sent();
                     data = response.data;
                     dependency_versions = data.sbom.packages.map(function (pkg) { return pkg.versionInfo; });
+                    if (!dependency_versions) {
+                        return [2 /*return*/, [0, 0]];
+                    }
+                    if (dependency_versions.length == 0) {
+                        return [2 /*return*/, [0, 0]];
+                    }
                     assigned_dependencies = 0;
                     unassigned_dependencies = 0;
                     for (_i = 0, dependency_versions_1 = dependency_versions; _i < dependency_versions_1.length; _i++) {
@@ -515,6 +522,9 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [4 /*yield*/, (0, popularity_tracker_1.getPopularity)(response, total_dependencies)];
                 case 11:
                     popularity = _b.sent();
+                    console.log("Popularity: ".concat(popularity));
+                    console.log("test");
+                    console.log(totalLines, issue_count);
                     return [4 /*yield*/, (0, metrics_1.calculate_net_score)(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl)];
                 case 12:
                     scores = _b.sent();
