@@ -18,6 +18,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         }
     }
     const midrange = (max + min) / 2;
+    console.log("midranbe",midrange);
     //find key contributor
     for (let i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] >= midrange) {
@@ -25,11 +26,11 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         }
     }
     
-    if ((key_contributor / total_contributors) >= 1) {
+    if ((key_contributor / 20) >= 1) {
         return 1;
     }
     else {
-        return key_contributor / total_contributors;
+        return key_contributor / 20;
     }
 
 }
@@ -113,6 +114,8 @@ export async function calculate_license(license_type:string | null) {
             return 0.9; //open-source, requires attribution 
         case "mit license":
             return 1; // Minimal restrictions
+        case "mit":
+            return 1;
         case "mpl-2.0":
             return 0.7 // Conditions on source code modifications and copyleft provisions
         case "osl-3.0":
@@ -163,7 +166,11 @@ export async function calculate_dependencies(assigned_dependencies: number, unas
 }
 //Net_Score
 export async function calculate_net_score(contributor_commits: number[], lines_of_code: number, num_issues: number, lines_of_readme: number, license_type: string, days_since_last_commit: number, assigned_dependencies:number, unassigned_dependencies:number, reviewed_code:number, npmPackageUrl: string) {
+<<<<<<< HEAD
     console.log(lines_of_code, num_issues);
+=======
+    console.log (lines_of_readme,contributor_commits,license_type);
+>>>>>>> d913e6b (Fixed Metrics)
     const bus_factor = await calculate_bus_factor(contributor_commits);
     const correctness = await calculate_correctness(lines_of_code, num_issues);
     const ramp_up_time = await calculate_ramp_up_time(lines_of_readme);
@@ -173,7 +180,7 @@ export async function calculate_net_score(contributor_commits: number[], lines_o
     const net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_code;
 
     //return each const metric score and net score
-    const  NET_SCORE: number = (Math.floor(net_score / 5 * 10000) / 10000); 
+    const  NET_SCORE: number = (Math.floor(net_score / 7 * 10000) / 10000); 
     const  RAMP_UP_SCORE: number = Math.floor(ramp_up_time * 10000) / 10000;
     const  CORRECTNESS_SCORE: number =  Math.floor(correctness * 10000) / 10000; 
     const  BUS_FACTOR_SCORE: number = Math.floor(bus_factor * 10000) / 10000;

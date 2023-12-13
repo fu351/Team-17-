@@ -48,20 +48,32 @@ async function countLinesInFile(filePath: string): Promise<number> {
 }
 async function getCommitsPerContributor(getUsername: string, repositoryName: string, personalAccessToken: string) {
   try {
-    const query = `
-    query($owner: String!, $name: String!) {
-      repository(owner: $owner, name: $name) {
-        refs(first: 1000, refPrefix: "refs/") {
-          nodes {
-            name
-            target {
-              ... on Commit {
-                history {
-                  totalCount
-                  nodes {
-                    author {
-                      user {
-                        login
+    let cursor = null;
+    let numCalls = 0;
+    const commitsPerContributor = {};
+    let hasNextPage = true;
+    while (numCalls <= 10 && hasNextPage) {
+      numCalls++;
+      const query = `
+        query($owner: String!, $name: String!, $cursor: String) {
+          repository(owner: $owner, name: $name) {
+            refs(first: 100, after: $cursor, refPrefix: "refs/") {
+              pageInfo {
+                endCursor
+                hasNextPage
+              }
+              nodes {
+                name
+                target {
+                  ... on Commit {
+                    history {
+                      totalCount
+                      nodes {
+                        author {
+                          user {
+                            login
+                          }
+                        }
                       }
                     }
                   }
@@ -70,56 +82,56 @@ async function getCommitsPerContributor(getUsername: string, repositoryName: str
             }
           }
         }
+      `;
+  
+      const variables = {
+        owner: getUsername,
+        name: repositoryName,
+        cursor: cursor,
+      };
+  
+      const response = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${personalAccessToken}`,
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+  
+      const data = await response.json();
+  
+      if (!data || !data.data || !data.data.repository) {
+        logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
+        return 0;
       }
-    }
-    `;
-
-    const variables = {
-      owner: getUsername,
-      name: repositoryName,
-    };
-
-    const response = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${personalAccessToken}`,
-      },
-      body: JSON.stringify({ query, variables }),
-    });
-
-    const data = await response.json();
-    //console.log(`${data},${response}`);
-    //console.log(`${getUsername}, ${repositoryName}`);
-    if (!data || !data.data || !data.data.repository) {
-      //throw new Error('Error fetching commits per contributor: Invalid response from GraphQL API');
-      logBasedOnVerbosity("No commits per contributor obtained: Invalid response from GraphQL API", 1);
-      return 0;
-    }
-
-    const refs = data.data.repository.refs.nodes;
-    const commitsPerContributor = {};
-
-    for (const ref of refs) {
-      const commits = ref.target?.history?.nodes || [];
-
-      for (const commit of commits) {
-        const contributor = commit.author?.user?.login || 'Unknown';
-
-        if (!commitsPerContributor[contributor]) {
-          commitsPerContributor[contributor] = 1;
-        } else {
-          commitsPerContributor[contributor]++;
+  
+      const refs = data.data.repository.refs.nodes;
+      cursor = data.data.repository.refs.pageInfo.endCursor;
+      hasNextPage = data.data.repository.refs.pageInfo.hasNextPage;
+  
+      for (const ref of refs) {
+        const commits = ref.target?.history?.nodes || [];
+  
+        for (const commit of commits) {
+          const contributor = commit.author?.user?.login || 'Unknown';
+  
+          if (!commitsPerContributor[contributor]) {
+            commitsPerContributor[contributor] = 1;
+          } else {
+            commitsPerContributor[contributor]++;
+          }
         }
       }
     }
-
+  
     const commitCountsArray = Object.values(commitsPerContributor);
-
+  
     return commitCountsArray;
   } catch (error) {
     //console.error('Error fetching commits per contributor:', error);
     //throw error;
+    console.log(error);
     logBasedOnVerbosity("No commits per contributor obtained", 1);
     return 0;
   }
@@ -367,7 +379,6 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
     else {
       const githubInfo = await extractGitHubInfo(npmPackageUrl);
       if (githubInfo) {
-        console.log("123");
 
         //console.log(githubInfo);
         // Modify the headers to include the personal access token
@@ -386,14 +397,14 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
 
         const issue_count: number =  response.data.open_issues_count;
         const contributor_commits: number[] = await getCommitsPerContributor(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
-        console.log(contributor_commits);
+        console.log(";emngth",contributor_commits.length);
         const days_since_last_commit: number = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
         const repoLicense = await getRepoLicense(response.data.license);
         const code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
         const rootDirectory = `./cli_storage/${githubInfo.repository}`;
         const totalLines = await traverseDirectory(rootDirectory);
         const total_lines = totalLines[1] - totalLines[0];
-        console.log(githubInfo);
+        //console.log(githubInfo);
 
         const [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
         //calculate netscore and all metrics

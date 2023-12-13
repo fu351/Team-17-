@@ -58,17 +58,18 @@ function calculate_bus_factor(contributor_commits) {
                 }
             }
             midrange = (max + min) / 2;
+            console.log("midranbe", midrange);
             //find key contributor
             for (i = 0; i < total_contributors; i++) {
                 if (contributor_commits[i] >= midrange) {
                     key_contributor++;
                 }
             }
-            if ((key_contributor / total_contributors) >= 1) {
+            if ((key_contributor / 20) >= 1) {
                 return [2 /*return*/, 1];
             }
             else {
-                return [2 /*return*/, key_contributor / total_contributors];
+                return [2 /*return*/, key_contributor / 20];
             }
             return [2 /*return*/];
         });
@@ -170,6 +171,8 @@ function calculate_license(license_type) {
                     return [2 /*return*/, 0.9]; //open-source, requires attribution 
                 case "mit license":
                     return [2 /*return*/, 1]; // Minimal restrictions
+                case "mit":
+                    return [2 /*return*/, 1];
                 case "mpl-2.0":
                     return [2 /*return*/, 0.7]; // Conditions on source code modifications and copyleft provisions
                 case "osl-3.0":
@@ -239,7 +242,9 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
         var bus_factor, correctness, ramp_up_time, license, responsiveness, dependencies, net_score, NET_SCORE, RAMP_UP_SCORE, CORRECTNESS_SCORE, BUS_FACTOR_SCORE, RESPONSIVE_MAINTAINER_SCORE, LICENSE_SCORE, DEPENDENCY_SCORE, REVIEWED_CODE_SCORE, output;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
+                case 0:
+                    console.log(lines_of_readme, contributor_commits, license_type);
+                    return [4 /*yield*/, calculate_bus_factor(contributor_commits)];
                 case 1:
                     bus_factor = _a.sent();
                     return [4 /*yield*/, calculate_correctness(lines_of_code, num_issues)];
@@ -258,7 +263,7 @@ function calculate_net_score(contributor_commits, lines_of_code, num_issues, lin
                 case 6:
                     dependencies = _a.sent();
                     net_score = 0.25 * bus_factor + 1.25 * correctness + 1 * ramp_up_time + 0.5 * license + 2 * responsiveness + dependencies + reviewed_code;
-                    NET_SCORE = (Math.floor(net_score / 5 * 10000) / 10000);
+                    NET_SCORE = (Math.floor(net_score / 7 * 10000) / 10000);
                     RAMP_UP_SCORE = Math.floor(ramp_up_time * 10000) / 10000;
                     CORRECTNESS_SCORE = Math.floor(correctness * 10000) / 10000;
                     BUS_FACTOR_SCORE = Math.floor(bus_factor * 10000) / 10000;
