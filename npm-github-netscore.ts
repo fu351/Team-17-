@@ -191,7 +191,8 @@ async function cloneREPO(username: string, repository: string) {
     const repoUrl = `https://github.com/${username}/${repository}.git`;
     //if the repo is already cloned, delete it
     if (fs.existsSync(`cli_storage/${repository}`)) {
-      const deleteCommand = `rm -rf cli_storage/${repository}`;
+      const isWindows = process.platform === "win32";
+      const deleteCommand = isWindows ? `rd /s /q cli_storage\\${repository}` : `rm -rf cli_storage/${repository}`;
       const { stdout, stderr } = await exec(deleteCommand);
     }
     const destinationPath = `cli_storage/${repository}`;

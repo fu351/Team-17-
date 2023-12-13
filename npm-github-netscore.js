@@ -261,14 +261,15 @@ function extractGitHubInfo(npmPackageUrl) {
 exports.extractGitHubInfo = extractGitHubInfo;
 function cloneREPO(username, repository) {
     return __awaiter(this, void 0, void 0, function () {
-        var repoUrl, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_5;
+        var repoUrl, isWindows, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_5;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
                     _c.trys.push([0, 4, , 5]);
                     repoUrl = "https://github.com/".concat(username, "/").concat(repository, ".git");
                     if (!fs.existsSync("cli_storage/".concat(repository))) return [3 /*break*/, 2];
-                    deleteCommand = "rm -rf cli_storage/".concat(repository);
+                    isWindows = process.platform === "win32";
+                    deleteCommand = isWindows ? "rd /s /q cli_storage\\".concat(repository) : "rm -rf cli_storage/".concat(repository);
                     return [4 /*yield*/, exec(deleteCommand)];
                 case 1:
                     _a = _c.sent(), stdout_1 = _a.stdout, stderr_1 = _a.stderr;
