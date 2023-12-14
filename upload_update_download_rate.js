@@ -46,7 +46,7 @@ const logAction = async (user, action, packageMetadata) => {
   }
 };
 
-const validateZipContents = (zipBuffer, ) => {
+const isPackageJsonThere = (zipBuffer, ) => {
   const zip = new AdmZip(zipBuffer);
   const zipEntries = zip.getEntries();
   const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
@@ -123,10 +123,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const decodedData = Buffer.from(content, 'base64');
 
 
-    if (!validateZipContents(decodedData)) {
-      console.log('Validation failed.');
-      return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
-    }
+
     // Read and parse package.json content
     const zip = new AdmZip(decodedData);
     const zipEntries = zip.getEntries();
@@ -136,6 +133,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       const depthB = b.entryName.split('/').length;
       return depthA - depthB;
     });
+    if (!isPackageJsonThere(decodedData)) {
+      console.log('Validation failed.');
+      return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
+    }
     const packageJsonEntry = sortedEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
 
     if (!packageJsonEntry) {
@@ -311,7 +312,7 @@ router.put('/package/:id', async (req, res) => { //update package
   const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
-  if(Name == null || Version == nill || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
+  if(Name == null || Version == null || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
   }
   if (packageId != ID) { //check that the package ID matches the ID in the URL
@@ -327,16 +328,12 @@ router.put('/package/:id', async (req, res) => { //update package
     };
     
     let existingMetaData;
-    try {
-      const existingPackage = await s3.headObject(existingPackageParams).promise();
-      existingMetaData = existingPackage.Metadata;
-    } catch (headObjectError) {
-      if (headObjectError.code == 'NotFound') {
-        return res.status(404).json({ error: 'Package does not exist'});
-      } else {
-        console.log('update error');
-      }
+    const existingPackage = await s3.headObject(existingPackageParams).promise();
+    if (!existingPackage) {
+      return res.status(404).json({ error: 'Package does not exist' });
     }
+    existingMetaData = existingPackage.Metadata;
+
 
     if(existingMetaData.version != Version || existingMetaData.id != ID || existingMetaData.name != Name) {
       return res.status(400).json({ error: 'Invalid name, ID, or Version'});
@@ -346,10 +343,9 @@ router.put('/package/:id', async (req, res) => { //update package
   }
   if (URL) { //if the URL is set, download the package from the URL
       console.log('URL was set.');
-      homepage = packageData.URL;
       let githubInfo;
       try {
-         githubInfo = await extractGitHubInfo(homepage);
+         githubInfo = await extractGitHubInfo(URL);
       } catch (error) {
         console.log(error);
       }
@@ -387,8 +383,6 @@ router.put('/package/:id', async (req, res) => { //update package
         //process.exit(1);
       }
     }
-    //console.log(content);
-    const decodedData = Buffer.from(content, 'base64');
   
   const s3uploadparams = { //replace old content with the new content
     Bucket: 'holder',

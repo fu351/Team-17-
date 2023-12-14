@@ -5,9 +5,27 @@ const app = require('./upload_update_download_rate'); // Import your app or serv
 const httpMocks = require('node-mocks-http');
 const fs = require('fs');
 
+
+
 describe('POST /package', () => {
   // test cases1 upload a file
-  
+   it('should upload a zip file', async () => {
+    const fileBuffer = fs.readFileSync('underscore-master.zip', 'base64'); // replace with your file path  
+    const req = httpMocks.createRequest({
+      method: 'POST',
+      url: '/package',
+      body: {
+          URL: "https://github.com/jashkenas/underscore",
+      },
+    });
+    const res = httpMocks.createResponse();
+    try {
+      await app(req, res);
+    } catch (error) {
+      console.log(error);
+    }
+    expect(res.statusCode).toBe(201);
+  }); 
  /// test cases1.1 upload a file
    it('should upload a url', async () => {
     const req = httpMocks.createRequest({
@@ -24,6 +42,8 @@ describe('POST /package', () => {
   
 
 }); 
+
+
 
 
 /* describe('GET /package/{id}/rate', () => {
@@ -57,7 +77,7 @@ describe('POST /package', () => {
   });
 }); */
 
-/* 
+
 describe('PUT /package/{id}', () => {
   //test the update function
   it('should update a file with an working id', async () => {
@@ -67,6 +87,7 @@ describe('PUT /package/{id}', () => {
       params: {
         id: "underscore-1.13.6",
       },
+      body:{
       metadata: {
         "Name": "underscore",
         "Version": "1.13.6",
@@ -75,6 +96,7 @@ describe('PUT /package/{id}', () => {
       data: {
         "URL": "https://github.com/jashkenas/underscore",
       }
+    }
   });
   const res = httpMocks.createResponse();
   await app(req, res);
@@ -82,5 +104,5 @@ describe('PUT /package/{id}', () => {
   console.log(res._getData());
   expect(res.statusCode).toBe(200);
  });
-}); */
+}); 
 
