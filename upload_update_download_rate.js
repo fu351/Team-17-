@@ -56,7 +56,7 @@ const validateZipContents = (zipBuffer, ) => {
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
     const packageData = req.body;
-    let content = packageData.Content; // Base 64 encoded zip file
+    let content = packageData.Content;
     if (!packageData) {
       console.log('No package data uploaded.');
       return res.status(400).json({ error: 'No package data uploaded' });
@@ -108,8 +108,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
           });
         });
         // Read the zip file into a buffer
-        content = fs.readFileSync(`${githubInfo.repository}.zip`);
-        content = content.toString('base64');
+        const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
+        // Convert the buffer to a base64 string
+        content = zipBuffer.toString('base64');
+       
       } catch (error) {
         console.log('Error downloading package:');
         
@@ -118,16 +120,15 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       }
     }
     //console.log(content);
-    
+    const decodedData = Buffer.from(content, 'base64');
 
-    const zipBuffer = Buffer.from(content, 'base64');
 
-    if (!validateZipContents(zipBuffer)) {
+    if (!validateZipContents(decodedData)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
     // Read and parse package.json content
-    const zip = new AdmZip(ZipBuffer);
+    const zip = new AdmZip(decodedData);
     const zipEntries = zip.getEntries();
     // Sort the entries by their depth to ensure that the package.json file is found on the first level
     const sortedEntries = zipEntries.sort((a, b) => {
@@ -385,15 +386,14 @@ router.put('/package/:id', async (req, res) => { //update package
         console.log(error);
         //process.exit(1);
       }
-    
+    }
     //console.log(content);
-    content = Buffer.from(content, 'base64');
-  }
+    const decodedData = Buffer.from(content, 'base64');
   
   const s3uploadparams = { //replace old content with the new content
     Bucket: 'holder',
     Key: `packages/${ID}.zip`,
-    Body: content,
+    Body: Content,
   };
 
   try {

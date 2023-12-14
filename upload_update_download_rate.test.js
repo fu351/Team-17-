@@ -22,6 +22,7 @@ describe('POST /package', () => {
     expect(res.statusCode).toBe(201);
   });
   
+
 }); 
 
 
@@ -56,7 +57,7 @@ describe('POST /package', () => {
   });
 }); */
 
-/*
+/* 
 describe('PUT /package/{id}', () => {
   //test the update function
   it('should update a file with an working id', async () => {
@@ -81,6 +82,5 @@ describe('PUT /package/{id}', () => {
   console.log(res._getData());
   expect(res.statusCode).toBe(200);
  });
-});
+}); */
 
-*/
