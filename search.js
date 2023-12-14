@@ -131,8 +131,8 @@ router.post('/package/byRegEx', async (req, res) => {
 });
 
 router.post('/packages', async (req, res) => {
-    const packageName = req.body.packageName;
-    const versionInput = req.body.version;
+    const packageName = req.body.Name;
+    const versionInput = req.body.Version;
     const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
     
     try {
