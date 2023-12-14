@@ -11,8 +11,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
 
-app.use(searchRoutes);
-app.use(uploadRoutes);
-app.use(deleteRoutes);
+app.use('/', searchRoutes);
+app.use('/', uploadRoutes);
+app.use('/', deleteRoutes);
 
 app.listen(3000, () => console.log('Server running on port 3000'));
