@@ -28,7 +28,7 @@ router.delete('/reset', async (req, res) => {
     
         // Delete the objects
         await s3.deleteObjects({
-            Bucket: bucketName,
+            Bucket: '461testbucket',
             Delete: { Objects: objectsToDelete },
         }).promise();
     
