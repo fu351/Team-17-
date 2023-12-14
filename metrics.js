@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -35,25 +35,45 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculate_net_score = exports.calculate_dependencies = exports.calculate_responsiveness = exports.calculate_license = exports.calculate_ramp_up_time = exports.calculate_correctness = exports.calculate_bus_factor = void 0;
 //Metric 1
 function calculate_bus_factor(contributor_commits) {
     return __awaiter(this, void 0, void 0, function () {
-        var key_contributor, total_contributors, total_commits, i, avg, min_commit, i;
+        var key_contributor, total_contributors, bus_factor_min, total_commits, max, i, avg, min_commit, i;
         return __generator(this, function (_a) {
             if (!contributor_commits) {
                 return [2 /*return*/, 0];
             }
             key_contributor = 0;
             total_contributors = contributor_commits.length;
+            bus_factor_min = 10;
+            if (total_contributors == 0) {
+                return [2 /*return*/, 0];
+            }
+            else if (total_contributors < bus_factor_min) {
+                bus_factor_min = total_contributors;
+            }
             total_commits = 0;
+            max = 0;
             //find average num of commits per contributor
             for (i = 0; i < total_contributors; i++) {
                 total_commits += contributor_commits[i];
+                if (contributor_commits[i] > max) {
+                    max = contributor_commits[i];
+                }
             }
             avg = total_commits / total_contributors;
-            min_commit = avg;
+            min_commit = 50;
+            if (max > 500) {
+                min_commit = 100;
+            }
+            if (max > 1000) {
+                min_commit = 300;
+            }
+            if (max > 5000) {
+                min_commit = avg;
+            }
             //find key contributor
             for (i = 0; i < total_contributors; i++) {
                 if (contributor_commits[i] >= min_commit) {
@@ -61,11 +81,11 @@ function calculate_bus_factor(contributor_commits) {
                 }
             }
             //if more than 20 key contributors, then the score is 1
-            if ((key_contributor / 20) >= 1) {
+            if ((key_contributor / bus_factor_min) >= 1) {
                 return [2 /*return*/, 1];
             }
             else {
-                return [2 /*return*/, key_contributor / 20];
+                return [2 /*return*/, key_contributor / bus_factor_min];
             }
             return [2 /*return*/];
         });

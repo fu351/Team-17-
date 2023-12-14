@@ -6,14 +6,34 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
     }
     let key_contributor = 0;
     let total_contributors = contributor_commits.length;
-
+    let bus_factor_min = 10;
+    if (total_contributors == 0) {
+        return 0;
+    }
+    else if (total_contributors < bus_factor_min) {
+        bus_factor_min = total_contributors;
+    }
     let  total_commits = 0;
+    let max = 0;
     //find average num of commits per contributor
     for (let i = 0; i < total_contributors; i++) {
         total_commits += contributor_commits[i];
+        if (contributor_commits[i] > max) {
+            max = contributor_commits[i];
+        }    
     }
+
     const avg = total_commits / total_contributors;
-    const min_commit = avg;
+    let min_commit = 50;
+    if (max > 500) {
+        min_commit = 100;
+    }
+    if (max > 1000) {
+        min_commit = 300;
+    }
+    if (max > 5000) {
+        min_commit = avg;
+    }
     //find key contributor
     for (let i = 0; i < total_contributors; i++) {
         if (contributor_commits[i] >= min_commit) {
@@ -21,11 +41,11 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         }
     }
     //if more than 20 key contributors, then the score is 1
-    if ((key_contributor / 20) >= 1) {
+    if ((key_contributor / bus_factor_min) >= 1) {
         return 1;
     }
     else {
-        return key_contributor / 20;
+        return key_contributor / bus_factor_min;
     }
 
 }

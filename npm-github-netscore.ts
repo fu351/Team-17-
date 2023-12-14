@@ -193,7 +193,7 @@ async function cloneREPO(username: string, repository: string) {
     if (fs.existsSync(`cli_storage/${repository}`)) {
       const isWindows = process.platform === "win32";
       const deleteCommand = isWindows ? `rd /s /q cli_storage\\${repository}` : `rm -rf cli_storage/${repository}`;
-      const { stdout, stderr } = await exec(deleteCommand);
+      await exec(deleteCommand);
     }
     const destinationPath = `cli_storage/${repository}`;
     const cloneCommand = `git clone ${repoUrl} ${destinationPath}`;
