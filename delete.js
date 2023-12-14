@@ -15,7 +15,7 @@ const s3 = new AWS.S3();
 
 
 //delete specific package from s3 bucket based on packageID
-router.delete('/package/{id}', (req, res) => {
+router.delete('/package/:id', (req, res) => {
     const packageID = req.params.id;
     const params = {
         Bucket: '461testbucket', //replace with bucket name
@@ -32,7 +32,7 @@ router.delete('/package/{id}', (req, res) => {
 });
 
 //delete every version of a package in the s3 bucket that matches the package name
-router.delete('/package/byName/{name}', (req, res) => {
+router.delete('/package/byName/:name', (req, res) => {
     const packageName = req.params.name;
     const params = {
         Bucket: '461testbucket', //replace with bucket name
