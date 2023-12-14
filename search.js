@@ -133,7 +133,6 @@ router.post('/package/byRegEx', async (req, res) => {
 router.post('/packages', async (req, res) => {
     const packageName = req.body.Name;
     console.log(req.body);
-    console.log(req.rawBody);
     const versionInput = req.body.Version;
     const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
     
