@@ -40,7 +40,7 @@ exports.calculate_net_score = exports.calculate_dependencies = exports.calculate
 //Metric 1
 function calculate_bus_factor(contributor_commits) {
     return __awaiter(this, void 0, void 0, function () {
-        var key_contributor, total_contributors, bus_factor_min, total_commits, i, avg, min_commit, i;
+        var key_contributor, total_contributors, bus_factor_min, total_commits, max, i, avg, min_commit, i;
         return __generator(this, function (_a) {
             if (!contributor_commits) {
                 return [2 /*return*/, 0];
@@ -55,12 +55,25 @@ function calculate_bus_factor(contributor_commits) {
                 bus_factor_min = total_contributors;
             }
             total_commits = 0;
+            max = 0;
             //find average num of commits per contributor
             for (i = 0; i < total_contributors; i++) {
                 total_commits += contributor_commits[i];
+                if (contributor_commits[i] > max) {
+                    max = contributor_commits[i];
+                }
             }
             avg = total_commits / total_contributors;
-            min_commit = avg;
+            min_commit = 50;
+            if (max > 500) {
+                min_commit = 100;
+            }
+            if (max > 1000) {
+                min_commit = 300;
+            }
+            if (max > 5000) {
+                min_commit = avg;
+            }
             //find key contributor
             for (i = 0; i < total_contributors; i++) {
                 if (contributor_commits[i] >= min_commit) {
