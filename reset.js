@@ -12,7 +12,7 @@ AWS.config.update({
 
 router.delete('/reset', (req, res) => {
     const s3 = new AWS.S3();
-    const bucketName = 'your-bucket-name'; // Replace with your S3 bucket name
+    const bucketName = '461testbucket'; // Replace with your S3 bucket name
     
     try {
         // List all objects in the bucket
@@ -20,7 +20,7 @@ router.delete('/reset', (req, res) => {
     
         // Check if there are any objects in the bucket
         if (data.Contents.length === 0) {
-            return res.status(200).json({ message: 'Bucket is already empty' });
+            return res.status(200).json({ message: 'Registry is already empty' });
         }
     
         // Prepare the list of objects to be deleted
@@ -32,7 +32,7 @@ router.delete('/reset', (req, res) => {
             Delete: { Objects: objectsToDelete },
         }).promise();
     
-        res.status(200).json({ message: 'Bucket emptied successfully' });
+        res.status(200).json({ message: 'Registry is reset.' });
     } catch (err) {
         console.error('Error emptying S3 bucket:', err);
         res.status(500).json({ error: 'Internal Server Error' });
