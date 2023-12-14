@@ -56,7 +56,7 @@ const validateZipContents = (zipBuffer, ) => {
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
     const packageData = req.body;
-    let content = packageData.Content;
+    let content = packageData.Content; // Base 64 encoded zip file
     if (!packageData) {
       console.log('No package data uploaded.');
       return res.status(400).json({ error: 'No package data uploaded' });
@@ -108,10 +108,8 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
           });
         });
         // Read the zip file into a buffer
-        const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
-        // Convert the buffer to a base64 string
-        content = zipBuffer.toString('base64');
-       
+        content = fs.readFileSync(`${githubInfo.repository}.zip`);
+        content = content.toString('base64');
       } catch (error) {
         console.log('Error downloading package:');
         
@@ -120,15 +118,16 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       }
     }
     //console.log(content);
-    const decodedData = Buffer.from(content, 'base64');
+    
 
+    const zipBuffer = Buffer.from(content, 'base64');
 
-    if (!validateZipContents(decodedData)) {
+    if (!validateZipContents(zipBuffer)) {
       console.log('Validation failed.');
       return res.status(400).json({ error: 'The zip file must contain a package.json file.' });
     }
     // Read and parse package.json content
-    const zip = new AdmZip(decodedData);
+    const zip = new AdmZip(ZipBuffer);
     const zipEntries = zip.getEntries();
     // Sort the entries by their depth to ensure that the package.json file is found on the first level
     const sortedEntries = zipEntries.sort((a, b) => {
@@ -308,11 +307,16 @@ router.get('/download', async (req, res) => { //download package (might need to 
 });
 
 router.put('/package/:id', async (req, res) => { //update package
+  const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
-  const { Content, URL } = req.body.data;
-  if(Name == NULL || Version == NULL || ID == NULL || Content == NULL || URL == NULL) { //need all fields to be present
+  let { Content, URL } = req.body.data;
+  if(Name == null || Version == nill || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
   }
+  if (packageId != ID) { //check that the package ID matches the ID in the URL
+    return res.status(400).json({error: 'The package ID does not match the ID in the URL'});
+  }
+
 
   //Next check that name, version, and ID match
   try {
@@ -333,17 +337,63 @@ router.put('/package/:id', async (req, res) => { //update package
       }
     }
 
-    if(existingMetaData.Version != Version || existingMetaData.packageId != ID || existingMetaData.Name != Name) {
+    if(existingMetaData.version != Version || existingMetaData.id != ID || existingMetaData.name != Name) {
       return res.status(400).json({ error: 'Invalid name, ID, or Version'});
     }
   } catch (error) {
 
   }
-
+  if (URL) { //if the URL is set, download the package from the URL
+      console.log('URL was set.');
+      homepage = packageData.URL;
+      let githubInfo;
+      try {
+         githubInfo = await extractGitHubInfo(homepage);
+      } catch (error) {
+        console.log(error);
+      }
+      console.log(githubInfo);
+      if (!githubInfo.username || !githubInfo.repository) {
+        console.log('Invalid Repository URL');
+        return res.status(400).json({ error: 'Invalid Repository URL'});
+      }
+      const url = `https://api.github.com/repos/${githubInfo.username}/${githubInfo.repository}/zipball`;
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+      };
+      try {
+        const response = await fetch(url, { headers });
+        const fileStream = fs.createWriteStream(`${githubInfo.repository}.zip`);
+        await new Promise((resolve, reject) => {
+          response.body.pipe(fileStream);
+          response.body.on("error", (err) => {
+            reject(err);
+          });
+          fileStream.on("finish", function () {
+            resolve();
+          });
+        });
+        // Read the zip file into a buffer
+        const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
+        // Convert the buffer to a base64 string
+        content = zipBuffer.toString('base64');
+       
+      } catch (error) {
+        console.log('Error downloading package:');
+        
+        console.log(error);
+        //process.exit(1);
+      }
+    
+    //console.log(content);
+    content = Buffer.from(content, 'base64');
+  }
+  
   const s3uploadparams = { //replace old content with the new content
     Bucket: 'holder',
     Key: `packages/${ID}.zip`,
-    Body: Content,
+    Body: content,
   };
 
   try {
