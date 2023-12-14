@@ -126,3 +126,68 @@ describe('GET /package/{id}', () => {
   expect(res.statusCode).toBe(200);
  });
 });
+*/
+
+
+describe('PUT /package/{id}', () => {
+  it('fail to update a file with an invalid field', async () => {
+    const req = httpMocks.createRequest({
+      method: 'PUT',
+      url: '/package/{id}',
+      body: {
+        metadata: {
+          name: 'javascript-client-generated',
+          version: '1.0.0',
+          ID: '',
+          },
+        data: {
+          Content:'',
+          URL:'',
+        },
+      },
+    });
+    const res = httpMocks.createResponse();
+    await app(req, res);
+    // now you can make assertions about the response
+    expect(res.statusCode).toBe(400);
+  });
+/*
+  it('fail to update when file does not exist', async () => {
+    const response = await axios({
+      method: 'put',
+      url: 'http://phase2-ece461.s3-website-us-east-1.amazonaws.com', // replace with your actual URL
+      data: {
+        metadata: {
+          Name: 'randomn file donr exist',
+          Version: '1.0.0',
+          ID: '1',
+        },
+        data: {
+        Content:'something',
+        URL:'something',
+      },
+    },
+  });
+  // now you can make assertions about the response
+  expect(response.status).toBe(404);
+});
+*/
+});
+
+describe('GET /package/{id}/rate', () => {
+  it('rate a file with an invalid id', async () => {
+    const req = httpMocks.createRequest({
+      method: 'GET',
+      url: '/package/{id}/rate',
+      params: {
+        id: 1,
+      },
+  });
+  const res = httpMocks.createResponse();
+  await app(req, res);
+  // now you can make assertions about the response
+  expect(res.statusCode).toBe(400);
+  });
+});
+
+
