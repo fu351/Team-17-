@@ -31,6 +31,7 @@ router.delete('/reset', async (req, res) => {
             Bucket: '461testbucket',
             Delete: { Objects: objectsToDelete },
         }).promise();
+        console.log('Delete response:', deleteResponse);
     
         res.status(200).json({ message: 'Registry is reset.' });
     } catch (err) {
