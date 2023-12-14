@@ -283,17 +283,20 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
   }
 });
 
-
-router.get('/download', async (req, res) => { //download package (might need to work on this one)
-  const selectedPackage = req.query.package; // Get the selected package name
+//Download Package Endpoint
+//Assuming that the package will be based on the package ID and will be a path parameter
+router.get('/download/:id', async (req, res) => { //download package from bucket
+  const ID = req.params.id; // Get the selected package name
   const params = {
     Bucket: '461testbucket', 
-    Key: `${selectedPackage}`, // Use the selected package name to generate the Object key
+    Key: `packages/${ID}.zip`, // Use the selected package name to generate the Object key
     Expires: 60 * 5, // The URL will expire in 60 seconds, Security
   };
 
   const downloadUrl = s3.getSignedUrl('getObject', params);
-
+  if (!downloadUrl) {
+    return res.status(404).json({ error: 'Package does not exist' });
+  }
   //Get Object metadata for logging
   const ObjectData = await s3.getObject(params).promise();
   const metadata = ObjectData.Metadata;
@@ -306,6 +309,7 @@ router.get('/download', async (req, res) => { //download package (might need to 
 
   // Redirect the user to the pre-signed URL
   res.redirect(downloadUrl);
+  return res.status(200).json('Package is downloaded' );
 });
 
 router.put('/package/:id', async (req, res) => { //update package
