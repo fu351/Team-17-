@@ -10,7 +10,7 @@ AWS.config.update({
     region: 'us-east-2', // Replace with your desired AWS region
 });
 
-router.delete('/reset', (req, res) => {
+router.delete('/reset', async (req, res) => {
     const s3 = new AWS.S3();
     const bucketName = '461testbucket'; // Replace with your S3 bucket name
     
@@ -40,3 +40,4 @@ router.delete('/reset', (req, res) => {
 });
     
 module.exports = router;
+
