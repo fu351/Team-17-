@@ -48,18 +48,30 @@ router.delete('/package/byName/:name', (req, res) => {
     }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
-        prefix: `packages/`,
-        Metdata: {
-            packageName: packageName
-        }
+        Prefix: `packages/${packageName}`
     };
-    s3.deleteObject(params, (err, data) => {
+    
+    s3.listObjectsV2(params, (err, data) => {
         if (err) {
-            console.error('Error deleting file from S3:', err);
-            res.status(500).json({ error: 'Error deleting file from S3' });
+            console.error('Error listing objects from S3:', err);
+            res.status(404).json({ error: 'Error listing objects from S3' });
         } else {
-            res.status(200).json({ data });
+            const deleteParams = {
+                Bucket: params.Bucket,
+                Delete: {
+                    Objects: data.Contents.map(content => ({ Key: content.Key }))
+                }
+            };
+            s3.deleteObjects(deleteParams, (err, data) => {
+                if (err) {
+                    console.error('Error deleting files from S3:', err);
+                    res.status(404).json({ error: 'Error deleting files from S3' });
+                } else {
+                    res.status(200).json('Package is deleted.');
+                }
+            });
         }
     });
+    return res.status(200).json('Package is deleted.');
 }); 
 module.exports = router;
