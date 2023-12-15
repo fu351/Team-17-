@@ -8,6 +8,7 @@ const semver = require('semver');
 require('dotenv').config();
 const slow = require('slow');
 const safeRegex = require('safe-regex');
+const RE2 = require('re2');
 
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_Key_ID,
@@ -109,8 +110,8 @@ router.get('/package/byName/:name', async (req, res) => {
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
 router.post('/package/byRegEx', async (req, res) => {
     console.log('search by regex happening');
-    //get the regular expression from the body
-    const regEx =  new RegExp(req.body.RegEx);
+    //get the regular expression from the bodys
+    const regEx =  new RE2(req.body.RegEx);
     if (!safeRegex(regEx)) {
         return res.status(400).json({error: 'The regular expression is potentially unsafe'});
     }
