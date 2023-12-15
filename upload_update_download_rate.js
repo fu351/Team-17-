@@ -263,15 +263,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       Key: `packages/${packageID}.zip`,
       Body: content,
       Metadata: {
-        NetScore: scores[1].toString(),
-        Ramp_Up: scores[2].toString(),
-        Correctness: scores[3].toString(),
-        Bus_Factor: scores[4].toString(),
-        Responsive_Maintainer: scores[5].toString(),
-        License_Score: scores[6].toString(),
-        Dependency_Score: scores[7].toString(),
-        Reviewed_Code_Score: scores[8].toString(),
-        PopularityScore: scores[9].toString(),
         URL: homepage,
         Name: packageName,
         Version: zip_ver.toString(),
@@ -423,6 +414,12 @@ router.put('/package/:id', async (req, res) => { //update package
     Bucket: '461testbucket',
     Key: `packages/${ID}.zip`,
     Body: Content,
+    Metadata: {
+      URL: URL,
+      Name: Name,
+      Version: Version,
+      ID: ID
+    }
   };
 
   try {
