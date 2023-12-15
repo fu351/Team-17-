@@ -21,7 +21,7 @@ router.get('/package/:id', (req, res) => {
     console.log('search by ID happening');
     //console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
-    const xauth = req.headers['x-authorization'];
+    const xauth = req.headers['x-authorization'] || req.headers.authorization;
     if (!packageID || typeof packageID !== 'string') {
         return res.status(400).json({ error: 'Missing package ID' });
     }
@@ -74,7 +74,7 @@ router.get('/package/:id', (req, res) => {
 router.get('/package/byName/:name', async (req, res) => {
     console.log('search by name happening');
     const packageName = req.params.name;
-    const xauth = req.headers['x-authorization'];
+    const xauth = req.headers['x-authorization'] || req.headers.authorization;
     if (xauth != "0" || !xauth) { //need all fields to be present
      return res.status(400).json({error: 'There are missing fields in the Request Body'});
     }
@@ -116,7 +116,7 @@ router.post('/package/byRegEx', async (req, res) => {
         return res.status(400).json({error: 'The regular expression is potentially unsafe'});
     }
     
-    const xauth = req.headers['x-authorization'];
+    const xauth = req.headers['x-authorization'] || req.headers.authorization;
     if (xauth != "0" || !xauth) { //need all fields to be present
         return res.status(400).json({error: 'There are missing fields in the Request Body'});
     }
@@ -179,7 +179,7 @@ router.post('/packages', async (req, res) => {
         console.log('error1');
         return res.status(400).json("Missing package name");
     }
-    const xauth = req.headers['x-authorization'];
+    const xauth = req.headers['x-authorization'] || req.headers.authorization;
     if (xauth != "0" || !xauth) { //need all fields to be present
         return res.status(400).json({error: 'There are missing fields in the Request Body'});
     }
