@@ -129,8 +129,8 @@ router.post('/package/byRegEx', async (req, res) => {
             const object = await s3.getObject(metadataParams).promise();
             if (regEx.test(object.Metadata.Name)) {
                 const objectdata = {};
-                    objectdata.Name = object.Metadata.name;
                     objectdata.Version = object.Metadata.version;
+                    objectdata.Name = object.Metadata.name;
                     //objectdata.Popularity = object.Metadata.popularity;
                     matchedPackages.push(objectdata);
             }
@@ -141,8 +141,8 @@ router.post('/package/byRegEx', async (req, res) => {
             const readme = readmeEntry ? readmeEntry.getData().toString('utf8') : '';
                 if (regEx.test(readme)) {
                     const objectdata = {};
-                    objectdata.Name = object.Metadata.name;
                     objectdata.Version = object.Metadata.version;
+                    objectdata.Name = object.Metadata.name;
                     //objectdata.Popularity = object.Metadata.popularity;
                     matchedPackages.push(objectdata);
                 }
