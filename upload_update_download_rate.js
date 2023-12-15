@@ -360,8 +360,9 @@ router.put('/package/:id', async (req, res) => { //update package
     if(existingMetaData.version != Version || existingMetaData.id != ID || existingMetaData.name != Name) {
       return res.status(400).json({ error: 'Invalid name, ID, or Version'});
     }
-  } catch (error) {
-
+  }
+  catch (error) {
+    return res.status(404).json({ error: 'Package does not exist' });
   }
   if (URL) { //if the URL is set, download the package from the URL
       console.log('URL was set.');
@@ -396,7 +397,7 @@ router.put('/package/:id', async (req, res) => { //update package
         // Read the zip file into a buffer
         const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
         // Convert the buffer to a base64 string
-        content = zipBuffer.toString('base64');
+        Content = zipBuffer.toString('base64');
        
       } catch (error) {
         console.log('Error downloading package:');
@@ -407,7 +408,7 @@ router.put('/package/:id', async (req, res) => { //update package
     }
   
   const s3uploadparams = { //replace old content with the new content
-    Bucket: 'holder',
+    Bucket: '461testbucket',
     Key: `packages/${ID}.zip`,
     Body: Content,
   };
@@ -417,7 +418,7 @@ router.put('/package/:id', async (req, res) => { //update package
 
     //Logging update action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: s3UploadParams.key, Version: s3UploadParams.Metadata.version, ID: s3UploadParams.Metadata.id };
+    const packageMetadata = { Name: Name, Version: Version, ID: ID };
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
     res.status(200).json({ message: 'Version is updated' });
