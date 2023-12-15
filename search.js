@@ -174,7 +174,7 @@ router.post('/packages', async (req, res) => {
         console.log(req_query);
         console.log(req.body);
         const versionInput = req_query.Version;
-        const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
+        const offset = req.query.offset || "";  //offset is optional
         if (offset < 0) {
             console.log('error3');
             return res.status(400).json("Offset must be greater than or equal to 0.");
