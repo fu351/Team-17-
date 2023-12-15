@@ -478,7 +478,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     }
   console.log("ID",packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
-  if (!packageId || typeof packageId != 'string') {
+  if (!packageId || typeof packageId != 'string' || packageId < 0) {
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {
