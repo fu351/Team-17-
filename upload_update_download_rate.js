@@ -292,11 +292,11 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('Error logging upload action to S3:', error);
     }
     console.log('\x1b[34m%s\x1b[0m', 'Successful Upload!');
-    return res.status(201).json({responseBody});
+    return res.status(201).json(responseBody);
 
   } catch (error) {
     console.log('Error uploading package:', error);
-    return res.status(400).json('Error uploading package:', error);
+    return res.status(400).json({ message: 'Error uploading package:', error });
   }
 });
 
