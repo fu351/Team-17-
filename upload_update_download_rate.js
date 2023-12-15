@@ -5,12 +5,11 @@ const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
-const port = 3000;
 require('dotenv').config();
 const fetch = require('node-fetch');
 const fs = require('fs');
-const stream = require('stream');
-const { promisify } = require('util');
+const semver = require('semver');
+
 
 
 const token = process.env.GITHUB_TOKEN;
@@ -46,13 +45,33 @@ const logAction = async (user, action, packageMetadata) => {
   }
 };
 
-const isPackageJsonThere = (zipBuffer, ) => {
+const isPackageJsonThere = (zipBuffer) => {
   const zip = new AdmZip(zipBuffer);
   const zipEntries = zip.getEntries();
   const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
   return Boolean(packageJsonEntry);
 };
-
+const findGitHubUrl = (object)  => {
+  const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+  for (const key in object) {
+    if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
+      let url = object[key];
+      // Remove any existing protocol
+      url = url.replace(/^[a-z]*:/, '');
+      // Ensure the URL uses the https protocol
+      url = 'https:' + url;
+      // Split the URL by '/' and join the first four elements
+      url = url.split('/').slice(0, 4).join('/');
+      return url;
+    } else if (typeof object[key] === 'object' && object[key] !== null) {
+      const result = findGitHubUrl(object[key]);
+      if (result) {
+        return result;
+      }
+    }
+  }
+  return null;
+}
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   console.log('pcakage upload/ingestion being used');
   try {
@@ -78,6 +97,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
     if (packageData.URL){
+      console.log('\x1b[34m%s\x1b[0m', 'URL was set.');
       console.log('URL was set.');
       homepage = packageData.URL;
       let githubInfo;
@@ -120,6 +140,9 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         //process.exit(1);
       }
     }
+    else {
+      console.log('\x1b[34m%s\x1b[0m', 'Content was set.');
+    }
     //console.log(content);
     const decodedData = Buffer.from(content, 'base64');
 
@@ -149,27 +172,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
     
-    function findGitHubUrl(object) {
-      const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
-      for (const key in object) {
-        if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
-          let url = object[key];
-          // Remove any existing protocol
-          url = url.replace(/^[a-z]*:/, '');
-          // Ensure the URL uses the https protocol
-          url = 'https:' + url;
-          // Split the URL by '/' and join the first four elements
-          url = url.split('/').slice(0, 4).join('/');
-          return url;
-        } else if (typeof object[key] === 'object' && object[key] !== null) {
-          const result = findGitHubUrl(object[key]);
-          if (result) {
-            return result;
-          }
-        }
-      }
-      return null;
-    }
     
     // Extract URL, name and version from package.json
     //Set URL if it was not set before
@@ -185,7 +187,8 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     packageName = packageJson.name;
     //remove any / from the package name
     packageName = packageName.replace(/\//g, '');
-    zip_ver = packageJson.version;
+    zip_ver = (packageJson.version).toString();
+    zip_ver = semver.valid(semver.clean(semver.coerce(zip_ver)));
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
@@ -202,8 +205,9 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
-    for (const score in scores) {
-      if (score < 0.5 || score == NaN) { //check for ingestion
+    for (let i = 1; i <= 8; i++) {
+      const score = scores[i];
+      if (score < 0.5 || isNaN(score)) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
         //return res.status(424).json({ error: 'Package not uploaded due to rating' });
@@ -298,7 +302,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     console.log('\x1b[34m%s\x1b[0m', 'Successful Upload!');
     return res.status(201).json(responseBody);
-
   } catch (error) {
     console.log('Error uploading package:', error);
     return res.status(400).json({ message: 'Error uploading package:'});
@@ -325,7 +328,7 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   const version = metadata.version;
   const id = metadata.packageId;
   const user = {name: 'default', isAdmin: 'true'};
-  const packageMetadata = { Name: selectedPackage, Version: version, ID: id };
+  const packageMetadata = { Name: ObjectData.Metadata.name, Version: ObjectData.Metadata.version, ID: ObjectData.Metadata.id};
   //logging download action for traceability
   logAction(user, 'DOWNLOAD', packageMetadata); // Log the upload action
 
@@ -366,7 +369,8 @@ router.put('/package/:id', async (req, res) => { //update package
       return res.status(400).json({ error: 'Invalid name, ID, or Version'});
     }
   } catch (error) {
-
+    console.error('Error retrieving package metadata:', error);
+    res.status(404).json({ error: 'An error occurred while retrieving package metadata' });
   }
   if (URL) { //if the URL is set, download the package from the URL
       console.log('URL was set.');
@@ -401,7 +405,7 @@ router.put('/package/:id', async (req, res) => { //update package
         // Read the zip file into a buffer
         const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
         // Convert the buffer to a base64 string
-        content = zipBuffer.toString('base64');
+        Content = zipBuffer.toString('base64');
        
       } catch (error) {
         console.log('Error downloading package:');
@@ -422,7 +426,7 @@ router.put('/package/:id', async (req, res) => { //update package
 
     //Logging update action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: s3UploadParams.key, Version: s3UploadParams.Metadata.version, ID: s3UploadParams.Metadata.id };
+    const packageMetadata = { Name: Name, Version: Version, ID: ID};
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
     res.status(200).json({ message: 'Version is updated' });

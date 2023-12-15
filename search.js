@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const AdmZip = require('adm-zip');
 const AWS = require('aws-sdk');
+const { version } = require('winston');
+const semver = require('semver');
 require('dotenv').config();
 
 AWS.config.update({
@@ -11,12 +13,20 @@ AWS.config.update({
     region: 'us-east-2', // Replace with your desired AWS region
   });
 const s3 = new AWS.S3();
-
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/:id', (req, res) => {
-    console.log('Search by ID being used');
-    console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
+    //console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
+    const xauth = req.headers['x-authorization'];
+    if (!packageID) {
+        return res.status(400).json({ error: 'Missing package ID' });
+    }
+    if (xauth != "0") {
+        return res.status(400).json({ error: 'You do not have permission to download the package.' });
+    }
+    if (!xauth) {
+        return res.status(400).json({ error: 'Missing AuthenticationToken' });
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Key : `packages/${packageID}.zip`,
@@ -34,6 +44,7 @@ router.get('/package/:id', (req, res) => {
                         Name: data.Metadata.name,
                         Version: data.Metadata.version,
                         ID: data.Metadata.id,
+                        
                         },
                     data: {
                         Content: data.Body.toString('base64'),
@@ -54,18 +65,21 @@ router.get('/package/:id', (req, res) => {
         });
     });
 });
-
-
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
 router.get('/package/byName/:name', async (req, res) => {
-    console.log('Search by Name being used');
     const packageName = req.params.name;
+    const xAuth = req.headers['x-authorization'];
+    if (!xAuth) {
+        return res.status(400).json({ error: 'Missing AuthenticationToken' });
+    }
+    if (!packageName) {
+        return res.status(400).json({ error: 'Missing package name' });
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `logs/${packageName}/`,
         MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
     };
-
     try {
         console.log(params);
         // Get the logs from S3 and return them
@@ -74,7 +88,7 @@ router.get('/package/byName/:name', async (req, res) => {
             const params = {
                 Bucket: '461testbucket', //replace with bucket name
                 Prefix: `logs`,
-                Key: item.Key
+                Key: item.key
             };
             const logData = await s3.getObject(params).promise();
             return JSON.parse(logData.Body.toString('utf-8'));
@@ -89,9 +103,12 @@ router.get('/package/byName/:name', async (req, res) => {
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
 router.post('/package/byRegEx', async (req, res) => {
-    console.log('Search by RegEx being used');
     //get the regular expression from the body
     const regEx =  new RegExp(req.body.regEx);
+    const xAuth = req.headers['x-authorization'];
+    if (!xAuth || !regEx) {
+        return res.status(400).json("There is missing field(s) in the PackageRegEx/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.");
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `packages/`,
@@ -106,11 +123,13 @@ router.post('/package/byRegEx', async (req, res) => {
                 Bucket: params.Bucket,
                 Key : item.Key,
             };
-
             const object = await s3.getObject(metadataParams).promise();
             if (regEx.test(object.Metadata.Name)) {
-                const [Name, Version] = [object.Metadata.Name, object.Metadata.Version];
-                matchedPackages.push({ Name, Version });
+                const data = {};
+                    data.Name = object.Metadata.name;
+                    data.Version = object.Metadata.version;
+                    data.Popularity = object.Metadata.popularity;
+                    matchedPackages.push(data);
             }
             else {
             const zip = new AdmZip(object.Body.buffer);
@@ -119,92 +138,138 @@ router.post('/package/byRegEx', async (req, res) => {
             const readme = readmeEntry ? readmeEntry.getData().toString('utf8') : '';
             
                 if (regEx.test(readme)) {
-                    const [Name, Version] = [object.Metadata.Name, object.Metadata.Version];
-                    matchedPackages.push({ Name, Version });
+                    const data = {};
+                    data.Name = object.Metadata.name;
+                    data.Version = object.Metadata.version;
+                    data.Popularity = object.Metadata.popularity;
+                    matchedPackages.push(data);
                 }
             }
-
         }
-
         res.status(200).json({ data: matchedPackages });
     } catch (err) {
         console.error('Error retrieving files from S3:', err);
         res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
-
 router.post('/packages', async (req, res) => {
-    console.log('getting the registry route being used');
-    const packageName = req.body.Name;
-    console.log(req.body[0]);
-    const versionInput = req.body.Version;
-    const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
-    
-    try {
-
-        if (!packageName) {
-            throw new Error('Package name is required');
+    const matchedPackages = [];
+    if (!req.body) {
+        return res.status(400).json("Missing package name");
+    }
+    const xAuth = req.headers['X-authorization'];
+    if (!xAuth) {
+        return res.status(400).json("Missing AuthenticationToken");
+    }
+    for (const data in req.body ){
+        const packageName = data.Name;
+        console.log(req.body);
+        const versionInput = data.Version;
+        const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
+        if (offset < 0) {
+            return res.status(400).json("Offset must be greater than or equal to 0.");
         }
-        if (packageName == "*") {
-            const params = {
-                Bucket: '461testbucket', //replace with bucket name
-                Prefix: `packages/`,
-                StartAfter: offset, // Start listing after the package name
-                MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
-            }; 
-            const data = await s3.listObjectsV2(params).promise();
-            const matchedPackages = [];
-            for (const item of data.Contents) {
-                const metadataParams = {
-                    Bucket: '461testbucket',
-                    Key: item.Key,
-                };
-                const metadata = await s3.headObject(metadataParams).promise();
-                const [Name, Version] = [metadata.Metadata.Name, metadata.Metadata.Version, metadata.Metadata.ID];
-                matchedPackages.push({ Name, Version });
+        try {
+            if (!packageName) {
+                throw new Error('Package name is required');
             }
-
-        }
-        else {
-            const params = {
-                Bucket: '461testbucket', //replace with bucket name
-                Prefix: `packages/`,
-                StartAfter: offset, // Start listing after the package name
-                MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
+            if (packageName == "*") {
+                const params = {
+                    Bucket: '461testbucket', //replace with bucket name
+                    Prefix: `packages/`,
+                    StartAfter: offset, // Start listing after the package name
+                    MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
+                }; 
+                const data = await s3.listObjectsV2(params).promise();
                 
-            }; 
-            const data = await s3.listObjectsV2(params).promise();
-            const matchedPackages = [];
-
-            for (const item of data.Contents) {
-                const metadataParams = {
-                    Bucket: params.Bucket,
-                    Key: item.Key,
-                };
-                const metadata = await s3.headObject(metadataParams).promise();
-                const version = metadata.Metadata.version;
-                if (metadata.Metadata.Name == packageName) {
-                    if (versionInput.includes('-')) {
-                        const versionRange = versionInput.split('-').map(semver.clean);
-                        if (semver.gte(version, versionRange[0]) && semver.lte(version, versionRange[1])) {
-                            matchedPackages.push(item);
+                for (const item of data.Contents) {
+                    const metadataParams = {
+                        Bucket: '461testbucket',
+                        Key: item.Key,
+                    };
+                    const metadata = await s3.headObject(metadataParams).promise();
+                    //json object to be returned
+                    const data = {};
+                    data.Name = metadata.Metadata.name;
+                    data.Version = versionInput || metadata.Metadata.version;
+                    data.ID = metadata.Metadata.id;
+                    data.Popularity = metadata.Metadata.popularity;
+                    if (versionInput) {
+                        if (versionInput.includes('-')) {
+                            const versionRange = versionInput.split('-').map(semver.clean);
+                            if (semver.gte(version, versionRange[0]) && semver.lte(version, versionRange[1])) {
+                                matchedPackages.push(data);
+                            }
+                        } else if (versionInput.startsWith('~') || versionInput.startsWith('^')) {
+                            if (semver.satisfies(version, versionInput)) {
+                                matchedPackages.push(data);
+                            }
+                        } else if (version === semver.clean(versionInput)) {
+                            matchedPackages.push(data);
                         }
-                    } else if (versionInput.startsWith('~') || versionInput.startsWith('^')) {
-                        if (semver.satisfies(version, versionInput)) {
-                            matchedPackages.push(item);
-                        }
-                    } else if (version === semver.clean(versionInput)) {
-                        matchedPackages.push(item);
+                    } else {
+                        matchedPackages.push(data);
+                    }
+                    if (matchedPackages.length >= 100) {
+                        return res.status(413).json("Too many packages returned.");
                     }
                 }
             }
-    
+            else {
+                const params = {
+                    Bucket: '461testbucket', //replace with bucket name
+                    Prefix: `packages/`,
+                    StartAfter: offset, // Start listing after the package name
+                    MaxKeys: 100, // Return a maximum of 100 packages, prevents DOS attacks
+                    
+                }; 
+                const data = await s3.listObjectsV2(params).promise();
+                const matchedPackages = [];
+                for (const item of data.Contents) {
+                    const metadataParams = {
+                        Bucket: params.Bucket,
+                        Key: item.Key,
+                    };
+                    const metadata = await s3.headObject(metadataParams).promise();
+                    const version = metadata.Metadata.version;
+                    //json object to be returned
+                    const data = {};
+                    data.Name = metadata.Metadata.name;
+                    data.Version = versionInput || metadata.Metadata.version;
+                    data.ID = metadata.Metadata.id;
+                    data.Popularity = metadata.Metadata.popularity;
+                    if (metadata.Metadata.Name == packageName) {
+                        if (versionInput) {
+                            if (versionInput.includes('-')) {
+                                const versionRange = versionInput.split('-').map(semver.clean);
+                                if (semver.gte(version, versionRange[0]) && semver.lte(version, versionRange[1])) {
+                                    matchedPackages.push(data);
+                                }
+                            } else if (versionInput.startsWith('~') || versionInput.startsWith('^')) {
+                                if (semver.satisfies(version, versionInput)) {
+                                    matchedPackages.push(data);
+                                }
+                            } else if (version === semver.clean(versionInput)) {
+                                matchedPackages.push(data);
+                            }
+                            
+                        } else{
+                            matchedPackages.push(data);
+                        }
+                    }
+                    if (matchedPackages.length >= 100) {
+                        return res.status(413).json("Too many packages returned.");
+                    }
+                }
+            }
+            if (matchedPackages.length === 0) {
+                return res.status(404).json("No packages found. Please try again.");
+            }
+            res.status(200).json(matchedPackages);
+        } catch (err) {
+            console.error('Error retrieving files from S3:', err);
+            res.status(500).json({ error: 'Error downloading files from S3' });
         }
-        res.status(200).json({ data: matchedPackages });
-    } catch (err) {
-        console.error('Error retrieving files from S3:', err);
-        res.status(500).json({ error: 'Error downloading files from S3' });
     }
 });
-
 module.exports = router;
