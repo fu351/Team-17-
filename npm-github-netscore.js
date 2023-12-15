@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractGitHubInfo = exports.countLinesInFile = exports.readLines = exports.fetchGitHubInfo = void 0;
 var axios = require('axios');
 var util = require('util');
@@ -101,8 +101,8 @@ function getContributors(owner, repo, personalAccessToken) {
                     url = "https://api.github.com/repos/".concat(owner, "/").concat(repo, "/contributors?per_page=100");
                     return [4 /*yield*/, fetch(url, {
                             headers: {
-                                Authorization: "token ".concat(personalAccessToken)
-                            }
+                                Authorization: "token ".concat(personalAccessToken),
+                            },
                         })];
                 case 1:
                     response = _a.sent();
@@ -261,28 +261,28 @@ function extractGitHubInfo(npmPackageUrl) {
 exports.extractGitHubInfo = extractGitHubInfo;
 function cloneREPO(username, repository) {
     return __awaiter(this, void 0, void 0, function () {
-        var repoUrl, isWindows, deleteCommand, _a, stdout_1, stderr_1, destinationPath, cloneCommand, _b, stdout, stderr, error_5;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var repoUrl, isWindows, deleteCommand, destinationPath, cloneCommand, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    _c.trys.push([0, 4, , 5]);
+                    _a.trys.push([0, 4, , 5]);
                     repoUrl = "https://github.com/".concat(username, "/").concat(repository, ".git");
                     if (!fs.existsSync("cli_storage/".concat(repository))) return [3 /*break*/, 2];
                     isWindows = process.platform === "win32";
                     deleteCommand = isWindows ? "rd /s /q cli_storage\\".concat(repository) : "rm -rf cli_storage/".concat(repository);
                     return [4 /*yield*/, exec(deleteCommand)];
                 case 1:
-                    _a = _c.sent(), stdout_1 = _a.stdout, stderr_1 = _a.stderr;
-                    _c.label = 2;
+                    _a.sent();
+                    _a.label = 2;
                 case 2:
                     destinationPath = "cli_storage/".concat(repository);
                     cloneCommand = "git clone ".concat(repoUrl, " ").concat(destinationPath);
                     return [4 /*yield*/, exec(cloneCommand)];
                 case 3:
-                    _b = _c.sent(), stdout = _b.stdout, stderr = _b.stderr;
+                    _a.sent();
                     return [3 /*break*/, 5];
                 case 4:
-                    error_5 = _c.sent();
+                    error_5 = _a.sent();
                     logBasedOnVerbosity("Error cloning repository: ".concat(error_5.message), 2);
                     console.log(error_5);
                     return [3 /*break*/, 5];
@@ -447,12 +447,12 @@ function getRepoLicense(response) {
 }
 function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
     return __awaiter(this, void 0, void 0, function () {
-        var githubInfo, error_6, headers, axiosConfig, url, response, error_7, error_8, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, totalLines, assigned_dependencies, unassigned_dependencies, rootDirectory, error_9, error_10, error_11, error_12, error_13, error_14, total_lines, total_dependencies, scores, error_15, popularity, error_16, scores, error_17;
+        var githubInfo, error_6, headers, axiosConfig, url, response, error_7, error_8, issue_count, contributor_commits, days_since_last_commit, repoLicense, code_review_score, totalLines, assigned_dependencies, unassigned_dependencies, rootDirectory, error_9, error_10, error_11, error_12, error_13, error_14, total_lines, total_dependencies, scores, error_15, popularity, error_16, error_17;
         var _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    _b.trys.push([0, 44, , 45]);
+                    _b.trys.push([0, 43, , 44]);
                     if (!(npmPackageUrl == "")) return [3 /*break*/, 1];
                     logBasedOnVerbosity("Empty line encountered", 1);
                     return [2 /*return*/, 0];
@@ -473,35 +473,26 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                 case 5:
                     if (!githubInfo) return [3 /*break*/, 41];
                     headers = {
-                        Authorization: "Bearer ".concat(personalAccessToken)
+                        Authorization: "Bearer ".concat(personalAccessToken),
                     };
                     axiosConfig = {
-                        headers: headers
+                        headers: headers,
                     };
                     url = "https://api.github.com/repos/".concat(githubInfo.username, "/").concat(githubInfo.repository);
                     response = void 0;
                     _b.label = 6;
                 case 6:
-                    console.log("waiting response");
                     _b.trys.push([6, 8, , 9]);
-                    console.log("waiting 2");
-
                     return [4 /*yield*/, axios.get(url, axiosConfig)];
                 case 7:
-                    console.log("waiting 3");
-
                     response = _b.sent();
                     return [3 /*break*/, 9];
                 case 8:
-                    console.log("waiting 4");
-
                     error_7 = _b.sent();
                     console.log("request error");
                     return [2 /*return*/];
                 case 9:
                     //gather info
-                    console.log("waiting 5");
-
                     console.log("got response");
                     _b.label = 10;
                 case 10:
@@ -619,17 +610,13 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     scores.push(popularity);
                     console.log("completed");
                     return [2 /*return*/, scores];
-                case 41: return [4 /*yield*/, (0, metrics_1.calculate_net_score)([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl)];
-                case 42:
-                    scores = _b.sent();
-                    scores.push(0); //Adding a 0 popularity score
-                    return [2 /*return*/, scores];
-                case 43: return [3 /*break*/, 45];
-                case 44:
+                case 41: return [2 /*return*/, "fail"];
+                case 42: return [3 /*break*/, 44];
+                case 43:
                     error_17 = _b.sent();
                     logBasedOnVerbosity("Error: ".concat(error_17.stack), 2);
-                    return [3 /*break*/, 45];
-                case 45: return [2 /*return*/];
+                    return [2 /*return*/, "fail"];
+                case 44: return [2 /*return*/];
             }
         });
     });

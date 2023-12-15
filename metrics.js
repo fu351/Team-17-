@@ -59,7 +59,7 @@ function calculate_bus_factor(contributor_commits) {
             //find average num of commits per contributor
             for (i = 0; i < total_contributors; i++) {
                 total_commits += contributor_commits[i];
-                if (contributor_commits[i] > max) {
+                if (contributor_commits[i] >= max) {
                     max = contributor_commits[i];
                 }
             }

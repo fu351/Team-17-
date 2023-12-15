@@ -211,16 +211,16 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const scores = await fetchGitHubInfo(homepage, token);
     console.log("scores", scores);
     //console.log(scores);
-    if (!scores) {
+    if (!scores || isNaN(scores)) {
       console.log('Invalid Repository URL');
-      return res.status(400).json({ error: 'Invalid Repository URL'});
+      return res.status(424).json({ error: 'Invalid Repository URL'});
     }
     for (let i = 1; i <= 8; i++) {
       const score = scores[i];
       if (score < 0.5 || isNaN(score)) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
@@ -450,6 +450,17 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     }
     console.log('\x1b[33m%s\x1b[0m', URL);
     const score = await fetchGitHubInfo(URL, token);
+    for (let i = 1; i <= 8; i++) {
+      const metric = score[i];
+      if (isNaN(metric)) { //check for ingestion
+        console.log('Package Net Score too low, ingestion blocked.');
+        return res.status(500).json({ error: 'Package not uploaded due to rating' });
+      }
+    }
+    if (!score) {
+      console.log('Invalid Repository URL');
+      return res.status(500).json({ error: 'Invalid Repository URL'});
+    }
     console.log('Score successfully been calculated');
     const NetScore = score[1];
     const RampUp = score[2];

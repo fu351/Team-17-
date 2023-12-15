@@ -454,14 +454,13 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
         return scores
       }
       else {
-        const scores = await calculate_net_score([0], 0, 0, 0, 'unlicense', 0, 0, 0, 0, npmPackageUrl);
-        scores.push(0); //Adding a 0 popularity score
-        return scores
+        return "fail";
       }
 
     }
   } catch (error) {
     logBasedOnVerbosity(`Error: ${error.stack}`, 2);
+    return "fail";
     //process.exit(1);
   }
 }

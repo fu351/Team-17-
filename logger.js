@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.debugLogger = exports.infoLogger = void 0;
 var winston_1 = require("winston");
 require('dotenv').config();
@@ -10,14 +10,14 @@ var customFormat = printf(function (_a) {
 });
 var createCustomLogger = function (labelStr, level) {
     return (0, winston_1.createLogger)({
-        level: level || 'info',
+        level: level || 'info', // Set the specified level or default to 'info'
         format: combine(label({ label: labelStr }), timestamp(), customFormat),
         transports: [
             new winston_1.transports.Console(),
             new winston_1.transports.File({
-                filename: process.env.LOG_FILE
+                filename: process.env.LOG_FILE,
             }),
-        ]
+        ],
     });
 };
 var infoLogger = createCustomLogger('INFO', 'info');
