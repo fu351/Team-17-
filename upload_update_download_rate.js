@@ -9,6 +9,7 @@ require('dotenv').config();
 const fetch = require('node-fetch');
 const fs = require('fs');
 const semver = require('semver');
+const { json } = require('stream/consumers');
 
 
 
@@ -285,6 +286,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
     logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
     
+    console.log(responseBody);
     return res.status(201).json(responseBody);
   } catch (error) {
     console.log('Error uploading package:', error);
@@ -322,7 +324,7 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
 });
 
 router.put('/package/:id', async (req, res) => { //update package
-  console.log('pcakage update being used');
+  console.log('package update being used');
   const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
@@ -412,7 +414,7 @@ router.put('/package/:id', async (req, res) => { //update package
     const user = {name: 'default', isAdmin: 'true'};
     const packageMetadata = { Name: Name, Version: Version, ID: ID};
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
-
+    console.log('Version is updated');
     res.status(200).json('Version is updated');
   } catch (error) {
     console.error('Error updating package:', error);
@@ -464,6 +466,16 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     const packageMetadata = { Name: s3ObjectMetadata.Metadata.name, Version: s3ObjectMetadata.Metadata.version, ID: s3ObjectMetadata.Metadata.id };
     logAction(user, 'RATE', packageMetadata); // Log the upload action
     // Display the relevant metadata
+    console.log(json({
+      "BusFactor": BusFactor,
+      "Correctness": Correctness,
+      "Rampup": RampUp,
+      "ResponsiveMaintainer": ResponsiveMaintainer,
+      "LicenseScore": LicenseScore,
+      "GoodPinningPractice": GoodPinningPractice,
+      "PullRequest": PullRequest,
+      "NetScore": NetScore,
+    }));
     return res.status(200).json({
       "BusFactor": BusFactor,
       "Correctness": Correctness,

@@ -275,6 +275,7 @@ router.post('/packages', async (req, res) => {
             res.status(500).json({ error: 'Error downloading files from S3' });
         }
     }
+    console.log(matchedPackages);
     res.status(200).json(matchedPackages);
 });
 module.exports = router;
