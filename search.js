@@ -201,8 +201,8 @@ router.post('/packages', async (req, res) => {
                     const metadata = await s3.headObject(metadataParams).promise();
                     //json object to be returned
                     const objectdata = {};
-                    objectdata.Name = metadata.Metadata.name;
                     objectdata.Version = versionInput || metadata.Metadata.version;
+                    objectdata.Name = metadata.Metadata.name;
                     objectdata.ID = metadata.Metadata.id;
                    // objectdata.Popularity = metadata.Metadata.popularity;
                     if (versionInput) {
@@ -245,8 +245,8 @@ router.post('/packages', async (req, res) => {
                     const version = metadata.Metadata.version;
                     //json object to be returned
                     const objectdata = {};
-                    objectdata.Name = metadata.Metadata.name;
                     objectdata.Version = versionInput || metadata.Metadata.version;
+                    objectdata.Name = metadata.Metadata.name;
                     objectdata.ID = metadata.Metadata.id;
                     //objectdata.Popularity = metadata.Metadata.popularity;
                     if (metadata.Metadata.Name == packageName) {
