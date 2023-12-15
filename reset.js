@@ -14,7 +14,8 @@ router.delete('/reset', async (req, res) => {
     console.log('Reset route being used');
     const s3 = new AWS.S3();
     const bucketName = '461testbucket'; // Replace with your S3 bucket name
-    const xauth = req.headers['X-Authorization']; //Commented to work with autograder
+    const xauth = req.headers['x-authorization']; //Commented to work with autograder
+   console.log(xauth);
     if (!xauth) { //need all fields to be present
         return res.status(400).json({error: 'There are missing fields in the Request Body'});
       }
