@@ -266,7 +266,8 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         URL: homepage,
         Name: packageName,
         Version: zip_ver.toString(),
-        ID: packageID
+        ID: packageID,
+        Popularity: scores[9],
       }
     };
 
@@ -344,7 +345,7 @@ router.put('/package/:id', async (req, res) => { //update package
     return res.status(400).json({error: 'The package ID does not match the ID in the URL'});
   }
 
-
+  let existingMetaData;
   //Next check that name, version, and ID match
   try {
     const existingPackageParams = {
@@ -352,7 +353,6 @@ router.put('/package/:id', async (req, res) => { //update package
       Key: `packages/${ID}.zip`,
     };
     
-    let existingMetaData;
     const existingPackage = await s3.headObject(existingPackageParams).promise();
     if (!existingPackage) {
       return res.status(404).json({ error: 'Package does not exist' });
@@ -418,7 +418,8 @@ router.put('/package/:id', async (req, res) => { //update package
       URL: URL,
       Name: Name,
       Version: Version,
-      ID: ID
+      ID: ID,
+      Popularity: existingMetaData.popularity,
     }
   };
 
