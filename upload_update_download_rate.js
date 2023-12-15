@@ -421,7 +421,7 @@ router.put('/package/:id', async (req, res) => { //update package
 });
 
 router.get('/package/:id/rate', async (req, res) => { //rate package
-  console.log('pcakage rate being used');
+  console.log('package rate being used');
   const packageId = req.params.id;
   console.log("ID",packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
@@ -447,6 +447,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     }
     console.log('\x1b[33m%s\x1b[0m', URL);
     const score = fetchGitHubInfo(URL, token);
+    console.log('Score successfully been calculated');
     const NetScore = score[1];
     const RampUp = score[2];
     const Correctness = score[3];
