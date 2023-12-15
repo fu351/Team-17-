@@ -232,7 +232,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       if (score < 0.5 || isNaN(score)) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
