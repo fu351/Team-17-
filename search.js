@@ -15,8 +15,18 @@ const s3 = new AWS.S3();
 
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/:id', (req, res) => {
-    console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
+    //console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
+    const xauth = req.headers['x-authorization'];
+    if (!packageID) {
+        return res.status(400).json({ error: 'Missing package ID' });
+    }
+    if (xauth !== process.env.AUTHENTICATION_TOKEN) {
+        return res.status(400).json({ error: 'You do not have permission to download the package.' });
+    }
+    if (!xauth) {
+        return res.status(400).json({ error: 'Missing AuthenticationToken' });
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Key : `packages/${packageID}.zip`,
@@ -60,6 +70,13 @@ router.get('/package/:id', (req, res) => {
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
 router.get('/package/byName/:name', async (req, res) => {
     const packageName = req.params.name;
+    const xAuth = req.headers['x-authorization'];
+    if (!xAuth) {
+        return res.status(400).json({ error: 'Missing AuthenticationToken' });
+    }
+    if (!packageName) {
+        return res.status(400).json({ error: 'Missing package name' });
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `logs/${packageName}/`,
@@ -91,6 +108,10 @@ router.get('/package/byName/:name', async (req, res) => {
 router.post('/package/byRegEx', async (req, res) => {
     //get the regular expression from the body
     const regEx =  new RegExp(req.body.regEx);
+    const xAuth = req.headers['x-authorization'];
+    if (!xAuth || !regEx) {
+        return res.status(400).json("There is missing field(s) in the PackageRegEx/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.");
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Prefix: `packages/`,
@@ -140,6 +161,13 @@ router.post('/package/byRegEx', async (req, res) => {
 
 router.post('/packages', async (req, res) => {
     const matchedPackages = [];
+    if (!req.body) {
+        return res.status(400).json("Missing package name");
+    }
+    const xAuth = req.headers['X-authorization'];
+    if (!xAuth) {
+        return res.status(400).json("Missing AuthenticationToken");
+    }
     for (data in req.body ){
         const packageName = data.Name;
         console.log(req.body);

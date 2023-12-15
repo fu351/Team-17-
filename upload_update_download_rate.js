@@ -29,7 +29,10 @@ const upload = multer({ storage });
 const logAction = async (user, action, packageMetadata) => {
   const date = new Date().toISOString();
   const logObject = {
-    User: user,
+    User: {
+      name: "ece30861defaultadminuser", // Assuming this is the user's name
+      isAdmin: true
+    },
     Date: date,
     PackageMetadata: packageMetadata,
     Action: action,
@@ -55,6 +58,10 @@ const isPackageJsonThere = (zipBuffer, ) => {
 
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
+    const xAuth = req.headers['x-authorization'];
+    if (!xAuth) {
+      return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
+    }
     const packageData = req.body;
     let content = packageData.Content;
     if (!packageData) {
@@ -314,6 +321,16 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
 
 router.put('/package/:id', async (req, res) => { //update package
   const packageId = req.params.id;
+  const xAuth = req.headers['x-authorization'];
+  if (!packageId) {
+    return res.status(400).json({ error: 'Missing PackageID' });
+  }
+  if (xAuth !== process.env.AUTHENTICATION_TOKEN) {
+    return res.status(400).json({ error: 'You do not have permission to update the package.' });
+  }
+  if (!xAuth) {
+    return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
+  }
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
   if(Name == null || Version == null || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
@@ -412,9 +429,12 @@ router.put('/package/:id', async (req, res) => { //update package
 router.get('/package/:id/rate', async (req, res) => { //rate package
   const packageId = req.params.id;
   console.log(packageId);
+  const xAuth = req.headers['x-authorization'];
+  if (!xAuth) {
+    return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
+  }
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
-
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {

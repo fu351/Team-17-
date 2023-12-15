@@ -17,16 +17,24 @@ const s3 = new AWS.S3();
 //delete specific package from s3 bucket based on packageID
 router.delete('/package/:id', (req, res) => {
     const packageID = req.params.id;
+    const xAuth = req.headers['x-authorization'];
+    if (xAuth !== process.env.AUTHENTICATION_TOKEN || !packageID || !xAuth) {
+        return res.status(400).json('There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.');
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Key: `packages/${packageID}.zip`,
     };
     s3.deleteObject(params, (err, data) => {
         if (err) {
-            console.error('Error deleting file from S3:', err);
-            res.status(500).json({ error: 'Error deleting file from S3' });
+            if (err.code === 'NoSuchKey') {
+                res.status(404).json({ error: 'Package does not exist' });
+            } else {
+                console.error('Error deleting file from S3:', err);
+                res.status(500).json({ error: 'Error deleting file from S3' });
+            }
         } else {
-            res.status(200).json({ data });
+            res.status(200).json('Package is deleted.');
         }
     });
 });
@@ -34,6 +42,10 @@ router.delete('/package/:id', (req, res) => {
 //delete every version of a package in the s3 bucket that matches the package name
 router.delete('/package/byName/:name', (req, res) => {
     const packageName = req.params.name;
+    const xAuth = req.headers['x-authorization'];
+    if ( !packageName || !xAuth) {
+        return res.status(400).json('There is missing field(s) in the PackageName/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.');
+    }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         prefix: `packages/`,
