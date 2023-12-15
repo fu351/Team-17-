@@ -17,10 +17,16 @@ const s3 = new AWS.S3();
 //delete specific package from s3 bucket based on packageID
 router.delete('/package/:id', (req, res) => {
     const packageID = req.params.id;
-    const xAuth = req.headers['x-authorization'];
-    if (xAuth != "0" || !packageID || !xAuth) {
-        return res.status(400).json('There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.');
-    }
+    const xauth = req.headers['x-authorization'];
+    /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+        return res.status(400).json({error: 'Missing Authentication Token'});
+      }
+      if (!packageID) {
+        return res.status(400).json({error: 'Missing PackageID'});
+      }
     const params = {
         Bucket: '461testbucket', //replace with bucket name
         Key: `packages/${packageID}.zip`,

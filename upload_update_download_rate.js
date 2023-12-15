@@ -84,8 +84,14 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageData = req.body;
     let content = packageData.Content;
     const xauth = req.headers['x-authorization'] || req.headers.authorization;
-        if (xauth != "0" || !xauth) { //need all fields to be present
+    if (xauth != "0" || !xauth) { //need all fields to be present
       return res.status(400).json({error: 'There are missing fields in the Request Body'});
+    }
+    /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+      return res.status(400).json({error: 'Missing Authentication Token'});
     }
     if (!packageData) {
       console.log('No package data uploaded.');
@@ -310,9 +316,12 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
 router.get('/download/:id', async (req, res) => { //download package from bucket
   const ID = req.params.id; // Get the selected package name
   const xauth = req.headers['x-authorization'] || req.headers.authorization;
-    if (xauth != "0" || !xauth) { //need all fields to be present
-    return res.status(400).json({error: 'There are missing fields in the Request Body'});
-  }
+    /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+      return res.status(400).json({error: 'Missing Authentication Token'});
+    }
   if (!ID || typeof ID != 'string') {
     return res.status(400).json({ error: 'Missing PackageID' });
   }
@@ -345,9 +354,12 @@ router.put('/package/:id', async (req, res) => { //update package
   const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
   const xauth = req.headers['x-authorization'] || req.headers.authorization;
-  if (xauth != "0" || !xauth) { //need all fields to be present
-    return res.status(400).json({error: 'There are missing fields in the Request Body'});
-  }
+  /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+      return res.status(400).json({error: 'Missing Authentication Token'});
+    }
   let { Content, URL } = req.body.data;
   if(!Name || !Version  || !ID || (!Content & !URL) || !packageId) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
@@ -458,9 +470,12 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
   console.log('package rate being used');
   const packageId = req.params.id;
   const xauth = req.headers['x-authorization'] || req.headers.authorization;
-  if (xauth != "0" || !xauth) { //need all fields to be present
-    return res.status(400).json({error: 'There are missing fields in the Request Body'});
-  }
+  /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+      return res.status(400).json({error: 'Missing Authentication Token'});
+    }
   console.log("ID",packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId || typeof packageId != 'string') {

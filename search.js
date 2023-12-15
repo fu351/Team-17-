@@ -25,9 +25,9 @@ router.get('/package/:id', (req, res) => {
     if (!packageID || typeof packageID !== 'string') {
         return res.status(400).json({ error: 'Missing package ID' });
     }
-    if (xauth != "0") {
+    /* if (xauth != "0") {
         return res.status(400).json({ error: 'You do not have permission to download the package.' });
-    }
+    } */
     if (!xauth) {
         return res.status(400).json({ error: 'Missing AuthenticationToken' });
     }
@@ -117,9 +117,12 @@ router.post('/package/byRegEx', async (req, res) => {
     }
     
     const xauth = req.headers['x-authorization'] || req.headers.authorization;
-    if (xauth != "0" || !xauth) { //need all fields to be present
-        return res.status(400).json({error: 'There are missing fields in the Request Body'});
-    }
+    /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+        return res.status(400).json({error: 'Missing Authentication Token'});
+      }
     console.log(regEx);
     if (!xauth || !regEx) {
         return res.status(400).json("There is missing field(s) in the PackageRegEx/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.");
@@ -180,9 +183,12 @@ router.post('/packages', async (req, res) => {
         return res.status(400).json("Missing package name");
     }
     const xauth = req.headers['x-authorization'] || req.headers.authorization;
-    if (xauth != "0" || !xauth) { //need all fields to be present
-        return res.status(400).json({error: 'There are missing fields in the Request Body'});
-    }
+    /* if (xauth != "0") {
+      return res.status(400).json({error: 'Invalid Authentication Token'});
+    } */
+    if (!xauth) {
+        return res.status(400).json({error: 'Missing Authentication Token'});
+      }
     for (const req_query of req.body ){
         const packageName = req_query.Name;
         console.log(req_query);
