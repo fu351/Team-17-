@@ -108,8 +108,9 @@ router.get('/package/byName/:name', async (req, res) => {
 router.post('/package/byRegEx', async (req, res) => {
     console.log('search by regex happening');
     //get the regular expression from the body
-    const regEx =  new RegExp(req.body.regEx);
+    const regEx =  new RegExp(req.body.RegEx);
     const xAuth = req.headers['x-authorization'];
+    console.log(regEx);
     if (!xAuth || !regEx) {
         return res.status(400).json("There is missing field(s) in the PackageRegEx/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.");
     }
@@ -135,6 +136,7 @@ router.post('/package/byRegEx', async (req, res) => {
                     matchedPackages.push(objectdata);
             }
             else {
+            console.log(object.Metadata.Name,"dio not match", RegEx);
             const zip = new AdmZip(object.Body.buffer);
             const zipEntries = zip.getEntries();
             const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
