@@ -4,6 +4,7 @@ const router = express.Router();
 const AdmZip = require('adm-zip');
 const AWS = require('aws-sdk');
 const { version } = require('winston');
+const semver = require('semver');
 require('dotenv').config();
 
 AWS.config.update({
@@ -168,7 +169,7 @@ router.post('/packages', async (req, res) => {
     if (!xAuth) {
         return res.status(400).json("Missing AuthenticationToken");
     }
-    for (data in req.body ){
+    for (const data in req.body ){
         const packageName = data.Name;
         console.log(req.body);
         const versionInput = data.Version;
@@ -215,8 +216,7 @@ router.post('/packages', async (req, res) => {
                         } else if (version === semver.clean(versionInput)) {
                             matchedPackages.push(data);
                         }
-                        
-                    } else{
+                    } else {
                         matchedPackages.push(data);
                     }
                     if (matchedPackages.length >= 100) {
