@@ -291,7 +291,7 @@ async function getDependencyData(getUsername: string, repositoryName: string, pe
 
 }
 
-async function getReviewedLines(getUsername: string, repositoryName: string, token: any): Promise<any> {
+async function getReviewedLines(getUsername: string, repositoryName: string, token: string): Promise<any> {
   //find the total number of commits in the repo and the total number of closed pull requests in the repo
   const url = `https://api.github.com/repos/${getUsername}/${repositoryName}/pulls?state=closed`;
   const response = await axios.get(url, token);
@@ -406,6 +406,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
           code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
         }
         catch (error) {
+          console.log(error);
           console.log("error d");
           return;
         }

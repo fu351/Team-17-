@@ -555,6 +555,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 26];
                 case 25:
                     error_12 = _b.sent();
+                    console.log(error_12);
                     console.log("error d");
                     return [2 /*return*/];
                 case 26:
