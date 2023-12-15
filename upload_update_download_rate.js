@@ -208,7 +208,17 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     
     console.log("adsfsadf")
+
     const scores = await fetchGitHubInfo(homepage, token);
+    const checkRateLimit = async (token) => {
+      const response = await fetch('https://api.github.com/rate_limit', {
+          headers: { 'Authorization': `token ${token}` }
+      });
+      const rateLimit = await response.json();
+      console.log("NUm lim left", rateLimit);
+    };
+  
+    checkRateLimit(token);
     console.log("scores", scores);
     //console.log(scores);
     if (!scores || isNaN(scores)) {
