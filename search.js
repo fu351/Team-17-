@@ -169,8 +169,9 @@ router.post('/packages', async (req, res) => {
     //     console.log('error2');
     //     return res.status(400).json("Missing AuthenticationToken");
     // }
-    for (const req_query in req.body ){
+    for (const req_query of req.body ){
         const packageName = req_query.Name;
+        console.log(req_query);
         console.log(req.body);
         const versionInput = req_query.Version;
         const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
