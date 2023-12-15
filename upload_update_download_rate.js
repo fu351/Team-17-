@@ -209,7 +209,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
-    for (let i = 1; i <= 9; i++) {
+    for (let i = 1; i <= 8; i++) {
       const score = scores[i];
       console.log(score);
       if (score < 0.5 || isNaN(score)) { //check for ingestion
