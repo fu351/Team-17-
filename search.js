@@ -132,7 +132,7 @@ router.post('/package/byRegEx', async (req, res) => {
                 const objectdata = {};
                     objectdata.Version = object.Metadata.version;
                     objectdata.Name = object.Metadata.name;
-                    objectdata.Popularity = object.Metadata.popularity;
+                    //objectdata.Popularity = object.Metadata.popularity;
                     matchedPackages.push(objectdata);
             }
             else {
