@@ -128,7 +128,7 @@ router.post('/package/byRegEx', async (req, res) => {
                 Key : item.Key,
             };
             const object = await s3.getObject(metadataParams).promise();
-            if (regEx.test(object.Metadata.Name)) {
+            if (regEx.test(object.Metadata.name)) {
                 const objectdata = {};
                     objectdata.Version = object.Metadata.version;
                     objectdata.Name = object.Metadata.name;
@@ -136,7 +136,7 @@ router.post('/package/byRegEx', async (req, res) => {
                     matchedPackages.push(objectdata);
             }
             else {
-            console.log(object.Metadata.Name,"dio not match", regEx);
+            console.log(object.Metadata.name,"dio not match", regEx);
             const zip = new AdmZip(object.Body.buffer);
             const zipEntries = zip.getEntries();
             const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
