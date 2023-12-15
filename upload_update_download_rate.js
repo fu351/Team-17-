@@ -448,7 +448,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
       console.log('\x1b[33m%s\x1b[0m', "no URL");
     }
     console.log('\x1b[33m%s\x1b[0m', URL);
-    const score = fetchGitHubInfo(URL, token);
+    const score = await fetchGitHubInfo(URL, token);
     console.log('Score successfully been calculated');
     const NetScore = score[1];
     const RampUp = score[2];
@@ -466,16 +466,16 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     const packageMetadata = { Name: s3ObjectMetadata.Metadata.name, Version: s3ObjectMetadata.Metadata.version, ID: s3ObjectMetadata.Metadata.id };
     logAction(user, 'RATE', packageMetadata); // Log the upload action
     // Display the relevant metadata
-    console.log(json({
-      "BusFactor": BusFactor,
-      "Correctness": Correctness,
-      "Rampup": RampUp,
-      "ResponsiveMaintainer": ResponsiveMaintainer,
-      "LicenseScore": LicenseScore,
-      "GoodPinningPractice": GoodPinningPractice,
-      "PullRequest": PullRequest,
-      "NetScore": NetScore,
-    }));
+    // console.log(json({
+    //   "BusFactor": BusFactor,
+    //   "Correctness": Correctness,
+    //   "Rampup": RampUp,
+    //   "ResponsiveMaintainer": ResponsiveMaintainer,
+    //   "LicenseScore": LicenseScore,
+    //   "GoodPinningPractice": GoodPinningPractice,
+    //   "PullRequest": PullRequest,
+    //   "NetScore": NetScore,
+    // }));
     return res.status(200).json({
       "BusFactor": BusFactor,
       "Correctness": Correctness,
