@@ -194,13 +194,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     //check that the version is a valid semver
     zip_ver = semver.coerce(zip_ver);
-    if (zip_ver == null) {
-      console.log('Invalid Version');
-      return res.status(400).json({ error: 'Invalid Version'});
-    }
-    console.log("BEFORE------zip:     ",zip_ver);
-    zip_ver = semver.valid(semver.clean(zip_ver));
-    console.log("AFTER------zip:     ",zip_ver);
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
