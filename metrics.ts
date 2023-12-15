@@ -5,7 +5,7 @@ export async function calculate_bus_factor(contributor_commits: number[]) {
         return 0;
     }
     let key_contributor = 0;
-    let total_contributors = contributor_commits.length;
+    const total_contributors = contributor_commits.length;
     let bus_factor_min = 10;
     if (total_contributors == 0) {
         return 0;

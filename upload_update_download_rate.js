@@ -5,12 +5,11 @@ const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
-const port = 3000;
 require('dotenv').config();
 const fetch = require('node-fetch');
 const fs = require('fs');
-const stream = require('stream');
-const { promisify } = require('util');
+const semver = require('semver');
+
 
 
 const token = process.env.GITHUB_TOKEN;
@@ -193,6 +192,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //remove any / from the package name
     packageName = packageName.replace(/\//g, '');
     zip_ver = packageJson.version;
+    zip_ver = semver.valid(semver.clean(semver.coerce(zip_ver)));
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
@@ -266,27 +266,30 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     try  { //upload complete, answer with response codes
       await s3.upload(s3Params).promise();
       //package was uploaded succesfully
-      const responseBody = {
-        metadata: {
-          Name: packageJson.name,
-          Version: zip_ver.toString(),
-          ID: packageID.toString(),
-        },
-        data: {
-          Content: content,
-          JSProgram: 'holder',
-        }
-      };
-      //logging upload action for traceability
-      const user = {name: 'default', isAdmin: 'true'};
-      const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
-      logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
-      
-      return res.status(201).json({responseBody});
     } catch (error) {
       console.error(error);
     }
-    
+    const responseBody = {
+      metadata: {
+        Name: packageJson.name,
+        Version: zip_ver.toString(),
+        ID: packageID.toString(),
+      },
+      data: {
+        Content: content,
+        JSProgram: 'holder',
+      }
+    };
+    try {
+      //logging upload action for traceability
+    const user = {name: 'default', isAdmin: 'true'};
+    const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
+    logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
+    } catch (error) {
+      console.log('Error logging upload action to S3:', error);
+    }
+    return res.status(201).json({responseBody});
+
   } catch (error) {
     console.log('Error uploading package:', error);
     return res.status(400).json('Error uploading package:', error);
