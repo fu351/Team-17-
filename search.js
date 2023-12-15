@@ -161,10 +161,12 @@ router.post('/packages', async (req, res) => {
     console.log('getting registry');
     const matchedPackages = [];
     if (!req.body) {
+        console.log('error1');
         return res.status(400).json("Missing package name");
     }
     const xAuth = req.headers['X-authorization'];
     if (!xAuth) {
+        console.log('error2');
         return res.status(400).json("Missing AuthenticationToken");
     }
     for (const req_query in req.body ){
@@ -173,6 +175,7 @@ router.post('/packages', async (req, res) => {
         const versionInput = req_query.Version;
         const offset = req.query.offset || 0; // Get the offset from the query parameters, default to 0
         if (offset < 0) {
+            console.log('error3');
             return res.status(400).json("Offset must be greater than or equal to 0.");
         }
         try {
@@ -217,6 +220,7 @@ router.post('/packages', async (req, res) => {
                         matchedPackages.push(objectdata);
                     }
                     if (matchedPackages.length >= 100) {
+                        console.log('error4');
                         return res.status(413).json("Too many packages returned.");
                     }
                 }
@@ -263,11 +267,13 @@ router.post('/packages', async (req, res) => {
                         }
                     }
                     if (matchedPackages.length >= 100) {
+                        console.log('error5');
                         return res.status(413).json("Too many packages returned.");
                     }
                 }
             }
             if (matchedPackages.length === 0) {
+                console.log('error6');
                 return res.status(404).json("No packages found. Please try again.");
             }
         } catch (err) {
