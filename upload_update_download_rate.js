@@ -5,11 +5,12 @@ const AWS = require('aws-sdk');
 const AdmZip = require('adm-zip');
 const { log } = require('console');
 const router = express.Router();
+const port = 3000;
 require('dotenv').config();
 const fetch = require('node-fetch');
 const fs = require('fs');
-const semver = require('semver');
-
+const stream = require('stream');
+const { promisify } = require('util');
 
 
 const token = process.env.GITHUB_TOKEN;
@@ -28,10 +29,7 @@ const upload = multer({ storage });
 const logAction = async (user, action, packageMetadata) => {
   const date = new Date().toISOString();
   const logObject = {
-    User: {
-      name: "ece30861defaultadminuser", // Assuming this is the user's name
-      isAdmin: true
-    },
+    User: user,
     Date: date,
     PackageMetadata: packageMetadata,
     Action: action,
@@ -54,34 +52,10 @@ const isPackageJsonThere = (zipBuffer, ) => {
   const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
   return Boolean(packageJsonEntry);
 };
-const findGitHubUrl = async (object) => {
-  const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
-  for (const key in object) {
-    if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
-      let url = object[key];
-      // Remove any existing protocol
-      url = url.replace(/^[a-z]*:/, '');
-      // Ensure the URL uses the https protocol
-      url = 'https:' + url;
-      // Split the URL by '/' and join the first four elements
-      url = url.split('/').slice(0, 4).join('/');
-      return url;
-    } else if (typeof object[key] === 'object' && object[key] !== null) {
-      const result = findGitHubUrl(object[key]);
-      if (result) {
-        return result;
-      }
-    }
-  }
-  return null;
-}
 
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
+  console.log('pcakage upload/ingestion being used');
   try {
-    const xAuth = req.headers['x-authorization'];
-    if (!xAuth) {
-      return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
-    }
     const packageData = req.body;
     let content = packageData.Content;
     if (!packageData) {
@@ -104,7 +78,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
     if (packageData.URL){
-      console.log('\x1b[34m%s\x1b[0m', 'URL LOADING PACKAGE');
+      console.log('URL was set.');
       homepage = packageData.URL;
       let githubInfo;
       try {
@@ -146,9 +120,6 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         //process.exit(1);
       }
     }
-    else {
-      console.log('\x1b[34m%s\x1b[0m', 'URL LOADING PACKAGE');
-    }
     //console.log(content);
     const decodedData = Buffer.from(content, 'base64');
 
@@ -178,7 +149,27 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
     
-    
+    function findGitHubUrl(object) {
+      const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+      for (const key in object) {
+        if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
+          let url = object[key];
+          // Remove any existing protocol
+          url = url.replace(/^[a-z]*:/, '');
+          // Ensure the URL uses the https protocol
+          url = 'https:' + url;
+          // Split the URL by '/' and join the first four elements
+          url = url.split('/').slice(0, 4).join('/');
+          return url;
+        } else if (typeof object[key] === 'object' && object[key] !== null) {
+          const result = findGitHubUrl(object[key]);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      return null;
+    }
     
     // Extract URL, name and version from package.json
     //Set URL if it was not set before
@@ -194,8 +185,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     packageName = packageJson.name;
     //remove any / from the package name
     packageName = packageName.replace(/\//g, '');
-    zip_ver = (packageJson.version).toString();
-    zip_ver = semver.valid(semver.clean(semver.coerce(zip_ver)));
+    zip_ver = packageJson.version;
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
@@ -212,13 +202,11 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
-    for (let i = 1; i <= 8; i++) {
-      const score = scores[i];
-      console.log(score);
-      if (score < 0.5 || isNaN(score)) { //check for ingestion
+    for (const score in scores) {
+      if (score < 0.5 || score == NaN) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
@@ -269,31 +257,27 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     try  { //upload complete, answer with response codes
       await s3.upload(s3Params).promise();
       //package was uploaded succesfully
+      const responseBody = {
+        metadata: {
+          Name: packageJson.name,
+          Version: zip_ver.toString(),
+          ID: packageID.toString(),
+        },
+        data: {
+          Content: content,
+          JSProgram: 'holder',
+        }
+      };
+      //logging upload action for traceability
+      const user = {name: 'default', isAdmin: 'true'};
+      const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
+      logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
+      
+      return res.status(201).json({responseBody});
     } catch (error) {
       console.error(error);
     }
-    const responseBody = {
-      metadata: {
-        Name: packageJson.name,
-        Version: zip_ver.toString(),
-        ID: packageID.toString(),
-      },
-      data: {
-        Content: content,
-        JSProgram: 'holder',
-      }
-    };
-    try {
-      //logging upload action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
-    logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
-    } catch (error) {
-      console.log('Error logging upload action to S3:', error);
-    }
-    console.log('\x1b[34m%s\x1b[0m', 'Successful Upload!');
-    return res.status(201).json({responseBody});
-
+    
   } catch (error) {
     console.log('Error uploading package:', error);
     return res.status(400).json('Error uploading package:', error);
@@ -320,7 +304,7 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   const version = metadata.version;
   const id = metadata.packageId;
   const user = {name: 'default', isAdmin: 'true'};
-  const packageMetadata = { Name: ObjectData.Metadata.name, Version: version, ID: id };
+  const packageMetadata = { Name: selectedPackage, Version: version, ID: id };
   //logging download action for traceability
   logAction(user, 'DOWNLOAD', packageMetadata); // Log the upload action
 
@@ -330,17 +314,8 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
 });
 
 router.put('/package/:id', async (req, res) => { //update package
+  console.log('pcakage update being used');
   const packageId = req.params.id;
-  const xAuth = req.headers['x-authorization'];
-  if (!packageId) {
-    return res.status(400).json({ error: 'Missing PackageID' });
-  }
-  if (xAuth != "0") {
-    return res.status(400).json({ error: 'You do not have permission to update the package.' });
-  }
-  if (!xAuth) {
-    return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
-  }
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
   if(Name == null || Version == null || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
@@ -369,9 +344,8 @@ router.put('/package/:id', async (req, res) => { //update package
     if(existingMetaData.version != Version || existingMetaData.id != ID || existingMetaData.name != Name) {
       return res.status(400).json({ error: 'Invalid name, ID, or Version'});
     }
-  }
-  catch (error) {
-    return res.status(404).json({ error: 'Package does not exist' });
+  } catch (error) {
+
   }
   if (URL) { //if the URL is set, download the package from the URL
       console.log('URL was set.');
@@ -406,7 +380,7 @@ router.put('/package/:id', async (req, res) => { //update package
         // Read the zip file into a buffer
         const zipBuffer = fs.readFileSync(`${githubInfo.repository}.zip`);
         // Convert the buffer to a base64 string
-        Content = zipBuffer.toString('base64');
+        content = zipBuffer.toString('base64');
        
       } catch (error) {
         console.log('Error downloading package:');
@@ -417,7 +391,7 @@ router.put('/package/:id', async (req, res) => { //update package
     }
   
   const s3uploadparams = { //replace old content with the new content
-    Bucket: '461testbucket',
+    Bucket: 'holder',
     Key: `packages/${ID}.zip`,
     Body: Content,
   };
@@ -427,7 +401,7 @@ router.put('/package/:id', async (req, res) => { //update package
 
     //Logging update action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: Name, Version: Version, ID: ID };
+    const packageMetadata = { Name: s3UploadParams.key, Version: s3UploadParams.Metadata.version, ID: s3UploadParams.Metadata.id };
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
     res.status(200).json({ message: 'Version is updated' });
@@ -438,14 +412,12 @@ router.put('/package/:id', async (req, res) => { //update package
 });
 
 router.get('/package/:id/rate', async (req, res) => { //rate package
+  console.log('pcakage rate being used');
   const packageId = req.params.id;
   console.log(packageId);
-  const xAuth = req.headers['x-authorization'];
-  if (!xAuth) {
-    return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
-  }
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
+
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {
