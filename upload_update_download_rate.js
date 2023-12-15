@@ -104,7 +104,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //Handles if the package is uploaded via URL
     //Retrieves the zip file of the package from the URL
     if (packageData.URL){
-      console.log('URL was set.');
+      console.log('\x1b[34m%s\x1b[0m', 'URL LOADING PACKAGE');
       homepage = packageData.URL;
       let githubInfo;
       try {
@@ -145,6 +145,9 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         console.log(error);
         //process.exit(1);
       }
+    }
+    else {
+      console.log('\x1b[34m%s\x1b[0m', 'URL LOADING PACKAGE');
     }
     //console.log(content);
     const decodedData = Buffer.from(content, 'base64');
@@ -191,7 +194,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     packageName = packageJson.name;
     //remove any / from the package name
     packageName = packageName.replace(/\//g, '');
-    zip_ver = packageJson.version;
+    zip_ver = (packageJson.version).toString();
     zip_ver = semver.valid(semver.clean(semver.coerce(zip_ver)));
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
@@ -288,6 +291,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     } catch (error) {
       console.log('Error logging upload action to S3:', error);
     }
+    console.log('\x1b[34m%s\x1b[0m', 'Successful Upload!');
     return res.status(201).json({responseBody});
 
   } catch (error) {
