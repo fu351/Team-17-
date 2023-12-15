@@ -6,6 +6,8 @@ const AWS = require('aws-sdk');
 const { version } = require('winston');
 const semver = require('semver');
 require('dotenv').config();
+const slow = require('slow');
+const safeRegex = require('safe-regex');
 
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_Key_ID,
@@ -109,6 +111,14 @@ router.post('/package/byRegEx', async (req, res) => {
     console.log('search by regex happening');
     //get the regular expression from the body
     const regEx =  new RegExp(req.body.RegEx);
+    if (!safeRegex(regEx)) {
+        return res.status(400).json({error: 'The regular expression is potentially unsafe'});
+    }
+    
+    const slowOptions = { timeout: 500 }; // Timeout after 500 milliseconds
+    if (slow.check(regEx, slowOptions)) {
+        return res.status(400).json({error: 'The regular expression took too long to evaluate'});
+    }
     const xauth = req.headers['x-authorization'];
     if (xauth != "0" || !xauth) { //need all fields to be present
         return res.status(400).json({error: 'There are missing fields in the Request Body'});
