@@ -37,7 +37,7 @@ router.get('/package/:id', (req, res) => {
         s3.getObject(params, (err, data) => {
             if (err) {
                 console.error('Error retrieving file from S3:', err);
-                res.status(500).json({ error: 'Error downloading file from S3' });
+                res.status(404).json('No such package exists.');
                 reject(err);
             } else {
                 console.log({ 
@@ -90,8 +90,7 @@ router.get('/package/byName/:name', async (req, res) => {
         const promises = data.Contents.map(async (item) => {
             const params = {
                 Bucket: '461testbucket', //replace with bucket name
-                Prefix: `logs`,
-                Key: item.key
+                Key: item.Key // Use 'Key' instead of 'key' and remove 'Prefix'
             };
             const logData = await s3.getObject(params).promise();
             return JSON.parse(logData.Body.toString('utf-8'));
