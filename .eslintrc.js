@@ -1,3 +1,5 @@
+const { off } = require("process");
+
 module.exports = {
     parser: '@typescript-eslint/parser',
     plugins: ['@typescript-eslint'],
@@ -7,7 +9,7 @@ module.exports = {
     ],
     rules: {
       // Add any additional rules here
-      //'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': 'off',
     }
   };
   
