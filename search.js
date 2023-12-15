@@ -19,7 +19,7 @@ router.get('/package/:id', (req, res) => {
     //console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
     const xauth = req.headers['x-authorization'];
-    if (!packageID) {
+    if (!packageID || typeof packageID !== 'string') {
         return res.status(400).json({ error: 'Missing package ID' });
     }
     if (xauth != "0") {

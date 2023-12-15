@@ -313,6 +313,9 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   if (xauth != "0" || !xauth) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
   }
+  if (!ID || typeof ID != 'string') {
+    return res.status(400).json({ error: 'Missing PackageID' });
+  }
   const params = {
     Bucket: '461testbucket', 
     Key: `packages/${ID}.zip`, // Use the selected package name to generate the Object key
@@ -421,7 +424,9 @@ router.put('/package/:id', async (req, res) => { //update package
         //process.exit(1);
       }
     }
-  
+  if (!URL) {
+    URL = existingMetaData.url;
+  }
   const s3uploadparams = { //replace old content with the new content
     Bucket: '461testbucket',
     Key: `packages/${ID}.zip`,
@@ -458,7 +463,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
   }
   console.log("ID",packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
-  if (!packageId) {
+  if (!packageId || typeof packageId != 'string') {
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {
@@ -484,7 +489,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
       const metric = score[i];
       if (isNaN(metric)) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
-        return res.status(500).json({ error: 'Package not uploaded due to rating' });
+        return res.status(500).json({ error: 'choke' });
       }
     }
     if (!score) {
