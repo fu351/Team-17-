@@ -194,7 +194,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     }
     //check that the version is a valid semver
     zip_ver = semver.coerce(zip_ver);
-    if(homepage == null|| packageName == null || zip_ver == null)  {
+    if(!homepage || !packageName || !zip_ver )  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
       console.log('homepage: ' + homepage + ' packageName: ' + packageName + ' zip_ver: ' + zip_ver);
@@ -206,7 +206,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const scores = await fetchGitHubInfo(homepage, token);
     console.log("scores", scores);
     //console.log(scores);
-    if (scores == null ) {
+    if (!scores) {
       console.log('Invalid Repository URL');
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }

@@ -15,6 +15,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 //Get the package from the s3 bucket with the corresponding packageID and return the contents of the package
 router.get('/package/:id', (req, res) => {
+    console.log('search by ID happening');
     //console.log(process.env.AWS_ACCESS_Key_ID, process.env.AWS_SECRET_ACCESS_Key)
     const packageID = req.params.id;
     const xauth = req.headers['x-authorization'];
@@ -67,6 +68,7 @@ router.get('/package/:id', (req, res) => {
 });
 //search the s3 bucket for the file based on just the package name and return the history of the package including the actions done to it
 router.get('/package/byName/:name', async (req, res) => {
+    console.log('search by name happening');
     const packageName = req.params.name;
     const xAuth = req.headers['x-authorization'];
     if (!xAuth) {
@@ -103,6 +105,7 @@ router.get('/package/byName/:name', async (req, res) => {
 });
 //Search for a package using regular expression over package names and READMEs. Return the packages if the package name or the README matches the regular expression
 router.post('/package/byRegEx', async (req, res) => {
+    console.log('search by regex happening');
     //get the regular expression from the body
     const regEx =  new RegExp(req.body.regEx);
     const xAuth = req.headers['x-authorization'];
@@ -153,6 +156,7 @@ router.post('/package/byRegEx', async (req, res) => {
     }
 });
 router.post('/packages', async (req, res) => {
+    console.log('getting registry');
     const matchedPackages = [];
     if (!req.body) {
         return res.status(400).json("Missing package name");
