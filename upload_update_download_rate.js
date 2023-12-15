@@ -503,7 +503,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     return res.status(200).json({
       "BusFactor": BusFactor,
       "Correctness": Correctness,
-      "Rampup": RampUp,
+      "RampUp": RampUp,
       "ResponsiveMaintainer": ResponsiveMaintainer,
       "LicenseScore": LicenseScore,
       "GoodPinningPractice": GoodPinningPractice,
