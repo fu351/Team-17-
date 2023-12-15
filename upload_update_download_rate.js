@@ -326,7 +326,7 @@ router.put('/package/:id', async (req, res) => { //update package
   const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
-  if(Name == null || Version == null || ID == null || (Content == null & URL == null) || packageId == null || (Content & URL)) { //need all fields to be present
+  if(!Name || !Version  || !ID || (!Content & !URL) || !packageId || (Content & URL)) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
   }
   if (packageId != ID) { //check that the package ID matches the ID in the URL
@@ -423,10 +423,9 @@ router.put('/package/:id', async (req, res) => { //update package
 router.get('/package/:id/rate', async (req, res) => { //rate package
   console.log('pcakage rate being used');
   const packageId = req.params.id;
-  console.log(packageId);
+  console.log("ID",packageId);
   //There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid. return 400 error
   if (!packageId) {
-
     return res.status(400).json({ error: 'Missing PackageID' });
   }
   try {
@@ -442,7 +441,11 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
       return res.status(404).json({ error: 'Package does not exist' });
     }
     // Extract URL and Rate the package
-    const URL = s3ObjectMetadata.Metadata.URL;
+    const URL = s3ObjectMetadata.Metadata.url;
+    if (!URL) {
+      console.log('\x1b[33m%s\x1b[0m', "no URL");
+    }
+    console.log('\x1b[33m%s\x1b[0m', URL);
     const score = fetchGitHubInfo(URL, token);
     const NetScore = score[1];
     const RampUp = score[2];
