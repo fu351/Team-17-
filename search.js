@@ -140,6 +140,8 @@ router.post('/package/byRegEx', async (req, res) => {
             const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
             const readme = readmeEntry ? readmeEntry.getData().toString('utf8') : '';
                 if (regEx.test(readme)) {
+                    console.log(`Match found in README for package: ${object.Metadata.name}`); // Log the package name
+                    console.log(`README content: ${readme}`);
                     const objectdata = {};
                     objectdata.Version = object.Metadata.version;
                     objectdata.Name = object.Metadata.name;
