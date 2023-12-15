@@ -136,7 +136,7 @@ router.post('/package/byRegEx', async (req, res) => {
                     matchedPackages.push(objectdata);
             }
             else {
-            console.log(object.Metadata.Name,"dio not match", RegEx);
+            console.log(object.Metadata.Name,"dio not match", regEx);
             const zip = new AdmZip(object.Body.buffer);
             const zipEntries = zip.getEntries();
             const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
