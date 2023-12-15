@@ -111,7 +111,7 @@ router.get('/package/byName/:name', async (req, res) => {
 router.post('/package/byRegEx', async (req, res) => {
     console.log('search by regex happening');
     //get the regular expression from the bodys
-    const regEx =  new RE2(req.body.RegEx);
+    const regEx =  new RegExp(req.body.RegEx);
     if (!safeRegex(RegExp(req.body.RegEx))) {
         return res.status(400).json({error: 'The regular expression is potentially unsafe'});
     }
