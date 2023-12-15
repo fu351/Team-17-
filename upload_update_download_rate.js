@@ -342,8 +342,12 @@ router.put('/package/:id', async (req, res) => { //update package
   const packageId = req.params.id;
   const { Name, Version, ID } = req.body.metadata;
   let { Content, URL } = req.body.data;
-  if(!Name || !Version  || !ID || (!Content & !URL) || !packageId || (Content & URL)) { //need all fields to be present
+  if(!Name || !Version  || !ID || (!Content & !URL) || !packageId) { //need all fields to be present
     return res.status(400).json({error: 'There are missing fields in the Request Body'});
+  }
+  //If both Content and URL are set then return 400 error
+  if (Content & URL) {
+    return res.status(400).json({error: 'Both Content and URL were set'});
   }
   if (packageId != ID) { //check that the package ID matches the ID in the URL
     return res.status(400).json({error: 'The package ID does not match the ID in the URL'});
