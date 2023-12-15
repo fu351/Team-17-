@@ -3,7 +3,6 @@
 const AWS = require('aws-sdk');
 const express = require('express');
 const router = express.Router();
-require('dotenv').config();
 
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -12,16 +11,14 @@ AWS.config.update({
 });
 
 router.delete('/reset', async (req, res) => {
-    const auth = req.headers['x-authorization'];
-    if (!auth) {
-        return res.status(400).json({ error: 'There is missing field(s) in the AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.' });
-    }
+    console.log('Reset route being used');
     const s3 = new AWS.S3();
     const bucketName = '461testbucket'; // Replace with your S3 bucket name
+    const folderPrefix = 'packages/'; // Replace with the desired folder prefix
 
     try {
         // List all objects in the specified folder
-        const data = await s3.listObjectsV2({ Bucket: bucketName}).promise();
+        const data = await s3.listObjectsV2({ Bucket: bucketName, Prefix: folderPrefix }).promise();
 
         // Check if there are any objects in the folder
         if (data.Contents.length === 0) {
