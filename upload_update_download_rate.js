@@ -342,7 +342,7 @@ router.put('/package/:id', async (req, res) => { //update package
   //Next check that name, version, and ID match
   try {
     const existingPackageParams = {
-      Bucket: 'holder',
+      Bucket: '461testbucket',
       Key: `packages/${ID}.zip`,
     };
     
@@ -405,7 +405,7 @@ router.put('/package/:id', async (req, res) => { //update package
     }
   
   const s3uploadparams = { //replace old content with the new content
-    Bucket: 'holder',
+    Bucket: '461testbucket',
     Key: `packages/${ID}.zip`,
     Body: Content,
   };
