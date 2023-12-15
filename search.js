@@ -120,7 +120,6 @@ router.post('/package/byRegEx', async (req, res) => {
     try {
         const data = await s3.listObjectsV2(params).promise();
         const matchedPackages = [];
-        console.log("dsf",data);
         for (const item of data.Contents) {
             const metadataParams = {
                 Bucket: params.Bucket,
@@ -128,28 +127,31 @@ router.post('/package/byRegEx', async (req, res) => {
             };
             const object = await s3.getObject(metadataParams).promise();
             if (regEx.test(object.Metadata.Name)) {
-                const data = {};
-                    data.Name = object.Metadata.name;
-                    data.Version = object.Metadata.version;
-                    data.Popularity = object.Metadata.popularity;
-                    matchedPackages.push(data);
+                const objectdata = {};
+                    objectdata.Name = object.Metadata.name;
+                    objectdata.Version = object.Metadata.version;
+                    //objectdata.Popularity = object.Metadata.popularity;
+                    matchedPackages.push(objectdata);
             }
             else {
             const zip = new AdmZip(object.Body.buffer);
             const zipEntries = zip.getEntries();
             const readmeEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('readme.md'));
             const readme = readmeEntry ? readmeEntry.getData().toString('utf8') : '';
-            
                 if (regEx.test(readme)) {
-                    const data = {};
-                    data.Name = object.Metadata.name;
-                    data.Version = object.Metadata.version;
-                    data.Popularity = object.Metadata.popularity;
-                    matchedPackages.push(data);
+                    const objectdata = {};
+                    objectdata.Name = object.Metadata.name;
+                    objectdata.Version = object.Metadata.version;
+                    //objectdata.Popularity = object.Metadata.popularity;
+                    matchedPackages.push(objectdata);
                 }
             }
         }
-        res.status(200).json({ data: matchedPackages });
+        if (matchedPackages.length === 0) {
+            return res.status(404).json("No packages found. Please try again.");
+        }
+        console.log(matchedPackages);
+        res.status(200).json(matchedPackages);
     } catch (err) {
         console.error('Error retrieving files from S3:', err);
         res.status(500).json({ error: 'Error downloading files from S3' });
@@ -193,11 +195,11 @@ router.post('/packages', async (req, res) => {
                     };
                     const metadata = await s3.headObject(metadataParams).promise();
                     //json object to be returned
-                    const data = {};
-                    data.Name = metadata.Metadata.name;
-                    data.Version = versionInput || metadata.Metadata.version;
-                    data.ID = metadata.Metadata.id;
-                    data.Popularity = metadata.Metadata.popularity;
+                    const objectdata = {};
+                    objectdata.Name = metadata.Metadata.name;
+                    objectdata.Version = versionInput || metadata.Metadata.version;
+                    objectdata.ID = metadata.Metadata.id;
+                   // objectdata.Popularity = metadata.Metadata.popularity;
                     if (versionInput) {
                         if (versionInput.includes('-')) {
                             const versionRange = versionInput.split('-').map(semver.clean);
@@ -206,13 +208,13 @@ router.post('/packages', async (req, res) => {
                             }
                         } else if (versionInput.startsWith('~') || versionInput.startsWith('^')) {
                             if (semver.satisfies(version, versionInput)) {
-                                matchedPackages.push(data);
+                                matchedPackages.push(objectdata);
                             }
                         } else if (version === semver.clean(versionInput)) {
-                            matchedPackages.push(data);
+                            matchedPackages.push(objectdata);
                         }
                     } else {
-                        matchedPackages.push(data);
+                        matchedPackages.push(objectdata);
                     }
                     if (matchedPackages.length >= 100) {
                         return res.status(413).json("Too many packages returned.");
@@ -228,7 +230,6 @@ router.post('/packages', async (req, res) => {
                     
                 }; 
                 const data = await s3.listObjectsV2(params).promise();
-                const matchedPackages = [];
                 for (const item of data.Contents) {
                     const metadataParams = {
                         Bucket: params.Bucket,
@@ -237,28 +238,28 @@ router.post('/packages', async (req, res) => {
                     const metadata = await s3.headObject(metadataParams).promise();
                     const version = metadata.Metadata.version;
                     //json object to be returned
-                    const data = {};
-                    data.Name = metadata.Metadata.name;
-                    data.Version = versionInput || metadata.Metadata.version;
-                    data.ID = metadata.Metadata.id;
-                    data.Popularity = metadata.Metadata.popularity;
+                    const objectdata = {};
+                    objectdata.Name = metadata.Metadata.name;
+                    objectdata.Version = versionInput || metadata.Metadata.version;
+                    objectdata.ID = metadata.Metadata.id;
+                    //objectdata.Popularity = metadata.Metadata.popularity;
                     if (metadata.Metadata.Name == packageName) {
                         if (versionInput) {
                             if (versionInput.includes('-')) {
                                 const versionRange = versionInput.split('-').map(semver.clean);
                                 if (semver.gte(version, versionRange[0]) && semver.lte(version, versionRange[1])) {
-                                    matchedPackages.push(data);
+                                    matchedPackages.push(objectdata);
                                 }
                             } else if (versionInput.startsWith('~') || versionInput.startsWith('^')) {
                                 if (semver.satisfies(version, versionInput)) {
-                                    matchedPackages.push(data);
+                                    matchedPackages.push(objectdata);
                                 }
                             } else if (version === semver.clean(versionInput)) {
-                                matchedPackages.push(data);
+                                matchedPackages.push(objectdata);
                             }
                             
                         } else{
-                            matchedPackages.push(data);
+                            matchedPackages.push(objectdata);
                         }
                     }
                     if (matchedPackages.length >= 100) {
@@ -269,11 +270,11 @@ router.post('/packages', async (req, res) => {
             if (matchedPackages.length === 0) {
                 return res.status(404).json("No packages found. Please try again.");
             }
-            res.status(200).json(matchedPackages);
         } catch (err) {
             console.error('Error retrieving files from S3:', err);
             res.status(500).json({ error: 'Error downloading files from S3' });
         }
     }
+    res.status(200).json(matchedPackages);
 });
 module.exports = router;
