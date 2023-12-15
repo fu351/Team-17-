@@ -549,6 +549,13 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     });
   } catch (error) {
     console.error('Error retrieving package metadata:', error);
+    try {
+    if (error.code == 'NotFound') {
+      return res.status(404).json({ error: 'Package does not exist' });
+    }
+    } catch (err){
+      res.status(500).json({ error: 'An error occurred while retrieving package metadata' });
+    }
     res.status(500).json({ error: 'An error occurred while retrieving package metadata' });
   }
 });
