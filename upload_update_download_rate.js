@@ -289,7 +289,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       }
     };
     //logging upload action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
+    const user = {name: 'ece30861defaultadminuser', isAdmin: true};
     logAction(user, 'UPLOAD', packageName, zip_ver.toString(), packageID); // Log the upload action
     
     console.log(responseBody);
@@ -319,7 +319,7 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   const metadata = ObjectData.Metadata;
   const version = metadata.version;
   const id = metadata.packageId;
-  const user = {name: 'default', isAdmin: 'true'};
+  const user = {name: 'ece30861defaultadminuser', isAdmin: true};
   //logging download action for traceability
   logAction(user, 'DOWNLOAD',  metadata.name, version.toString(), id); // Log the upload action
 
@@ -426,7 +426,7 @@ router.put('/package/:id', async (req, res) => { //update package
     await s3.upload(s3uploadparams).promise(); //upload package with new data content
 
     //Logging update action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
+    const user = {name: 'ece30861defaultadminuser', isAdmin: true};
     logAction(user, 'UPDATE', Name, Version,ID); // Log the upload action
     console.log('Version is updated');
     res.status(200).json('Version is updated');
@@ -487,7 +487,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
     
 
     //logging Rate action for traceability
-    const user = {name: 'default', isAdmin: 'true'};
+    const user = {name: 'ece30861defaultadminuser', isAdmin: true};
     logAction(user, 'RATE', s3ObjectMetadata.Metadata.name, s3ObjectMetadata.Metadata.version, s3ObjectMetadata.Metadata.id); // Log the upload action
     // Display the relevant metadata
     // console.log(json({

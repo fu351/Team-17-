@@ -97,7 +97,8 @@ router.get('/package/byName/:name', async (req, res) => {
         });
         const logs = await Promise.all(promises);
         console.log(logs);
-        res.status(200).json(logs);
+        const reversedLogs = logs.reverse();
+        res.status(200).json(reversedLogs);
     } catch (err) {
         console.error('Error retrieving logs from S3:', err);
         res.status(500).json({ error: 'Error retrieving logs from S3' });
