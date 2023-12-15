@@ -42,8 +42,11 @@ router.delete('/package/:id', (req, res) => {
 //delete every version of a package in the s3 bucket that matches the package name
 router.delete('/package/byName/:name', (req, res) => {
     const packageName = req.params.name;
-    const xAuth = req.headers['x-authorization'];
-    if ( !packageName || !xAuth) {
+    const xauth = req.headers['x-authorization'];
+    if (xauth != "0" || !xauth) { //need all fields to be present
+        return res.status(400).json({error: 'There are missing fields in the Request Body'});
+    }
+    if ( !packageName || !xauth) {
         return res.status(400).json('There is missing field(s) in the PackageName/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.');
     }
     const params = {

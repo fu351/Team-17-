@@ -14,7 +14,9 @@ router.delete('/reset', async (req, res) => {
     console.log('Reset route being used');
     const s3 = new AWS.S3();
     const bucketName = '461testbucket'; // Replace with your S3 bucket name
-
+    if (!req.body['x-authorization']) {
+        return res.status(401).json({ error: 'Missing x-authorization header' });
+    }
     try {
         // List all objects in the specified folder
         const data = await s3.listObjectsV2({ Bucket: bucketName }).promise();

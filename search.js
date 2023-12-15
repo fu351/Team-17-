@@ -22,9 +22,9 @@ router.get('/package/:id', (req, res) => {
     if (!packageID) {
         return res.status(400).json({ error: 'Missing package ID' });
     }
-    /* if (xauth != "0") {
+    if (xauth != "0") {
         return res.status(400).json({ error: 'You do not have permission to download the package.' });
-    } */
+    }
     if (!xauth) {
         return res.status(400).json({ error: 'Missing AuthenticationToken' });
     }
@@ -71,9 +71,9 @@ router.get('/package/:id', (req, res) => {
 router.get('/package/byName/:name', async (req, res) => {
     console.log('search by name happening');
     const packageName = req.params.name;
-    const xAuth = req.headers['x-authorization'];
-    if (!xAuth) {
-        return res.status(400).json({ error: 'Missing AuthenticationToken' });
+    const xauth = req.headers['x-authorization'];
+    if (xauth != "0" || !xauth) { //need all fields to be present
+     return res.status(400).json({error: 'There are missing fields in the Request Body'});
     }
     if (!packageName) {
         return res.status(400).json({ error: 'Missing package name' });
@@ -109,9 +109,12 @@ router.post('/package/byRegEx', async (req, res) => {
     console.log('search by regex happening');
     //get the regular expression from the body
     const regEx =  new RegExp(req.body.RegEx);
-    const xAuth = req.headers['x-authorization'];
+    const xauth = req.headers['x-authorization'];
+    if (xauth != "0" || !xauth) { //need all fields to be present
+        return res.status(400).json({error: 'There are missing fields in the Request Body'});
+    }
     console.log(regEx);
-    if (!xAuth || !regEx) {
+    if (!xauth || !regEx) {
         return res.status(400).json("There is missing field(s) in the PackageRegEx/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.");
     }
     const params = {
@@ -169,11 +172,10 @@ router.post('/packages', async (req, res) => {
         console.log('error1');
         return res.status(400).json("Missing package name");
     }
-    const xAuth = req.headers['X-authorization'];
-    // if (!xAuth) {
-    //     console.log('error2');
-    //     return res.status(400).json("Missing AuthenticationToken");
-    // }
+    const xauth = req.headers['x-authorization'];
+    if (xauth != "0" || !xauth) { //need all fields to be present
+        return res.status(400).json({error: 'There are missing fields in the Request Body'});
+    }
     for (const req_query of req.body ){
         const packageName = req_query.Name;
         console.log(req_query);
