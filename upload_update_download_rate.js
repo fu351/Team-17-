@@ -419,7 +419,7 @@ router.put('/package/:id', async (req, res) => { //update package
     res.status(200).json('Version is updated');
   } catch (error) {
     console.error('Error updating package:', error);
-    res.status(500).json({ error: 'An error occurred while updating the package' });
+    res.status(404).json({ error: 'An error occurred while updating the package' });
   }
 });
 
