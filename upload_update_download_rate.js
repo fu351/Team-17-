@@ -188,7 +188,17 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //remove any / from the package name
     packageName = packageName.replace(/\//g, '');
     zip_ver = (packageJson.version).toString();
-    zip_ver = semver.valid(semver.clean(semver.coerce(zip_ver)));
+    //if zip_ver not a string then convert it to a string
+    if (typeof zip_ver != 'string') {
+      zip_ver = zip_ver.toString();
+    }
+    //check that the version is a valid semver
+    zip_ver = semver.coerce(zip_ver);
+    if (zip_ver == null) {
+      console.log('Invalid Version');
+      return res.status(400).json({ error: 'Invalid Version'});
+    }
+    zip_ver = semver.valid(semver.clean(zip_ver));
     if(homepage == null|| packageName == null || zip_ver == null)  {
       console.log(packageJsonEntry.entryName)
       console.log(packageJson)
@@ -260,27 +270,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
 
     try  { //upload complete, answer with response codes
       await s3.upload(s3Params).promise();
-      //package was uploaded succesfully
-      const responseBody = {
-        metadata: {
-          Name: packageJson.name,
-          Version: zip_ver.toString(),
-          ID: packageID.toString(),
-        },
-        data: {
-          Content: content,
-          JSProgram: 'holder',
-        }
-      };
-      //logging upload action for traceability
-      const user = {name: 'default', isAdmin: 'true'};
-      const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
-      logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
-      
-      return res.status(201).json({responseBody});
     } catch (error) {
       console.error(error);
     }
+    //package was uploaded succesfully
     const responseBody = {
       metadata: {
         Name: packageJson.name,
@@ -292,15 +285,11 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         JSProgram: 'holder',
       }
     };
-    try {
-      //logging upload action for traceability
+    //logging upload action for traceability
     const user = {name: 'default', isAdmin: 'true'};
     const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
     logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
-    } catch (error) {
-      console.log('Error logging upload action to S3:', error);
-    }
-    console.log('\x1b[34m%s\x1b[0m', 'Successful Upload!');
+    
     return res.status(201).json(responseBody);
   } catch (error) {
     console.log('Error uploading package:', error);
@@ -429,7 +418,7 @@ router.put('/package/:id', async (req, res) => { //update package
     const packageMetadata = { Name: Name, Version: Version, ID: ID};
     logAction(user, 'UPDATE', packageMetadata); // Log the upload action
 
-    res.status(200).json({ message: 'Version is updated' });
+    res.status(200).json('Version is updated');
   } catch (error) {
     console.error('Error updating package:', error);
     res.status(500).json({ error: 'An error occurred while updating the package' });
