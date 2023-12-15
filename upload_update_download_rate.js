@@ -291,7 +291,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     };
     //logging upload action for traceability
     const user = {name: 'ece30861defaultadminuser', isAdmin: true};
-    logAction(user, 'UPLOAD', packageName, zip_ver.toString(), packageID); // Log the upload action
+    logAction(user, 'CREATE', packageName, zip_ver.toString(), packageID); // Log the upload action
     
     console.log(responseBody);
     return res.status(201).json(responseBody);
