@@ -279,7 +279,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     //package was uploaded succesfully
     const responseBody = {
       metadata: {
-        Name: packageJson.name,
+        Name: packageName,
         Version: zip_ver.toString(),
         ID: packageID.toString(),
       },

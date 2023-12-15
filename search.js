@@ -199,6 +199,7 @@ router.post('/packages', async (req, res) => {
                         Key: item.Key,
                     };
                     const metadata = await s3.headObject(metadataParams).promise();
+                    const version = metadata.Metadata.version;
                     //json object to be returned
                     const objectdata = {};
                     objectdata.Version = versionInput || metadata.Metadata.version;
@@ -249,7 +250,7 @@ router.post('/packages', async (req, res) => {
                     objectdata.Name = metadata.Metadata.name;
                     objectdata.ID = metadata.Metadata.id;
                     //objectdata.Popularity = metadata.Metadata.popularity;
-                    if (metadata.Metadata.Name == packageName) {
+                    if (metadata.Metadata.name == packageName) {
                         if (versionInput) {
                             if (versionInput.includes('-')) {
                                 const versionRange = versionInput.split('-').map(semver.clean);
