@@ -525,7 +525,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 17];
                 case 16:
                     error_9 = _b.sent();
-                    console.log("error");
+                    console.log("error a");
                     return [2 /*return*/];
                 case 17:
                     _b.trys.push([17, 19, , 20]);
@@ -535,7 +535,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 20];
                 case 19:
                     error_10 = _b.sent();
-                    console.log("error");
+                    console.log("error b ");
                     return [2 /*return*/];
                 case 20:
                     _b.trys.push([20, 22, , 23]);
@@ -545,7 +545,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 23];
                 case 22:
                     error_11 = _b.sent();
-                    console.log("error");
+                    console.log("error c");
                     return [2 /*return*/];
                 case 23:
                     _b.trys.push([23, 25, , 26]);
@@ -555,7 +555,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 26];
                 case 25:
                     error_12 = _b.sent();
-                    console.log("error");
+                    console.log("error d");
                     return [2 /*return*/];
                 case 26:
                     _b.trys.push([26, 28, , 29]);
@@ -565,7 +565,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 29];
                 case 28:
                     error_13 = _b.sent();
-                    console.log("error");
+                    console.log("error e");
                     return [2 /*return*/];
                 case 29:
                     _b.trys.push([29, 31, , 32]);
@@ -575,7 +575,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 32];
                 case 31:
                     error_14 = _b.sent();
-                    console.log("error");
+                    console.log("error f");
                     return [2 /*return*/];
                 case 32:
                     total_lines = totalLines[1] - totalLines[0];
@@ -590,7 +590,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 36];
                 case 35:
                     error_15 = _b.sent();
-                    console.log("error");
+                    console.log("error g");
                     return [2 /*return*/];
                 case 36:
                     popularity = void 0;
@@ -603,7 +603,7 @@ function fetchGitHubInfo(npmPackageUrl, personalAccessToken) {
                     return [3 /*break*/, 40];
                 case 39:
                     error_16 = _b.sent();
-                    console.log("error");
+                    console.log("error k");
                     return [2 /*return*/];
                 case 40:
                     popularity = Math.floor(popularity * 10000) / 10000;

@@ -385,42 +385,42 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
            contributor_commits = await getContributors(githubInfo.username, githubInfo.repository, personalAccessToken) as number[];
         }
         catch (error) {
-          console.log("error");
+          console.log("error a");
           return;
         }
 
         try {
         days_since_last_commit = await getTimeSinceLastCommit(githubInfo.username, githubInfo.repository) as number;
         } catch (error) {
-          console.log("error");
+          console.log("error b ");
           return;
         }
         try {
           repoLicense = await getRepoLicense(response.data.license);
         }
         catch (error) {
-          console.log("error");
+          console.log("error c");
           return;
         }
         try {
           code_review_score = await getReviewedLines(githubInfo.username, githubInfo.repository, personalAccessToken);
         }
         catch (error) {
-          console.log("error");
+          console.log("error d");
           return;
         }
         try {
           totalLines = await traverseDirectory(rootDirectory);
         }
         catch (error) {
-          console.log("error");
+          console.log("error e");
           return;
         }
         try {
           [assigned_dependencies, unassigned_dependencies] = await getDependencyData(githubInfo.username, githubInfo.repository, personalAccessToken) as [number,number];
         }
         catch (error) {
-          console.log("error");
+          console.log("error f");
           return;
         }
         
@@ -435,7 +435,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
           scores = await calculate_net_score(contributor_commits, total_lines, issue_count, totalLines[0], repoLicense, days_since_last_commit, assigned_dependencies, unassigned_dependencies, code_review_score, npmPackageUrl);
         }
         catch (error) {
-          console.log("error");
+          console.log("error g");
           return;
         }
         let popularity;
@@ -443,7 +443,7 @@ async function fetchGitHubInfo(npmPackageUrl: string, personalAccessToken: strin
           popularity = await getPopularity(response, total_dependencies);
         }
         catch (error) {
-          console.log("error");
+          console.log("error k");
           return;
         }
 
