@@ -267,7 +267,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
         Name: packageName,
         Version: zip_ver.toString(),
         ID: packageID,
-        Popularity: scores[9],
+        Popularity: scores[9].toString(),
       }
     };
 
