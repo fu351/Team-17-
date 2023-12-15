@@ -165,10 +165,10 @@ router.post('/packages', async (req, res) => {
         return res.status(400).json("Missing package name");
     }
     const xAuth = req.headers['X-authorization'];
-    if (!xAuth) {
-        console.log('error2');
-        return res.status(400).json("Missing AuthenticationToken");
-    }
+    // if (!xAuth) {
+    //     console.log('error2');
+    //     return res.status(400).json("Missing AuthenticationToken");
+    // }
     for (const req_query in req.body ){
         const packageName = req_query.Name;
         console.log(req.body);
