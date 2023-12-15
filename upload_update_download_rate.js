@@ -212,7 +212,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     console.log("scores", scores);
     //console.log(scores);
     if (!scores || isNaN(scores)) {
-      console.log('Invalid Repository URL');
+      console.log('Scores are invalid');
       return res.status(424).json({ error: 'Invalid Repository URL'});
     }
     for (let i = 1; i <= 8; i++) {
