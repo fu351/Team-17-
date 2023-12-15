@@ -18,9 +18,9 @@ router.delete('/reset', async (req, res) => {
     if (!xauth) { //need all fields to be present
         return res.status(400).json({error: 'There are missing fields in the Request Body'});
       }
-     /*  if (xauth != "0") { //Commented to work with autograder
+       if (xauth != "0") { //Commented to work with autograder
         return res.status(400).json({error: 'Invalid Authentication Token'});
-      } */
+      } 
     try {
         // List all objects in the specified folder
         const data = await s3.listObjectsV2({ Bucket: bucketName }).promise();
