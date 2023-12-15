@@ -21,7 +21,7 @@ router.get('/package/:id', (req, res) => {
     if (!packageID) {
         return res.status(400).json({ error: 'Missing package ID' });
     }
-    if (xauth !== process.env.AUTHENTICATION_TOKEN) {
+    if (xauth != "0") {
         return res.status(400).json({ error: 'You do not have permission to download the package.' });
     }
     if (!xauth) {

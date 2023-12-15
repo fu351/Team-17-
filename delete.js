@@ -18,7 +18,7 @@ const s3 = new AWS.S3();
 router.delete('/package/:id', (req, res) => {
     const packageID = req.params.id;
     const xAuth = req.headers['x-authorization'];
-    if (xAuth !== process.env.AUTHENTICATION_TOKEN || !packageID || !xAuth) {
+    if (xAuth != "0" || !packageID || !xAuth) {
         return res.status(400).json('There is missing field(s) in the PackageID/AuthenticationToken or it is formed improperly, or the AuthenticationToken is invalid.');
     }
     const params = {

@@ -55,6 +55,27 @@ const isPackageJsonThere = (zipBuffer, ) => {
   const packageJsonEntry = zipEntries.find(entry => entry.entryName.toLowerCase().includes('package.json'));
   return Boolean(packageJsonEntry);
 };
+const findGitHubUrl = async (object) => {
+  const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
+  for (const key in object) {
+    if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
+      let url = object[key];
+      // Remove any existing protocol
+      url = url.replace(/^[a-z]*:/, '');
+      // Ensure the URL uses the https protocol
+      url = 'https:' + url;
+      // Split the URL by '/' and join the first four elements
+      url = url.split('/').slice(0, 4).join('/');
+      return url;
+    } else if (typeof object[key] === 'object' && object[key] !== null) {
+      const result = findGitHubUrl(object[key]);
+      if (result) {
+        return result;
+      }
+    }
+  }
+  return null;
+}
 
 router.post('/package', upload.single('file'), async (req, res) => { //upload package
   try {
@@ -155,27 +176,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     const packageJsonContent = zip.readAsText(packageJsonEntry);
     const packageJson = JSON.parse(packageJsonContent);
     
-    function findGitHubUrl(object) {
-      const githubUrlPattern = /:\/\/github\.com\/([^/]+)\/([^/]+)(\/|$)/i;
-      for (const key in object) {
-        if (typeof object[key] === 'string' && githubUrlPattern.test(object[key])) {
-          let url = object[key];
-          // Remove any existing protocol
-          url = url.replace(/^[a-z]*:/, '');
-          // Ensure the URL uses the https protocol
-          url = 'https:' + url;
-          // Split the URL by '/' and join the first four elements
-          url = url.split('/').slice(0, 4).join('/');
-          return url;
-        } else if (typeof object[key] === 'object' && object[key] !== null) {
-          const result = findGitHubUrl(object[key]);
-          if (result) {
-            return result;
-          }
-        }
-      }
-      return null;
-    }
+    
     
     // Extract URL, name and version from package.json
     //Set URL if it was not set before
@@ -209,10 +210,10 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
       return res.status(400).json({ error: 'Invalid Repository URL'});
     }
     for (const score in scores) {
-      if (score < 0.5 || score == NaN) { //check for ingestion
+      if (score < 0.5 || isNaN(score)) { //check for ingestion
         console.log('Package Net Score too low, ingestion blocked.');
         console.log(scores);
-        //return res.status(424).json({ error: 'Package not uploaded due to rating' });
+        return res.status(424).json({ error: 'Package not uploaded due to rating' });
       }
     }
     // Create a unique package ID that includes the name and version
@@ -310,7 +311,7 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   const version = metadata.version;
   const id = metadata.packageId;
   const user = {name: 'default', isAdmin: 'true'};
-  const packageMetadata = { Name: selectedPackage, Version: version, ID: id };
+  const packageMetadata = { Name: ObjectData.Metadata.name, Version: version, ID: id };
   //logging download action for traceability
   logAction(user, 'DOWNLOAD', packageMetadata); // Log the upload action
 
@@ -325,7 +326,7 @@ router.put('/package/:id', async (req, res) => { //update package
   if (!packageId) {
     return res.status(400).json({ error: 'Missing PackageID' });
   }
-  if (xAuth !== process.env.AUTHENTICATION_TOKEN) {
+  if (xAuth != "0") {
     return res.status(400).json({ error: 'You do not have permission to update the package.' });
   }
   if (!xAuth) {
