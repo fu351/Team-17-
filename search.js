@@ -59,6 +59,7 @@ router.get('/package/:id', (req, res) => {
                         },
                     data: {
                         Content: data.Body.toString('base64'),
+                        JSProgram: "holder",
                     }
                 });
                 resolve();

@@ -26,17 +26,21 @@ const s3 = new AWS.S3();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const logAction = async (user, action, packageMetadata) => {
+const logAction = async (user, action, name, version, id) => {
   const date = new Date().toISOString();
   const logObject = {
     User: user,
     Date: date,
-    PackageMetadata: packageMetadata,
+    PackageMetadata: {
+      Name: name,
+      Version: version,
+      ID: id,
+    },
     Action: action,
   };
   const params = {
     Bucket: '461testbucket',
-    Key: `logs/${packageMetadata.Name}/${date}`,
+    Key: `logs/${name}/${date}`,
     Body: JSON.stringify(logObject),
   };
   try {
@@ -283,8 +287,7 @@ router.post('/package', upload.single('file'), async (req, res) => { //upload pa
     };
     //logging upload action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: packageName, Version: zip_ver, ID: packageID.toString() };
-    logAction(user, 'UPLOAD', packageMetadata); // Log the upload action
+    logAction(user, 'UPLOAD', packageName, zip_ver.toString(), packageID); // Log the upload action
     
     console.log(responseBody);
     return res.status(201).json(responseBody);
@@ -314,9 +317,8 @@ router.get('/download/:id', async (req, res) => { //download package from bucket
   const version = metadata.version;
   const id = metadata.packageId;
   const user = {name: 'default', isAdmin: 'true'};
-  const packageMetadata = { Name: ObjectData.Metadata.name, Version: ObjectData.Metadata.version, ID: ObjectData.Metadata.id};
   //logging download action for traceability
-  logAction(user, 'DOWNLOAD', packageMetadata); // Log the upload action
+  logAction(user, 'DOWNLOAD',  metadata.name, version.toString(), id); // Log the upload action
 
   // Redirect the user to the pre-signed URL
   res.redirect(downloadUrl);
@@ -412,8 +414,7 @@ router.put('/package/:id', async (req, res) => { //update package
 
     //Logging update action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: Name, Version: Version, ID: ID};
-    logAction(user, 'UPDATE', packageMetadata); // Log the upload action
+    logAction(user, 'UPDATE', Name, Version,ID); // Log the upload action
     console.log('Version is updated');
     res.status(200).json('Version is updated');
   } catch (error) {
@@ -463,8 +464,7 @@ router.get('/package/:id/rate', async (req, res) => { //rate package
 
     //logging Rate action for traceability
     const user = {name: 'default', isAdmin: 'true'};
-    const packageMetadata = { Name: s3ObjectMetadata.Metadata.name, Version: s3ObjectMetadata.Metadata.version, ID: s3ObjectMetadata.Metadata.id };
-    logAction(user, 'RATE', packageMetadata); // Log the upload action
+    logAction(user, 'RATE', s3ObjectMetadata.Metadata.name, s3ObjectMetadata.Metadata.version, s3ObjectMetadata.Metadata.id); // Log the upload action
     // Display the relevant metadata
     // console.log(json({
     //   "BusFactor": BusFactor,
